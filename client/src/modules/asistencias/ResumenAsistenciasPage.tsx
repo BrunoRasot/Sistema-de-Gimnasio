@@ -1,0 +1,1 @@
+﻿const ResumenAsistenciasPage = () => { return <div className='p-6 text-white bg-[#111111]/60 backdrop-blur-sm rounded-xl border border-white/5'><h1>ResumenAsistenciasPage</h1><p className='text-gray-400'>Módulo en construcción.</p></div>; }; export default ResumenAsistenciasPage;

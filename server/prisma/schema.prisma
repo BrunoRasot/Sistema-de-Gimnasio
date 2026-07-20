@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id              Int       @id @default(autoincrement())
+  foto            String?
+  nombres         String    @default("")
+  apellidos       String    @default("")
+  dni             String    @unique
+  fechaNacimiento DateTime?
+  sexo            String?
+  direccion       String?
+  telefono        String?
+  email           String    @unique
+  cargo           String    @default("Recepcionista")
+  turno           String?
+  fechaIngreso    DateTime  @default(now())
+  estadoLaboral   String    @default("Activo")
+  nombreUsuario   String    @unique
+  password        String
+  rol             String    @default("USER")
+  estadoCuenta    String    @default("Activa")
+  ultimoAcceso    DateTime?
+  creadoPor       Int?
+  actualizadoPor  Int?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  activo          Boolean   @default(true)
+  codigoOtp       String?
+  expiracionOtp   DateTime?
+  intentosFallidos Int       @default(0)
+  bloqueoHasta     DateTime?
+  auditorias       Auditoria[]
+}
+
+model Permiso {
+  id        Int      @id @default(autoincrement())
+  cargo     String   
+  modulo    String   
+  ver       Boolean  @default(false)
+  crear     Boolean  @default(false)
+  editar    Boolean  @default(false)
+  eliminar  Boolean  @default(false)
+  @@unique([cargo, modulo]) 
+}
+
+model Plan {
+  id           Int      @id @default(autoincrement())
+  nombre       String   @unique
+  descripcion  String?  
+  precio       Decimal  @db.Decimal(10, 2)
+  duracionDias Int      
+  estado       String   @default("Activo")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  membresias   Membresia[]
+}
+
+model Miembro {
+  id              Int         @id @default(autoincrement())
+  nombres         String
+  apellidos       String
+  dni             String      @unique
+  email           String?
+  telefono        String?
+  fechaNacimiento DateTime?
+  direccion       String?
+  estado          String      @default("Activo")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  membresias      Membresia[]
+}
+
+model Membresia {
+  id              Int       @id @default(autoincrement())
+  miembroId       Int
+  planId          Int
+  fechaInicio     DateTime
+  fechaFin        DateTime
+  estado          String    @default("Activa")
+  montoPagado     Decimal   @db.Decimal(10, 2)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  miembro         Miembro   @relation(fields: [miembroId], references: [id])
+  plan            Plan      @relation(fields: [planId], references: [id])
+}
+
+model Auditoria {
+  id          Int      @id @default(autoincrement())
+  usuarioId   Int?     
+  accion      String   
+  modulo      String   
+  detalles    String?  
+  ip          String? 
+  createdAt   DateTime @default(now())
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+}

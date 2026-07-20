@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #111111;
+  color: #ffffff;
+}
+
+.theme-dark {
+  --app-background: #1c1c1b;
+  --app-foreground: #ffffff;
+  --sidebar-background: #141414;
+  --card-background: #1a1a1a;
+  --app-border: rgb(255 255 255 / 0.1);
+  --input-border: rgb(255 255 255 / 0.2);
+  --muted-foreground: #9ca3af;
+  --sidebar-hover: rgb(255 255 255 / 0.05);
+}
+
+.theme-light {
+  --app-background: #f6f7f5;
+  --app-foreground: #1f2937;
+  --sidebar-background: #ffffff;
+  --card-background: #ffffff;
+  --app-border: #e5e7eb;
+  --input-border: #d1d5db;
+  --muted-foreground: #6b7280;
+  --sidebar-hover: #f3f4f6;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
