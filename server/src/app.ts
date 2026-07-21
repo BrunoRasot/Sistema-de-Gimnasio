@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.routes.js';
 import permisosRoutes from './routes/permisos.routes.js';
 import planRoutes from './routes/plan.routes.js';
 import miembroRoutes from './routes/miembro.routes.js';
+import categoriaRoutes from './routes/categoria.routes.js';
 
 const app = express();
 
@@ -43,5 +44,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/permisos', permisosRoutes);
 app.use('/api/planes', planRoutes);
 app.use('/api/miembros', miembroRoutes);
+app.use('/api/categorias', categoriaRoutes);
 
 export default app;

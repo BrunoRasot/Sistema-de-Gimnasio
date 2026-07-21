@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { ChevronRight, ChevronDown, LucideIcon } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { ChevronDown, LucideIcon } from 'lucide-react';
 
 interface SubItem {
   path: string;
@@ -13,67 +12,84 @@ interface SidebarItemProps {
   icon: LucideIcon;
   subItems?: SubItem[];
   closeSidebar: () => void;
+  isOpenDropdown: boolean;
+  onToggle: () => void;
 }
 
-const SidebarItem = ({ path, label, icon: Icon, subItems, closeSidebar }: SidebarItemProps) => {
+const SidebarItem = ({
+  path,
+  label,
+  icon: Icon,
+  subItems,
+  closeSidebar,
+  isOpenDropdown,
+  onToggle,
+}: SidebarItemProps) => {
   const location = useLocation();
-  const isPathActive = location.pathname.startsWith(path);
-  const [isOpen, setIsOpen] = useState(isPathActive);
-
   const hasSubItems = subItems && subItems.length > 0;
-  const toggleOpen = () => setIsOpen(!isOpen);
+  const IconComponent = Icon;
 
-  const baseButtonClass = `flex w-full items-center justify-between rounded-md px-3 py-2.5 text-[15px] transition-all duration-200 ${
-    isPathActive && !hasSubItems
-      ? 'text-white font-bold'
-      : 'text-gray-400 font-medium hover:bg-white/5 hover:text-white'
-  }`;
+  const isActive = location.pathname === path || (hasSubItems && subItems.some(sub => location.pathname === sub.path));
 
+  // Si no tiene subítem (como el Dashboard), actúa como enlace directo
+  if (!hasSubItems) {
+    return (
+      <Link
+        to={path}
+        onClick={closeSidebar}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          isActive
+            ? 'bg-[#e6b010] text-black font-bold shadow-md'
+            : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+        }`}
+      >
+        {IconComponent && <IconComponent className={`w-5 h-5 ${isActive ? 'text-black' : 'text-gray-400'}`} />}
+        <span>{label}</span>
+      </Link>
+    );
+  }
+
+  // Si tiene subítem, renderiza el botón desplegable con acordeón
   return (
-    <div className="space-y-1">
-      {hasSubItems ? (
-        <button onClick={toggleOpen} className={baseButtonClass}>
-          <div className="flex items-center gap-3">
-            <Icon className="h-[18px] w-[18px]" strokeWidth={isPathActive ? 2.5 : 2} />
-            <span className="tracking-wide">{label}</span>
-          </div>
-          {isOpen ? (
-            <ChevronDown className="h-4 w-4 opacity-70" />
-          ) : (
-            <ChevronRight className="h-4 w-4 opacity-70" />
-          )}
-        </button>
-      ) : (
-        <NavLink 
-          to={path} 
-          className={baseButtonClass}
-          onClick={closeSidebar} 
-        >
-          <div className="flex items-center gap-3">
-            <Icon className="h-[18px] w-[18px]" strokeWidth={isPathActive ? 2.5 : 2} />
-            <span className="tracking-wide">{label}</span>
-          </div>
-        </NavLink>
-      )}
+    <div>
+      <button
+        onClick={onToggle}
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          isActive || isOpenDropdown
+            ? 'bg-gray-800 text-white font-semibold'
+            : 'text-gray-400 hover:bg-gray-800/60 hover:text-white'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          {IconComponent && <IconComponent className="w-5 h-5 text-[#e6b010]" />}
+          <span>{label}</span>
+        </div>
+        <ChevronDown
+          className={`w-4 h-4 transition-transform duration-200 ${
+            isOpenDropdown ? 'rotate-180 text-[#e6b010]' : 'text-gray-500'
+          }`}
+        />
+      </button>
 
-      {hasSubItems && isOpen && (
-        <div className="mt-1 flex flex-col space-y-1 pl-9 pr-2">
-          {subItems.map((subItem) => (
-            <NavLink
-              key={subItem.path}
-              to={subItem.path}
-              onClick={closeSidebar}
-              className={({ isActive }) =>
-                `block rounded-md px-3 py-2 text-[13px] transition-colors ${
-                  isActive
-                    ? 'text-white font-semibold'
-                    : 'text-gray-500 hover:text-white hover:bg-white/5'
-                }`
-              }
-            >
-              {subItem.label}
-            </NavLink>
-          ))}
+      {isOpenDropdown && (
+        <div className="ml-8 mt-1 space-y-1 border-l border-gray-800 pl-3">
+          {subItems.map((sub) => {
+            const isSubActive = location.pathname === sub.path;
+            return (
+              <Link
+                key={sub.path}
+                to={sub.path}
+                onClick={closeSidebar}
+                className={`block py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
+                  isSubActive
+                    ? 'text-[#e6b010] bg-yellow-500/10 font-bold'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/40'
+                }`}
+              >
+                {sub.label}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

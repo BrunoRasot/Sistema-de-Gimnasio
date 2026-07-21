@@ -17,7 +17,7 @@ import RolesPermisosPage from '../modules/usuarios/RolesPermisosPage';
 import AdministradoresPage from '../modules/usuarios/AdministradoresPage';
 
 import InventarioPage from '../modules/productos/InventarioPage';
-import CategoriasPage from '../modules/productos/CategoriasPage';
+import CategoriasPage from '../modules/productos/CategoriasPage'; 
 import ProveedoresPage from '../modules/productos/ProveedoresPage';
 import StockAlertasPage from '../modules/productos/StockAlertasPage';
 

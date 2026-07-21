@@ -101,3 +101,45 @@ model Auditoria {
   createdAt   DateTime @default(now())
   usuario     Usuario? @relation(fields: [usuarioId], references: [id])
 }
+
+model Categoria {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @unique
+  descripcion String?
+  estado      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  productos   Producto[]
+}
+
+model Proveedor {
+  id          Int        @id @default(autoincrement())
+  nombre      String
+  contacto    String?
+  telefono    String?
+  email       String?
+  direccion   String?
+  estado      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  productos   Producto[]
+}
+
+model Producto {
+  id           Int        @id @default(autoincrement())
+  nombre       String
+  sku          String     @unique
+  descripcion  String?
+  precioCompra Decimal    @db.Decimal(10, 2)
+  precioVenta  Decimal    @db.Decimal(10, 2)
+  stock        Int        @default(0)
+  stockMinimo  Int        @default(5)
+  categoriaId  Int
+  proveedorId  Int?
+  estado       String     @default("Activo") // Activo, Inactivo
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  categoria    Categoria  @relation(fields: [categoriaId], references: [id])
+  proveedor    Proveedor? @relation(fields: [proveedorId], references: [id])
+}

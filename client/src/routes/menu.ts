@@ -7,10 +7,28 @@ import {
   CreditCard,
   CalendarCheck,
   BarChart3,
-  Settings
+  Settings,
+  LucideIcon
 } from 'lucide-react';
 
-export const menuGroups = [
+export interface SubItem {
+  path: string;
+  label: string;
+}
+
+export interface MenuItem {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  subItems?: SubItem[];
+}
+
+export interface MenuGroup {
+  title: string;
+  items: MenuItem[];
+}
+
+export const menuGroups: MenuGroup[] = [
   {
     title: 'GENERAL',
     items: [

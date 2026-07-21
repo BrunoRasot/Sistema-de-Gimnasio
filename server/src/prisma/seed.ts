@@ -1,30 +1,28 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcrypt';
 
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
   const passwordHasheada = await bcrypt.hash('admin123', 10);
 
   const admin = await prisma.usuario.upsert({
-    where: { email: 'admin@gimnasio.com' },
-    update: {},
+    where: { dni: '00000000' },
+    update: {
+      email: 'bdbr230311@gmail.com',
+      password: passwordHasheada,
+    },
     create: {
       nombreUsuario: 'admin',
-      email: 'admin@gimnasio.com',
+      email: 'bdbr230311@gmail.com',
       password: passwordHasheada,
       rol: 'ADMIN',
+      dni: '00000000',
     },
   });
 
-  console.log('Usuario Administrador creado exitosamente:', admin);
+  console.log('Usuario Administrador creado o actualizado exitosamente:', admin);
 }
 
 main()
@@ -34,5 +32,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await pool.end();
   });

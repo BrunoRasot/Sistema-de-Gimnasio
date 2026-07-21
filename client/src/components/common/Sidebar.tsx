@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import SidebarItem from './SidebarItem';
 import { menuGroups } from '../../routes/menu';
 import logoSidebar from '../../assets/logos/lg-sidebar.png'; 
@@ -8,6 +9,12 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
+  const [openItemPath, setOpenItemPath] = useState<string | null>(null);
+
+  const handleToggle = (path: string) => {
+    setOpenItemPath((prev) => (prev === path ? null : path));
+  };
+
   return (
     <aside 
       className={`
@@ -40,6 +47,8 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
                   key={item.path} 
                   {...item} 
                   closeSidebar={closeSidebar} 
+                  isOpenDropdown={openItemPath === item.path}
+                  onToggle={() => handleToggle(item.path)}
                 />
               ))}
             </div>
