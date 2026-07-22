@@ -1,17 +1,10 @@
 import { useState, useEffect } from 'react';
-import {
-  Users, CreditCard, Activity, TrendingUp,
-  ArrowUpRight, ArrowDownRight, Clock, ShieldCheck,
-  Package, AlertTriangle
-} from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  AreaChart, Area, PieChart, Pie, Cell
-} from 'recharts';
+import {   Users, CreditCard, Activity, TrendingUp,   ArrowUpRight, ArrowDownRight, Clock, ShieldCheck,   Package, AlertTriangle, PackageOpen } from 'lucide-react';
+import {   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,   AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { obtenerUsuarios } from '../../services/usuarios.service';
 import { Usuario } from '../../types/usuario';
-
 import { obtenerMembresias } from '../../services/membresias.service';
+import { obtenerProductos } from '../../services/productos.service';
 
 const datosIngresos = [
   { name: 'Lun', total: 1200 }, { name: 'Mar', total: 900 },
@@ -32,29 +25,24 @@ const datosMembresiasGrafico = [
   { name: 'Anual', value: 48, color: '#fbbf24' },
 ];
 
-const alertasStock = [
-  { id: 1, producto: 'Whey Protein 2lb', stock: 2, estado: 'Crítico' },
-  { id: 2, producto: 'Creatina Monohidratada', stock: 4, estado: 'Bajo' },
-  { id: 3, producto: 'Barras Energéticas', stock: 5, estado: 'Bajo' },
-];
-
 export default function DashboardPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [membresias, setMembresias] = useState<any[]>([]);
+  const [productos, setProductos] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const dataUsuarios = await obtenerUsuarios({});
-        const dataMembresias = await obtenerMembresias();
-
-        console.log("Respuesta Usuarios:", dataUsuarios);
-        console.log("Respuesta Membresías:", dataMembresias);
-
+        const [dataUsuarios, dataMembresias, dataProductos] = await Promise.all([
+          obtenerUsuarios({}),
+          obtenerMembresias(),
+          obtenerProductos()
+        ]);
+        
         setUsuarios(dataUsuarios.usuarios || dataUsuarios || []);
         setMembresias(dataMembresias.membresias || dataMembresias || []);
-
+        setProductos(dataProductos || []);
       } catch (error) {
         console.error("Error al cargar datos del dashboard:", error);
       } finally {
@@ -71,10 +59,9 @@ export default function DashboardPage() {
   }).slice(0, 5);
 
   const membresiasActivas = membresias.filter(m => m.estado === 'Activa' || m.estado === 'Activo').length;
-
+  
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
-
   const membresiasVencenHoy = membresias.filter(m => {
     if (!m.fechaFin) return false;
     const fechaFin = new Date(m.fechaFin);
@@ -82,6 +69,8 @@ export default function DashboardPage() {
     return fechaFin.getTime() === hoy.getTime() && (m.estado === 'Activa' || m.estado === 'Activo');
   }).length;
 
+  // Filtrar alertas de stock reales
+  const alertasStockReales = productos.filter(p => p.estado === 'Activo' && p.stock <= p.stockMinimo);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -99,7 +88,6 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto text-gray-900 space-y-4">
-
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <div>
           <h1 className="text-xl font-bold text-gray-900 tracking-wide">Resumen General</h1>
@@ -135,7 +123,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* MEMBRESÍAS (AHORA REALES) */}
+        {/* MEMBRESÍAS */}
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-[#e6b010]/30 transition-colors">
           <div className="flex justify-between items-start">
             <div>
@@ -188,31 +176,31 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* PAGOS */}
+        {/* ALERTAS DE STOCK (AHORA DINÁMICO) */}
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-[#e6b010]/30 transition-colors">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Pagos Pendientes</p>
-              <h3 className="text-2xl font-bold text-gray-900">12</h3>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Alertas de Stock</p>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {cargando ? '...' : alertasStockReales.length}
+              </h3>
             </div>
             <div className="p-2.5 bg-red-50 text-red-500 rounded-lg group-hover:scale-110 transition-transform">
-              <CreditCard className="w-4 h-4" />
+              <Package className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3 flex items-center justify-between text-xs">
             <div className="flex items-center">
-              <ArrowDownRight className="w-3.5 h-3.5 text-red-500 mr-1" />
-              <span className="text-red-500 font-semibold mr-1.5">-2</span>
-              <span className="text-gray-400">vs sem. pasada</span>
+              <AlertTriangle className="w-3.5 h-3.5 text-red-500 mr-1" />
+              <span className="text-red-500 font-semibold">Requieren atención</span>
             </div>
-            <span className="text-gray-500 font-medium">S/ 850 deuda</span>
+            <span className="text-gray-500 font-medium">Inventario</span>
           </div>
         </div>
       </div>
 
       {/* GRÁFICOS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm lg:col-span-2 xl:col-span-2">
           <div className="mb-4">
             <h3 className="text-sm font-bold text-gray-900">Ingresos de la Semana</h3>
@@ -283,7 +271,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* TABLA INFERIOR Y ALERTAS */}
+      {/* TABLA INFERIOR Y ALERTAS REALES */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden lg:col-span-2">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
@@ -333,33 +321,46 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        {/* WIDGET DE ALERTAS DE STOCK REALES */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4 text-gray-500" />
               <h3 className="text-sm font-bold text-gray-900">Alertas de Stock</h3>
             </div>
+            <span className="text-[11px] font-bold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
+              {alertasStockReales.length}
+            </span>
           </div>
-          <div className="p-2">
-            {alertasStock.map((alerta) => (
-              <div key={alerta.id} className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded-lg transition-colors border-b border-gray-50 last:border-0">
-                <div className="flex items-center gap-2.5">
-                  <div className={`p-1.5 rounded-md ${alerta.estado === 'Crítico' ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-900">{alerta.producto}</p>
-                    <p className="text-[10px] text-gray-500">Quedan: {alerta.stock} und.</p>
-                  </div>
-                </div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${alerta.estado === 'Crítico' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                  {alerta.estado}
-                </span>
+          <div className="p-2 flex-1 overflow-y-auto max-h-[250px] custom-scrollbar">
+            {alertasStockReales.length === 0 && !cargando ? (
+              <div className="p-6 text-center text-gray-400 text-xs">
+                <PackageOpen className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                Todo el inventario está en niveles óptimos.
               </div>
-            ))}
+            ) : (
+              alertasStockReales.map((alerta) => {
+                const esCritico = alerta.stock === 0 || alerta.stock <= (alerta.stockMinimo / 2);
+                return (
+                  <div key={alerta.id} className="flex items-center justify-between p-2.5 hover:bg-gray-50 rounded-lg transition-colors border-b border-gray-50 last:border-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-md ${esCritico ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-900">{alerta.nombre}</p>
+                        <p className="text-[10px] text-gray-500">Quedan: {alerta.stock} und. (Mín: {alerta.stockMinimo})</p>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${esCritico ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                      {alerta.stock === 0 ? 'Agotado' : 'Bajo'}
+                    </span>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -8,6 +8,8 @@ import permisosRoutes from './routes/permisos.routes.js';
 import planRoutes from './routes/plan.routes.js';
 import miembroRoutes from './routes/miembro.routes.js';
 import categoriaRoutes from './routes/categoria.routes.js';
+import productoRoutes from './routes/producto.routes.js';
+import proveedorRoutes from './routes/proveedor.routes.js';
 
 const app = express();
 
@@ -45,5 +47,7 @@ app.use('/api/permisos', permisosRoutes);
 app.use('/api/planes', planRoutes);
 app.use('/api/miembros', miembroRoutes);
 app.use('/api/categorias', categoriaRoutes);
+app.use('/api/productos', productoRoutes);
+app.use('/api/proveedores', proveedorRoutes);
 
 export default app;

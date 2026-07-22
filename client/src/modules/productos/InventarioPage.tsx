@@ -1,82 +1,274 @@
-﻿import { useState, useEffect } from 'react';
-import { Plus, Search, Trash2, Edit } from 'lucide-react';
-import { obtenerProductos } from '../../services/productos.service';
-import { Producto } from '../../types/producto';
+﻿import { useState, useEffect, useMemo } from 'react';
+import { Search, Plus, RefreshCw, Edit2, Trash2, Package, Loader2, X, Save, AlertTriangle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
+import { obtenerProductos, crearProducto, actualizarProducto, eliminarProducto } from '../../services/productos.service';
+import { obtenerCategorias } from '../../services/categorias.service';
+import { obtenerProveedores } from '../../services/proveedores.service';
 
 export default function InventarioPage() {
-  const [productos, setProductos] = useState<Producto[]>([]);
+  const [productos, setProductos] = useState<any[]>([]);
+  const [categorias, setCategorias] = useState<any[]>([]);
+  const [proveedores, setProveedores] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [buscar, setBuscar] = useState('');
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [productoEditando, setProductoEditando] = useState<any | null>(null);
+  const [formData, setFormData] = useState({
+    nombre: '', sku: '', descripcion: '', precioCompra: 0, precioVenta: 0, 
+    stock: 0, stockMinimo: 5, categoriaId: '', proveedorId: '', estado: 'Activo'
+  });
+  const [guardando, setGuardando] = useState(false);
 
-  useEffect(() => {
-    const cargarInventario = async () => {
-      try {
-        const data = await obtenerProductos();
-        setProductos(data);
-      } catch (error) {
-        console.error("Error al cargar inventario:", error);
-      } finally {
-        setCargando(false);
+  const cargarDatos = async () => {
+    setCargando(true);
+    try {
+      const [prods, cats, provs] = await Promise.all([
+        obtenerProductos(), obtenerCategorias(), obtenerProveedores()
+      ]);
+      setProductos(prods);
+      setCategorias(cats.filter((c: any) => c.estado)); 
+      setProveedores(provs.filter((p: any) => p.estado));
+    } catch (err) {
+      toast.error('Error al cargar inventario');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => { cargarDatos(); }, []);
+
+  const handleOpenModal = (producto?: any) => {
+    if (producto) {
+      setProductoEditando(producto);
+      setFormData({
+        nombre: producto.nombre, sku: producto.sku, descripcion: producto.descripcion || '',
+        precioCompra: producto.precioCompra, precioVenta: producto.precioVenta,
+        stock: producto.stock, stockMinimo: producto.stockMinimo,
+        categoriaId: producto.categoriaId.toString(),
+        proveedorId: producto.proveedorId ? producto.proveedorId.toString() : '',
+        estado: producto.estado
+      });
+    } else {
+      setProductoEditando(null);
+      setFormData({
+        nombre: '', sku: '', descripcion: '', precioCompra: 0, precioVenta: 0,
+        stock: 0, stockMinimo: 5, categoriaId: '', proveedorId: '', estado: 'Activo'
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.categoriaId) return toast.error('Selecciona una categoría');
+    
+    setGuardando(true);
+    try {
+      if (productoEditando) {
+        await actualizarProducto(productoEditando.id, formData);
+        toast.success('Producto actualizado');
+      } else {
+        await crearProducto(formData);
+        toast.success('Producto registrado');
       }
-    };
-    cargarInventario();
-  }, []);
+      setIsModalOpen(false);
+      cargarDatos();
+    } catch (err: any) {
+      toast.error(err.message || 'Error al guardar el producto');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const handleEliminar = (producto: any) => {
+    Swal.fire({
+      title: '¿Eliminar producto?',
+      text: `¿Seguro de eliminar "${producto.nombre}" (SKU: ${producto.sku})?`,
+      icon: 'warning',
+      background: '#ffffff',
+      color: '#1f2937',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#e5e7eb',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: '<span style="color: black">Cancelar</span>',
+      customClass: { popup: 'border border-gray-200 rounded-2xl shadow-xl' }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await eliminarProducto(producto.id);
+          toast.success('Producto eliminado');
+          cargarDatos();
+        } catch (err: any) {
+          Swal.fire({ title: 'Error', text: err.message || 'No se pudo eliminar', icon: 'error', background: '#ffffff', color: '#1f2937' });
+        }
+      }
+    });
+  };
+
+  const productosFiltrados = useMemo(() => {
+    const term = buscar.toLowerCase();
+    return productos.filter(p => 
+      p.nombre.toLowerCase().includes(term) || 
+      p.sku.toLowerCase().includes(term) ||
+      p.categoria?.nombre?.toLowerCase().includes(term)
+    );
+  }, [productos, buscar]);
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
-          <p className="text-sm text-gray-500">Gestión de stock, productos y suministros.</p>
+    <div className="p-6 max-w-[1600px] mx-auto text-gray-900">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100">
+            <Package className="w-6 h-6 text-[#e6b010]" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-wide">Inventario</h1>
+            <p className="text-sm text-gray-500 mt-1">Gestión completa de productos y stock.</p>
+          </div>
         </div>
-        <button className="bg-[#e6b010] text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-[#d4a00e] transition-all">
-          <Plus className="w-4 h-4" /> Nuevo Producto
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={cargarDatos} className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-500 transition-all border border-gray-200">
+            <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin' : ''}`} />
+          </button>
+          <button onClick={() => handleOpenModal()} className="flex items-center gap-2 px-5 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white font-bold rounded-xl text-sm transition-all shadow-md">
+            <Plus className="w-4 h-4" /> Nuevo Producto
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-          <input 
-            type="text" 
-            placeholder="Buscar por nombre, SKU o categoría..." 
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#e6b010]/20"
-          />
-        </div>
+      <div className="relative mb-6">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Buscar por nombre, SKU o categoría..."
+          value={buscar}
+          onChange={(e) => setBuscar(e.target.value)}
+          className="w-full bg-white border border-gray-300 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#e6b010] outline-none shadow-sm"
+        />
+      </div>
 
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-500">
-            <tr>
-              <th className="p-3">Producto</th>
-              <th className="p-3">SKU</th>
-              <th className="p-3">Categoría</th>
-              <th className="p-3">Stock</th>
-              <th className="p-3">Estado</th>
-              <th className="p-3">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 text-sm">
-            {cargando ? (
-              <tr><td colSpan={6} className="p-6 text-center text-gray-400">Cargando inventario...</td></tr>
-            ) : productos.map((p) => (
-              <tr key={p.id} className="hover:bg-gray-50">
-                <td className="p-3 font-medium">{p.nombre}</td>
-                <td className="p-3 text-gray-500">{p.sku}</td>
-                <td className="p-3 text-gray-500">{p.categoria}</td>
-                <td className="p-3 font-semibold">{p.stock}</td>
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded text-[10px] font-bold ${p.estado === 'Crítico' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                    {p.estado}
-                  </span>
-                </td>
-                <td className="p-3 flex gap-2">
-                  <button className="p-1 hover:text-[#e6b010]"><Edit className="w-4 h-4" /></button>
-                  <button className="p-1 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
-                </td>
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[1100px]">
+            <thead>
+              <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-200">
+                <th className="p-5 pl-6">Producto / SKU</th>
+                <th className="p-5">Categoría</th>
+                <th className="p-5">Proveedor</th>
+                <th className="p-5 text-right">Precio Venta</th>
+                <th className="p-5 text-center">Stock</th>
+                <th className="p-5 text-center">Estado</th>
+                <th className="p-5 text-center">Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-sm">
+              {cargando ? (
+                <tr><td colSpan={7} className="p-12 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#e6b010]" /> Cargando inventario...</td></tr>
+              ) : productosFiltrados.length === 0 ? (
+                <tr><td colSpan={7} className="p-12 text-center text-gray-500">No se encontraron productos.</td></tr>
+              ) : (
+                productosFiltrados.map((p) => (
+                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-4 pl-6">
+                      <p className="font-semibold text-gray-900">{p.nombre}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">SKU: {p.sku}</p>
+                    </td>
+                    <td className="p-4 text-gray-700">{p.categoria?.nombre || '---'}</td>
+                    <td className="p-4 text-gray-700">{p.proveedor?.nombre || '---'}</td>
+                    <td className="p-4 text-right font-semibold text-gray-900">S/ {Number(p.precioVenta).toFixed(2)}</td>
+                    <td className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className={`font-bold ${p.stock <= p.stockMinimo ? 'text-red-600' : 'text-gray-900'}`}>{p.stock}</span>
+                        {p.stock <= p.stockMinimo && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
+                      </div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${p.estado === 'Activo' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                        {p.estado}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button onClick={() => handleOpenModal(p)} className="p-2 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-lg transition-all"><Edit2 className="w-4 h-4" /></button>
+                        <button onClick={() => handleEliminar(p)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50">
+              <h2 className="text-lg font-bold text-gray-900">{productoEditando ? 'Editar Producto' : 'Nuevo Producto'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-all"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nombre del Producto *</label>
+                  <input required value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">SKU / Código *</label>
+                  <input required value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Categoría *</label>
+                  <select required value={formData.categoriaId} onChange={e => setFormData({...formData, categoriaId: e.target.value})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] outline-none">
+                    <option value="">Selecciona...</option>
+                    {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Precio Compra (S/)</label>
+                  <input type="number" step="0.01" value={formData.precioCompra} onChange={e => setFormData({...formData, precioCompra: parseFloat(e.target.value)})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Precio Venta (S/) *</label>
+                  <input required type="number" step="0.01" value={formData.precioVenta} onChange={e => setFormData({...formData, precioVenta: parseFloat(e.target.value)})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Stock Actual</label>
+                  <input type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: parseInt(e.target.value)})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Stock Mínimo (Alerta)</label>
+                  <input type="number" value={formData.stockMinimo} onChange={e => setFormData({...formData, stockMinimo: parseInt(e.target.value)})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] outline-none" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Proveedor</label>
+                  <select value={formData.proveedorId} onChange={e => setFormData({...formData, proveedorId: e.target.value})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] outline-none">
+                    <option value="">Ninguno</option>
+                    {proveedores.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Estado</label>
+                  <select value={formData.estado} onChange={e => setFormData({...formData, estado: e.target.value})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] outline-none">
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </div>
+              </div>
+              <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition-all">Cancelar</button>
+                <button type="submit" disabled={guardando} className="flex items-center gap-2 px-6 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white font-bold text-sm rounded-xl shadow-md disabled:opacity-70 transition-all">
+                  {guardando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

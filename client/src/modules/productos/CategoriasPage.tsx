@@ -1,116 +1,101 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Search, Plus, RefreshCw, Edit2, Trash2, Tag, Loader2 } from 'lucide-react';
-import { obtenerCategorias, eliminarCategoria } from '../../services/categorias.service';
+import { useState, useEffect, useMemo } from 'react';
+import { Search, Plus, RefreshCw, Edit2, Trash2, FolderTree, Loader2, X, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
-import { CategoriaModal } from './CategoriaModal'; 
-import { Categoria } from '../../types/categoria';
+import { obtenerCategorias, crearCategoria, actualizarCategoria, eliminarCategoria } from '../../services/categorias.service';
 
 export default function CategoriasPage() {
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categorias, setCategorias] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
   const [buscar, setBuscar] = useState('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(null);
+  const [categoriaEditando, setCategoriaEditando] = useState<any | null>(null);
+  const [formData, setFormData] = useState({ nombre: '', descripcion: '', estado: true });
+  const [guardando, setGuardando] = useState(false);
 
   const cargarDatos = async () => {
     setCargando(true);
     try {
       const data = await obtenerCategorias();
       setCategorias(data);
-    } catch (error) {
-      console.error(error);
-      toast.error('Error al cargar las categorías');
+    } catch (err) {
+      toast.error('Error al cargar categorías');
     } finally {
       setCargando(false);
     }
   };
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
+  useEffect(() => { cargarDatos(); }, []);
 
-  const handleEliminar = (categoria: Categoria) => {
-    if (categoria._count?.productos && categoria._count.productos > 0) {
-      toast.error('No puedes eliminar una categoría con productos asignados. Desactívala en su lugar.');
-      return;
+  const handleOpenModal = (categoria?: any) => {
+    if (categoria) {
+      setCategoriaEditando(categoria);
+      setFormData({ nombre: categoria.nombre, descripcion: categoria.descripcion || '', estado: categoria.estado });
+    } else {
+      setCategoriaEditando(null);
+      setFormData({ nombre: '', descripcion: '', estado: true });
     }
+    setIsModalOpen(true);
+  };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuardando(true);
+    try {
+      if (categoriaEditando) {
+        await actualizarCategoria(categoriaEditando.id, formData);
+        toast.success('Categoría actualizada');
+      } else {
+        await crearCategoria(formData);
+        toast.success('Categoría creada');
+      }
+      setIsModalOpen(false);
+      cargarDatos();
+    } catch (err: any) {
+      toast.error(err.message || 'Error al guardar');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const handleEliminar = (categoria: any) => {
     Swal.fire({
-      padding: 0,
-      showCloseButton: false,
-      buttonsStyling: false,
+      title: '¿Eliminar categoría?',
+      text: `¿Estás seguro de eliminar "${categoria.nombre}"?`,
+      icon: 'warning',
       background: '#ffffff',
-      width: 480,
-      customClass: {
-        popup: 'rounded-2xl overflow-hidden shadow-2xl border border-gray-200 p-0',
-        actions: 'w-full m-0 p-5 bg-white flex justify-end gap-3',
-        confirmButton: 'px-5 py-2.5 bg-[#dc2626] hover:bg-[#b91c1c] text-white rounded-xl font-bold transition-all shadow-sm',
-        cancelButton: 'px-5 py-2.5 text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl font-bold transition-all'
-      },
-      html: `
-        <div class="flex flex-col text-left">
-          <div class="bg-[#fef2f2] px-6 py-4 flex items-center justify-between border-b border-red-100">
-            <div class="flex items-center gap-2.5 text-[#dc2626]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
-              </svg>
-              <h2 class="text-[17px] font-bold m-0 p-0 tracking-tight">Eliminar Categoría</h2>
-            </div>
-            <button type="button" onclick="Swal.close()" class="text-gray-400 hover:text-gray-700 transition-colors focus:outline-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
-          </div>
-          <div class="bg-white px-6 pt-6 pb-2">
-            <p class="text-gray-600 text-[15px] m-0 leading-relaxed">
-              ¿Estás seguro de que deseas eliminar permanentemente la categoría <strong class="text-gray-900 font-bold">${categoria.nombre}</strong>?
-            </p>
-            <div class="mt-5 p-4 bg-gray-50 border border-gray-200 rounded-xl text-[13.5px] text-gray-500 leading-relaxed shadow-sm">
-              Esta acción no se puede deshacer.
-            </div>
-          </div>
-        </div>
-      `,
+      color: '#1f2937',
       showCancelButton: true,
-      reverseButtons: true,
-      confirmButtonText: `
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
-          </svg>
-          <span>Sí, Eliminar</span>
-        </div>
-      `,
-      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#e5e7eb',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: '<span style="color: black">Cancelar</span>',
+      customClass: { popup: 'border border-gray-200 rounded-2xl shadow-xl' }
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
           await eliminarCategoria(categoria.id);
-          await cargarDatos();
-          toast.success('Categoría eliminada correctamente.');
-        } catch (error: any) {
-          toast.error(error.message || 'No se pudo eliminar la categoría.');
+          toast.success('Categoría eliminada');
+          cargarDatos();
+        } catch (err: any) {
+          Swal.fire({ title: 'Error', text: err.message || 'No se pudo eliminar', icon: 'error', background: '#ffffff', color: '#1f2937' });
         }
       }
     });
   };
 
   const categoriasFiltradas = useMemo(() => {
-    const term = buscar.trim().toLowerCase();
-    if (!term) return categorias;
-    return categorias.filter((c) =>
-      c.nombre.toLowerCase().includes(term) ||
-      c.descripcion?.toLowerCase().includes(term)
-    );
+    return categorias.filter(c => c.nombre.toLowerCase().includes(buscar.toLowerCase()));
   }, [categorias, buscar]);
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto text-gray-900">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100">
-            <Tag className="w-6 h-6 text-[#e6b010]" />
+            <FolderTree className="w-6 h-6 text-[#e6b010]" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-wide">Categorías</h1>
@@ -118,35 +103,34 @@ export default function CategoriasPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={cargarDatos} className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition-all border border-gray-200">
+          <button onClick={cargarDatos} className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-500 transition-all border border-gray-200">
             <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin' : ''}`} />
           </button>
-          <button 
-            onClick={() => { setCategoriaEditando(null); setIsModalOpen(true); }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white font-bold rounded-xl text-sm transition-all shadow-md"
-          >
+          <button onClick={() => handleOpenModal()} className="flex items-center gap-2 px-5 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white font-bold rounded-xl text-sm transition-all shadow-md">
             <Plus className="w-4 h-4" /> Nueva Categoría
           </button>
         </div>
       </div>
 
+      {/* Buscador */}
       <div className="relative mb-6">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
-          placeholder="Buscar categoría por nombre o descripción..."
+          placeholder="Buscar categoría..."
           value={buscar}
           onChange={(e) => setBuscar(e.target.value)}
-          className="w-full bg-white border border-gray-300 rounded-xl py-3 pl-11 pr-4 text-sm text-gray-900 focus:border-[#e6b010] focus:ring-1 focus:ring-[#e6b010] outline-none transition-all placeholder-gray-400 shadow-sm"
+          className="w-full bg-white border border-gray-300 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-[#e6b010] focus:ring-1 focus:ring-[#e6b010] outline-none shadow-sm"
         />
       </div>
 
+      {/* Tabla */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-200">
-                <th className="p-5 pl-6">Nombre de la Categoría</th>
+                <th className="p-5 pl-6">Nombre</th>
                 <th className="p-5">Descripción</th>
                 <th className="p-5 text-center">Productos Asociados</th>
                 <th className="p-5 text-center">Estado</th>
@@ -155,46 +139,26 @@ export default function CategoriasPage() {
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
               {cargando ? (
-                <tr>
-                  <td colSpan={5} className="p-12 text-center text-gray-500">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#e6b010]" /> Cargando categorías...
-                  </td>
-                </tr>
+                <tr><td colSpan={5} className="p-12 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#e6b010]" /> Cargando...</td></tr>
               ) : categoriasFiltradas.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-12 text-center text-gray-500">
-                    No se encontraron categorías registradas.
-                  </td>
-                </tr>
+                <tr><td colSpan={5} className="p-12 text-center text-gray-500">No hay categorías registradas.</td></tr>
               ) : (
                 categoriasFiltradas.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50 transition-colors group">
+                  <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                     <td className="p-4 pl-6 font-semibold text-gray-900">{c.nombre}</td>
                     <td className="p-4 text-gray-600">{c.descripcion || '---'}</td>
                     <td className="p-4 text-center">
-                      <span className="inline-flex px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full font-bold text-xs">
-                        {c._count?.productos ?? 0} ítems
-                      </span>
+                      <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">{c._count?.productos || 0}</span>
                     </td>
                     <td className="p-4 text-center">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${c.estado ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${c.estado ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
                         {c.estado ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-center gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => { setCategoriaEditando(c); setIsModalOpen(true); }}
-                          className="p-2 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-lg transition-all" title="Editar"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleEliminar(c)}
-                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                    <td className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button onClick={() => handleOpenModal(c)} className="p-2 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-lg transition-all"><Edit2 className="w-4 h-4" /></button>
+                        <button onClick={() => handleEliminar(c)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -205,12 +169,37 @@ export default function CategoriasPage() {
         </div>
       </div>
 
-      <CategoriaModal 
-        isOpen={isModalOpen} 
-        onClose={() => { setIsModalOpen(false); setCategoriaEditando(null); }} 
-        onSuccess={cargarDatos}
-        categoriaAEditar={categoriaEditando}
-      />
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50">
+              <h2 className="text-lg font-bold text-gray-900">{categoriaEditando ? 'Editar Categoría' : 'Nueva Categoría'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-all"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nombre *</label>
+                <input required value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] focus:ring-1 focus:ring-[#e6b010] outline-none placeholder-gray-400" placeholder="Ej. Suplementos" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Descripción</label>
+                <textarea rows={3} value={formData.descripcion} onChange={e => setFormData({...formData, descripcion: e.target.value})} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-[#e6b010] focus:ring-1 focus:ring-[#e6b010] outline-none resize-none placeholder-gray-400" placeholder="Detalles opcionales..." />
+              </div>
+              <div className="flex items-center gap-3">
+                <input type="checkbox" id="estadoCat" checked={formData.estado} onChange={e => setFormData({...formData, estado: e.target.checked})} className="w-4 h-4 text-[#e6b010] rounded border-gray-300 focus:ring-[#e6b010] cursor-pointer" />
+                <label htmlFor="estadoCat" className="text-sm font-medium text-gray-700 cursor-pointer">Categoría Activa</label>
+              </div>
+              <div className="pt-4 flex justify-end gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition-all">Cancelar</button>
+                <button type="submit" disabled={guardando} className="flex items-center gap-2 px-6 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white font-bold text-sm rounded-xl shadow-md disabled:opacity-70 transition-all">
+                  {guardando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
