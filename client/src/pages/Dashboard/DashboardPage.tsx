@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import {   Users, CreditCard, Activity, TrendingUp,   ArrowUpRight, ArrowDownRight, Clock, ShieldCheck,   Package, AlertTriangle, PackageOpen } from 'lucide-react';
+import { Users, Activity, TrendingUp, ArrowUpRight, Clock, ShieldCheck, Package, AlertTriangle, PackageOpen } from 'lucide-react';
 import {   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,   AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { obtenerUsuarios } from '../../services/usuarios.service';
 import { Usuario } from '../../types/usuario';
