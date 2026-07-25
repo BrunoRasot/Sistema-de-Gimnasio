@@ -7,57 +7,57 @@ datasource db {
 }
 
 model Usuario {
-  id              Int       @id @default(autoincrement())
-  foto            String?
-  nombres         String    @default("")
-  apellidos       String    @default("")
-  dni             String    @unique
-  fechaNacimiento DateTime?
-  sexo            String?
-  direccion       String?
-  telefono        String?
-  email           String    @unique
-  cargo           String    @default("Recepcionista")
-  turno           String?
-  fechaIngreso    DateTime  @default(now())
-  estadoLaboral   String    @default("Activo")
-  nombreUsuario   String    @unique
-  password        String
-  rol             String    @default("USER")
-  estadoCuenta    String    @default("Activa")
-  ultimoAcceso    DateTime?
-  creadoPor       Int?
-  actualizadoPor  Int?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  activo          Boolean   @default(true)
-  codigoOtp       String?
-  expiracionOtp   DateTime?
-  intentosFallidos Int       @default(0)
+  id               Int         @id @default(autoincrement())
+  foto             String?
+  nombres          String      @default("")
+  apellidos        String      @default("")
+  dni              String      @unique
+  fechaNacimiento  DateTime?
+  sexo             String?
+  direccion        String?
+  telefono         String?
+  email            String      @unique
+  cargo            String      @default("Recepcionista")
+  turno            String?
+  fechaIngreso     DateTime    @default(now())
+  estadoLaboral    String      @default("Activo")
+  nombreUsuario    String      @unique
+  password         String
+  rol              String      @default("USER")
+  estadoCuenta     String      @default("Activa")
+  ultimoAcceso     DateTime?
+  creadoPor        Int?
+  actualizadoPor   Int?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  activo           Boolean     @default(true)
+  codigoOtp        String?
+  expiracionOtp    DateTime?
+  intentosFallidos Int         @default(0)
   bloqueoHasta     DateTime?
   auditorias       Auditoria[]
 }
 
 model Permiso {
-  id        Int      @id @default(autoincrement())
-  cargo     String   
-  modulo    String   
-  ver       Boolean  @default(false)
-  crear     Boolean  @default(false)
-  editar    Boolean  @default(false)
-  eliminar  Boolean  @default(false)
+  id       Int     @id @default(autoincrement())
+  cargo    String   
+  modulo   String   
+  ver      Boolean @default(false)
+  crear    Boolean @default(false)
+  editar   Boolean @default(false)
+  eliminar Boolean @default(false)
   @@unique([cargo, modulo]) 
 }
 
 model Plan {
-  id           Int      @id @default(autoincrement())
-  nombre       String   @unique
+  id           Int         @id @default(autoincrement())
+  nombre       String      @unique
   descripcion  String?  
-  precio       Decimal  @db.Decimal(10, 2)
+  precio       Decimal     @db.Decimal(10, 2)
   duracionDias Int      
-  estado       String   @default("Activo")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  estado       String      @default("Activo")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
   membresias   Membresia[]
 }
 
@@ -74,31 +74,32 @@ model Miembro {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   membresias      Membresia[]
+  asistencias     Asistencia[] 
 }
 
 model Membresia {
-  id              Int       @id @default(autoincrement())
-  miembroId       Int
-  planId          Int
-  fechaInicio     DateTime
-  fechaFin        DateTime
-  estado          String    @default("Activa")
-  montoPagado     Decimal   @db.Decimal(10, 2)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  miembro         Miembro   @relation(fields: [miembroId], references: [id])
-  plan            Plan      @relation(fields: [planId], references: [id])
+  id            Int      @id @default(autoincrement())
+  miembroId     Int
+  planId        Int
+  fechaInicio   DateTime
+  fechaFin      DateTime
+  estado        String   @default("Activa")
+  montoPagado   Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  miembro       Miembro  @relation(fields: [miembroId], references: [id])
+  plan          Plan     @relation(fields: [planId], references: [id])
 }
 
 model Auditoria {
-  id          Int      @id @default(autoincrement())
-  usuarioId   Int?     
-  accion      String   
-  modulo      String   
-  detalles    String?  
-  ip          String? 
-  createdAt   DateTime @default(now())
-  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+  id        Int      @id @default(autoincrement())
+  usuarioId Int?      
+  accion    String   
+  modulo    String   
+  detalles  String?  
+  ip        String? 
+  createdAt DateTime @default(now())
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
 }
 
 model Categoria {
@@ -112,35 +113,35 @@ model Categoria {
 }
 
 model Proveedor {
-  id          Int        @id @default(autoincrement())
-  nombre      String
-  contacto    String?
-  telefono    String?
-  email       String?
-  direccion   String?
-  estado      Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  productos   Producto[]
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  contacto  String?
+  telefono  String?
+  email     String?
+  direccion String?
+  estado    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  productos Producto[]
 }
 
 model Producto {
-  id           Int        @id @default(autoincrement())
+  id           Int            @id @default(autoincrement())
   nombre       String
-  sku          String     @unique
+  sku          String         @unique
   descripcion  String?
-  precioCompra Decimal    @db.Decimal(10, 2)
-  precioVenta  Decimal    @db.Decimal(10, 2)
-  stock        Int        @default(0)
-  stockMinimo  Int        @default(5)
+  precioCompra Decimal        @db.Decimal(10, 2)
+  precioVenta  Decimal        @db.Decimal(10, 2)
+  stock        Int            @default(0)
+  stockMinimo  Int            @default(5)
   categoriaId  Int
   proveedorId  Int?
-  estado       String     @default("Activo")
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  detalles DetalleVenta[]
-  categoria    Categoria  @relation(fields: [categoriaId], references: [id])
-  proveedor    Proveedor? @relation(fields: [proveedorId], references: [id])
+  estado       String         @default("Activo")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  detalles     DetalleVenta[]
+  categoria    Categoria      @relation(fields: [categoriaId], references: [id])
+  proveedor    Proveedor?     @relation(fields: [proveedorId], references: [id])
 }
 
 model Venta {
@@ -159,22 +160,22 @@ model Venta {
 }
 
 model DetalleVenta {
-  id          Int      @id @default(autoincrement())
-  ventaId     Int
-  venta       Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
-  productoId  Int
-  producto    Producto @relation(fields: [productoId], references: [id])
-  cantidad    Int
-  precioUnit  Decimal  @db.Decimal(10, 2)
-  subtotal    Decimal  @db.Decimal(10, 2)
+  id         Int      @id @default(autoincrement())
+  ventaId    Int
+  venta      Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  productoId Int
+  producto   Producto @relation(fields: [productoId], references: [id])
+  cantidad   Int
+  precioUnit Decimal  @db.Decimal(10, 2)
+  subtotal   Decimal  @db.Decimal(10, 2)
 }
 
 model Devolucion {
-  id         Int      @id @default(autoincrement())
-  ventaId    Int
-  venta      Venta    @relation(fields: [ventaId], references: [id])
-  motivo     String
-  createdAt  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  ventaId   Int
+  venta     Venta    @relation(fields: [ventaId], references: [id])
+  motivo    String
+  createdAt DateTime @default(now())
 }
 
 model MetodoPago {
@@ -187,14 +188,23 @@ model MetodoPago {
 }
 
 model Pago {
-  id          Int        @id @default(autoincrement())
-  codigo      String     @unique
-  cliente     String?
-  concepto    String
-  monto       Decimal    @db.Decimal(10, 2)
-  metodoId    Int
-  estado      String     @default("Completado") // Completado, Anulado
-  fecha       DateTime   @default(now())
+  id       Int        @id @default(autoincrement())
+  codigo   String     @unique
+  cliente  String?
+  concepto String
+  monto    Decimal    @db.Decimal(10, 2)
+  metodoId Int
+  estado   String     @default("Completado") 
+  fecha    DateTime   @default(now())
+  metodo   MetodoPago @relation(fields: [metodoId], references: [id])
+}
+
+model Asistencia {
+  id        Int      @id @default(autoincrement())
+  fechaHora DateTime @default(now())
   
-  metodo      MetodoPago @relation(fields: [metodoId], references: [id])
+  miembroId Int
+  miembro   Miembro  @relation(fields: [miembroId], references: [id])
+
+  @@map("asistencias")
 }

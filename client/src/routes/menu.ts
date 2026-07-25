@@ -98,7 +98,6 @@ export const menuGroups: MenuGroup[] = [
         subItems: [
           { path: '/asistencias/registro', label: 'Registro de Asistencia' },
           { path: '/asistencias/resumen', label: 'Resumen de Asistencias' },
-          { path: '/asistencias/inasistencias', label: 'Inasistencias' },
         ]
       },
     ]

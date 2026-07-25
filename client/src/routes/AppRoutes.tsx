@@ -31,7 +31,6 @@ import MetodosPagoPage from '../modules/pagos/MetodosPagoPage';
 
 import RegistroAsistenciaPage from '../modules/asistencias/RegistroAsistenciaPage';
 import ResumenAsistenciasPage from '../modules/asistencias/ResumenAsistenciasPage';
-import InasistenciasPage from '../modules/asistencias/InasistenciasPage';
 
 import ReportesVentasPage from '../modules/reportes/ReportesVentasPage';
 import ReportesMembresiasPage from '../modules/reportes/ReportesMembresiasPage';
@@ -92,7 +91,6 @@ const AppRoutes = () => {
           <Route path="/asistencias" element={<Navigate to="/asistencias/registro" replace />} />
           <Route path="/asistencias/registro" element={<RegistroAsistenciaPage />} />
           <Route path="/asistencias/resumen" element={<ResumenAsistenciasPage />} />
-          <Route path="/asistencias/inasistencias" element={<InasistenciasPage />} />
 
           {/* Submódulos Reportes */}
           <Route path="/reportes" element={<Navigate to="/reportes/ventas" replace />} />
