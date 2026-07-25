@@ -30,7 +30,6 @@ export default function ReportesAsistenciasPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4">
-      {/* 1. Header Card */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <div className="p-2.5 bg-yellow-50 border border-yellow-100 rounded-lg text-yellow-600">
@@ -41,15 +40,13 @@ export default function ReportesAsistenciasPage() {
             <p className="text-xs text-gray-500 mt-0.5">Análisis de los ingresos registrados durante el día.</p>
           </div>
         </div>
-        <button 
-          onClick={cargarDatos} 
+        <button
+          onClick={cargarDatos}
           className="p-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin' : ''}`} />
         </button>
       </div>
-
-      {/* 2. Métricas */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-5 flex items-center gap-4 shadow-sm">
           <div className="p-3 rounded-lg bg-gray-50 border border-gray-100"><Users className="w-5 h-5 text-gray-900" /></div>
@@ -66,8 +63,6 @@ export default function ReportesAsistenciasPage() {
           </div>
         </div>
       </div>
-
-      {/* 3. Gráfico */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
         <h3 className="text-sm font-bold text-gray-900 mb-6">Asistencias por Hora</h3>
         {cargando ? (
@@ -81,7 +76,7 @@ export default function ReportesAsistenciasPage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                 <XAxis dataKey="hora" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
-                <Tooltip 
+                <Tooltip
                   cursor={{ fill: '#f9fafb' }}
                   contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}
                 />

@@ -31,7 +31,6 @@ export default function ReportesVentasPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4">
-      {/* 1. Header Card */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <div className="p-2.5 bg-blue-50 border border-blue-100 rounded-lg text-blue-600">
@@ -42,15 +41,13 @@ export default function ReportesVentasPage() {
             <p className="text-xs text-gray-500 mt-0.5">Análisis de ingresos y transacciones monetarias.</p>
           </div>
         </div>
-        <button 
-          onClick={cargarDatos} 
+        <button
+          onClick={cargarDatos}
           className="p-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin' : ''}`} />
         </button>
       </div>
-
-      {/* 2. Métricas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-5 flex items-center gap-4 shadow-sm">
           <div className="p-3 rounded-lg bg-green-50 border border-green-100"><TrendingUp className="w-5 h-5 text-green-600" /></div>
@@ -74,8 +71,6 @@ export default function ReportesVentasPage() {
           </div>
         </div>
       </div>
-
-      {/* 3. Gráfico */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
         <h3 className="text-sm font-bold text-gray-900 mb-6">Evolución de Ingresos</h3>
         {cargando ? (
@@ -87,7 +82,7 @@ export default function ReportesVentasPage() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                 <XAxis dataKey="fecha" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} dx={-10} tickFormatter={(val) => `S/${val}`} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}
                   labelStyle={{ fontWeight: 'bold', color: '#111827', marginBottom: '4px' }}
                 />

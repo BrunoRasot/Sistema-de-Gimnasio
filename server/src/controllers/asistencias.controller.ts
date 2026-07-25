@@ -29,7 +29,7 @@ export const buscarMiembroPorDni = async (req: Request, res: Response): Promise<
       where: { dni: dni as string },
       include: {
         membresias: {
-          where: { estado: 'Activa' }, // Traemos solo si tiene membresía activa
+          where: { estado: 'Activa' },
           orderBy: { fechaFin: 'desc' },
           take: 1,
           include: { plan: true }
