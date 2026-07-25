@@ -27,59 +27,65 @@ export default function StockAlertasPage() {
   }, [productos]);
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto text-gray-900">
-      {/* Header en diseño claro y ancho completo */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 bg-white p-6 rounded-2xl border border-red-200 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-red-50 rounded-xl border border-red-100">
-            <AlertTriangle className="w-6 h-6 text-red-500" />
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
+      
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="p-2.5 bg-red-50 rounded-lg border border-red-100 text-red-500">
+            <AlertTriangle className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-wide">Alertas de Stock</h1>
-            <p className="text-sm text-gray-500 mt-1">Productos con stock crítico o bajo el mínimo recomendado.</p>
+            <h1 className="text-base font-bold text-gray-900 tracking-wide">Alertas de Stock</h1>
+            <p className="text-[11px] text-gray-500 mt-0.5">Productos con stock crítico o bajo el mínimo recomendado.</p>
           </div>
         </div>
-        <button onClick={cargarDatos} className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-500 transition-all border border-gray-200">
-          <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin text-red-500' : ''}`} />
-        </button>
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button onClick={cargarDatos} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-500 transition-all border border-gray-200" title="Actualizar">
+            <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin text-red-500' : ''}`} />
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="overflow-x-auto custom-scrollbar flex-1">
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
-              <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-200">
-                <th className="p-5 pl-6">Producto / SKU</th>
-                <th className="p-5">Categoría</th>
-                <th className="p-5 text-center">Stock Actual</th>
-                <th className="p-5 text-center">Stock Mínimo</th>
-                <th className="p-5 text-center">Estado</th>
+              <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                <th className="py-3 px-4 pl-5">Producto / SKU</th>
+                <th className="py-3 px-4">Categoría</th>
+                <th className="py-3 px-4 text-center">Stock Actual</th>
+                <th className="py-3 px-4 text-center">Stock Mínimo</th>
+                <th className="py-3 px-4 text-center pr-5">Estado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="divide-y divide-gray-100 text-xs">
               {cargando ? (
-                <tr><td colSpan={5} className="p-12 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-red-500" /> Revisando inventario...</td></tr>
+                <tr>
+                  <td colSpan={5} className="py-10 text-center text-gray-500">
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-red-500" /> Revisando inventario...
+                  </td>
+                </tr>
               ) : alertas.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center text-gray-500">
-                    <PackageOpen className="w-10 h-10 mx-auto mb-3 text-green-500" />
+                  <td colSpan={5} className="py-12 text-center text-gray-500">
+                    <PackageOpen className="w-8 h-8 mx-auto mb-2 text-green-500" />
                     No hay alertas. Todos los productos tienen buen stock.
                   </td>
                 </tr>
               ) : (
                 alertas.map((p) => (
-                  <tr key={p.id} className="hover:bg-red-50/40 transition-colors">
-                    <td className="p-4 pl-6">
-                      <p className="font-semibold text-gray-900">{p.nombre}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">SKU: {p.sku}</p>
+                  <tr key={p.id} className="hover:bg-red-50/30 transition-colors">
+                    <td className="py-3 px-4 pl-5">
+                      <p className="font-bold text-gray-900">{p.nombre}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">SKU: {p.sku}</p>
                     </td>
-                    <td className="p-4 text-gray-700">{p.categoria?.nombre || '---'}</td>
-                    <td className="p-4 text-center">
-                      <span className="font-bold text-red-600 text-lg">{p.stock}</span>
+                    <td className="py-3 px-4 text-gray-700">{p.categoria?.nombre || '---'}</td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="font-bold text-red-600 text-sm">{p.stock}</span>
                     </td>
-                    <td className="p-4 text-center text-gray-600">{p.stockMinimo}</td>
-                    <td className="p-4 text-center">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${p.stock === 0 ? 'bg-red-100 text-red-700 border-red-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>
+                    <td className="py-3 px-4 text-center text-gray-600">{p.stockMinimo}</td>
+                    <td className="py-3 px-4 text-center pr-5">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${p.stock === 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
                         {p.stock === 0 ? 'Agotado' : 'Crítico'}
                       </span>
                     </td>

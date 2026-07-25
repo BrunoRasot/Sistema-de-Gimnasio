@@ -1,0 +1,169 @@
+import { Request, Response } from 'express';
+import { prisma } from '../database/prisma.js';
+
+export const obtenerVentas = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const ventas = await prisma.venta.findMany({
+      include: {
+        detalles: {
+          include: { producto: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return res.json(ventas);
+  } catch (error: any) {
+    return res.status(500).json({ message: 'Error al obtener el historial de ventas', error: error.message });
+  }
+};
+
+export const crearVenta = async (req: Request, res: Response): Promise<any> => {
+  const { cliente, metodoPago, numeroOperacion, montoRecibido, vuelto, items } = req.body;
+
+  if (!items || items.length === 0) {
+    return res.status(400).json({ message: 'La venta debe contener al menos un producto' });
+  }
+
+  try {
+    const ultimaVenta = await prisma.venta.findFirst({ orderBy: { id: 'desc' } });
+    const numero = ultimaVenta ? ultimaVenta.id + 1 : 1;
+    const codigo = `VNT-${String(numero).padStart(4, '0')}`;
+
+    let totalVenta = 0;
+    const detallesData = items.map((item: any) => {
+      const subtotal = Number(item.cantidad) * Number(item.precioUnit);
+      totalVenta += subtotal;
+      return {
+        productoId: Number(item.productoId),
+        cantidad: Number(item.cantidad),
+        precioUnit: Number(item.precioUnit),
+        subtotal: Number(subtotal)
+      };
+    });
+
+    const nuevaVenta = await prisma.$transaction(async (tx) => {
+      for (const item of items) {
+        const prod = await tx.producto.findUnique({ where: { id: Number(item.productoId) } });
+        if (!prod || prod.stock < Number(item.cantidad)) {
+          throw new Error(`Stock insuficiente para el producto ID: ${item.productoId}`);
+        }
+      }
+
+      const venta = await tx.venta.create({
+        data: {
+          codigo,
+          cliente: cliente || 'Público General',
+          total: totalVenta,
+          metodoPago: metodoPago || 'Efectivo',
+          numeroOperacion: numeroOperacion || null,
+          montoRecibido: montoRecibido ? Number(montoRecibido) : null,
+          vuelto: vuelto !== undefined ? Number(vuelto) : null,
+          detalles: {
+            create: detallesData
+          }
+        },
+        include: { detalles: true }
+      });
+
+      for (const item of items) {
+        await tx.producto.update({
+          where: { id: Number(item.productoId) },
+          data: { stock: { decrement: Number(item.cantidad) } }
+        });
+      }
+
+      return venta;
+    });
+
+    return res.status(201).json({ message: 'Venta registrada con éxito', venta: nuevaVenta });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message || 'Error al procesar la venta' });
+  }
+};
+
+export const obtenerComprobantePorId = async (req: Request, res: Response): Promise<any> => {
+  const { id } = req.params;
+  try {
+    const comprobante = await prisma.venta.findUnique({
+      where: { id: Number(id) },
+      include: {
+        detalles: {
+          include: { producto: true }
+        }
+      }
+    });
+    if (!comprobante) {
+      return res.status(404).json({ message: 'Comprobante no encontrado' });
+    }
+    return res.json(comprobante);
+  } catch (error: any) {
+    return res.status(500).json({ message: 'Error al obtener el comprobante', error: error.message });
+  }
+};
+
+export const obtenerDevoluciones = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const devoluciones = await prisma.devolucion.findMany({
+      include: {
+        venta: {
+          include: { detalles: { include: { producto: true } } }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return res.json(devoluciones);
+  } catch (error: any) {
+    return res.status(500).json({ message: 'Error al obtener devoluciones', error: error.message });
+  }
+};
+
+export const registrarDevolucion = async (req: Request, res: Response): Promise<any> => {
+  const { identificador, motivo } = req.body;
+
+  try {
+    const resultado = await prisma.$transaction(async (tx) => {
+      const venta = await tx.venta.findFirst({
+        where: {
+          OR: [
+            { numeroOperacion: identificador },
+            { codigo: identificador }
+          ]
+        },
+        include: { detalles: true }
+      });
+
+      if (!venta) {
+        throw new Error('No se encontró ninguna venta con ese número de operación o código.');
+      }
+
+      if (venta.estado === 'Anulado') {
+        throw new Error('Esta venta ya fue anulada anteriormente.');
+      }
+
+      const devolucion = await tx.devolucion.create({
+        data: {
+          ventaId: venta.id,
+          motivo: motivo || 'Devolución de productos'
+        }
+      });
+      for (const detalle of venta.detalles) {
+        await tx.producto.update({
+          where: { id: detalle.productoId },
+          data: {
+            stock: { increment: detalle.cantidad }
+          }
+        });
+      }
+      await tx.venta.update({
+        where: { id: venta.id },
+        data: { estado: 'Anulado' }
+      });
+
+      return devolucion;
+    });
+
+    return res.status(201).json({ message: 'Devolución procesada y stock restaurado', resultado });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message || 'Error al procesar devolución' });
+  }
+};

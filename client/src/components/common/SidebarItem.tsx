@@ -31,7 +31,6 @@ const SidebarItem = ({
 
   const isActive = location.pathname === path || (hasSubItems && subItems.some(sub => location.pathname === sub.path));
 
-  // Si no tiene subítem (como el Dashboard), actúa como enlace directo
   if (!hasSubItems) {
     return (
       <Link
@@ -49,7 +48,6 @@ const SidebarItem = ({
     );
   }
 
-  // Si tiene subítem, renderiza el botón desplegable con acordeón
   return (
     <div>
       <button
@@ -61,7 +59,7 @@ const SidebarItem = ({
         }`}
       >
         <div className="flex items-center gap-3">
-          {IconComponent && <IconComponent className="w-5 h-5 text-[#e6b010]" />}
+          {IconComponent && <IconComponent className="w-5 h-5 text-[#ffffff]" />}
           <span>{label}</span>
         </div>
         <ChevronDown

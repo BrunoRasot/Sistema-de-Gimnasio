@@ -23,7 +23,7 @@ export const buscarClienteDni = async (dni: string) => {
 export const asignarMembresia = async (data: any) => {
   const res = await fetch(`${API_URL}/miembros/asignar-membresia`, {
     method: 'POST',
-    headers: getHeaders(), // 👈 CORREGIDO
+    headers: getHeaders(),
     body: JSON.stringify(data)
   });
   if (!res.ok) {

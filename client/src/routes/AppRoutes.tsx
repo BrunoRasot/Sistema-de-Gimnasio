@@ -28,7 +28,6 @@ import ComprobantesVentasPage from '../modules/ventas/ComprobantesVentasPage';
 
 import RegistroPagosPage from '../modules/pagos/RegistroPagosPage';
 import MetodosPagoPage from '../modules/pagos/MetodosPagoPage';
-import ComprobantesPagosPage from '../modules/pagos/ComprobantesPagosPage';
 
 import RegistroAsistenciaPage from '../modules/asistencias/RegistroAsistenciaPage';
 import ResumenAsistenciasPage from '../modules/asistencias/ResumenAsistenciasPage';
@@ -88,7 +87,6 @@ const AppRoutes = () => {
           <Route path="/pagos" element={<Navigate to="/pagos/registro" replace />} />
           <Route path="/pagos/registro" element={<RegistroPagosPage />} />
           <Route path="/pagos/metodos" element={<MetodosPagoPage />} />
-          <Route path="/pagos/comprobantes" element={<ComprobantesPagosPage />} />
 
           {/* Submódulos Asistencias */}
           <Route path="/asistencias" element={<Navigate to="/asistencias/registro" replace />} />

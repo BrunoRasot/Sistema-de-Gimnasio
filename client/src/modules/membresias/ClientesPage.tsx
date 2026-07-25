@@ -45,7 +45,7 @@ export default function ClientesPage() {
   const handleInactivar = async (id: number, nombre: string) => {
     const confirmar = window.confirm(`¿Estás seguro de que deseas eliminar a ${nombre} del sistema? (Sus pagos históricos se mantendrán)`);
     if (!confirmar) return;
-    
+
     try {
       await inactivarCliente(id);
       cargarDatos();
@@ -67,69 +67,66 @@ export default function ClientesPage() {
   }, [clientes, buscar]);
 
   return (
-    <div className="p-4 md:p-6 max-w-[1600px] mx-auto text-gray-900">
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 shadow-sm">
-            <Users className="w-6 h-6 text-blue-600" />
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="p-2.5 bg-blue-50 rounded-lg border border-blue-100 text-blue-600">
+            <Users className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Directorio de Clientes</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Gestión general de personas registradas en el gimnasio.</p>
+            <h1 className="text-base font-bold text-gray-900 tracking-wide">Directorio de Clientes</h1>
+            <p className="text-[11px] text-gray-500 mt-0.5">Gestión general de personas registradas en el gimnasio.</p>
           </div>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-6 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white font-bold rounded-xl text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+          className="w-full sm:w-auto px-4 py-2 bg-[#141414] hover:bg-black text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm"
         >
-          <UserPlus className="w-4 h-4" /> Registrar Cliente
+          <UserPlus className="w-3.5 h-3.5" /> Registrar Cliente
         </button>
       </div>
 
-      {/* BUSCADOR Y ESTADÍSTICAS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
-          <div className="p-3 rounded-xl bg-blue-50 border border-blue-100"><Users className="w-5 h-5 text-blue-600" /></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3.5 shadow-sm">
+          <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-100"><Users className="w-4 h-4 text-blue-600" /></div>
           <div>
-            <p className="text-2xl font-bold text-gray-900 leading-none">{clientesFiltrados.length}</p>
-            <p className="text-xs text-gray-500 mt-1">Total Registrados</p>
+            <p className="text-xl font-bold text-gray-900 leading-none">{clientesFiltrados.length}</p>
+            <p className="text-[11px] text-gray-500 mt-1">Total Registrados</p>
           </div>
         </div>
-        <div className="md:col-span-2 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <div className="md:col-span-2 relative flex items-center">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             placeholder="Buscar por nombre, apellidos o DNI..."
             value={buscar}
             onChange={(e) => setBuscar(e.target.value)}
-            className="w-full h-full bg-white border border-gray-200 rounded-2xl py-3 pl-11 pr-4 text-sm text-gray-900 focus:border-[#e6b010] focus:ring-2 focus:ring-[#e6b010]/20 outline-none transition-all placeholder-gray-400 shadow-sm"
+            className="w-full h-full bg-white border border-gray-200 rounded-xl py-3 pl-10 pr-4 text-xs text-gray-900 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-all placeholder-gray-400 shadow-sm"
           />
         </div>
       </div>
 
-      {/* TABLA DE CLIENTES */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[400px] flex flex-col">
+        <div className="overflow-x-auto custom-scrollbar flex-1">
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
-              <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-200">
-                <th className="p-5 pl-6">Cliente</th>
-                <th className="p-5">Contacto</th>
-                <th className="p-5 text-center">Estado Comercial</th>
-                <th className="p-5 text-center">Acciones</th>
+              <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                <th className="py-3 px-4 pl-5">Cliente</th>
+                <th className="py-3 px-4">Contacto</th>
+                <th className="py-3 px-4 text-center">Estado Comercial</th>
+                <th className="py-3 px-4 text-center pr-5">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="divide-y divide-gray-100 text-xs">
               {cargando ? (
                 <tr>
-                  <td colSpan={4} className="p-12 text-center text-gray-500">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#e6b010]" /> Cargando directorio...
+                  <td colSpan={4} className="py-14 text-center text-gray-500">
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#e6b010]" /> Cargando directorio...
                   </td>
                 </tr>
               ) : clientesFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-12 text-center text-gray-500">
+                  <td colSpan={4} className="py-14 text-center text-gray-500">
                     No se encontraron clientes registrados.
                   </td>
                 </tr>
@@ -137,46 +134,46 @@ export default function ClientesPage() {
                 clientesFiltrados.map((c) => {
                   const tieneMembresia = c.membresias && c.membresias.length > 0;
                   return (
-                    <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-4 pl-6">
+                    <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="py-3 px-4 pl-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 font-bold text-gray-600 text-xs shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 font-bold text-gray-600 text-[10px] shrink-0">
                             {c.nombres.charAt(0)}{c.apellidos.charAt(0)}
                           </div>
                           <div>
                             <p className="font-bold text-gray-900">{c.nombres} {c.apellidos}</p>
-                            <p className="text-xs text-gray-500 font-medium">DNI: {c.dni}</p>
+                            <p className="text-[10px] text-gray-500 font-medium">DNI: {c.dni}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2 text-gray-700 mb-1">
-                          <Phone className="w-3 h-3 text-gray-400" /> 
-                          <span className="text-xs">{c.telefono || 'Sin teléfono'}</span>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1.5 text-gray-700 mb-0.5">
+                          <Phone className="w-3 h-3 text-gray-400" />
+                          <span className="text-[11px]">{c.telefono || 'Sin teléfono'}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-700">
+                        <div className="flex items-center gap-1.5 text-gray-700">
                           <Mail className="w-3 h-3 text-gray-400" />
-                          <span className="text-xs">{c.email || 'Sin correo'}</span>
+                          <span className="text-[11px]">{c.email || 'Sin correo'}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-center">
+                      <td className="py-3 px-4 text-center">
                         {tieneMembresia ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-green-50 text-green-600 border border-green-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-green-50 text-green-700 border border-green-200">
                             Con Plan Activo
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-gray-100 text-gray-600 border border-gray-200">
                             Solo Registro
                           </span>
                         )}
                       </td>
-                      <td className="p-4 text-center">
-                        <button 
+                      <td className="py-3 px-4 text-center pr-5">
+                        <button
                           onClick={() => handleInactivar(c.id, c.nombres)}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
                           title="Inactivar / Eliminar"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
                     </tr>
@@ -188,56 +185,58 @@ export default function ClientesPage() {
         </div>
       </div>
 
-      {/* MODAL PARA CREAR CLIENTE (SIN PLAN) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg bg-white border border-gray-200 rounded-xl shadow-xl flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
               <div>
-                <h2 className="text-xl font-extrabold text-gray-900">Registrar Persona</h2>
-                <p className="text-xs text-gray-500 mt-1">Añade a un cliente a la agenda del gimnasio.</p>
+                <h2 className="text-sm font-bold text-gray-900">Registrar Persona</h2>
+                <p className="text-[11px] text-gray-500">Añade a un cliente a la agenda del gimnasio.</p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-200 rounded-xl transition-all">
-                <X className="w-5 h-5" />
+              <button onClick={() => setIsModalOpen(false)} className="p-1 text-gray-400 hover:text-gray-700 rounded-lg transition-all">
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl flex gap-3 text-blue-800 text-xs mb-2">
-                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+
+            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+              <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex gap-2.5 text-blue-900 text-xs">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-blue-600" />
                 <p>Al registrar aquí, el cliente <b>no tendrá membresía activa</b>. Luego ve a "Miembros Activos" para asignarle un plan buscándolo por su DNI.</p>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Nombres *</label>
-                  <input required value={formData.nombres} onChange={(e) => setFormData({ ...formData, nombres: e.target.value })} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#e6b010] focus:ring-2 focus:ring-[#e6b010]/20" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nombres *</label>
+                  <input required value={formData.nombres} onChange={(e) => setFormData({ ...formData, nombres: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Apellidos *</label>
-                  <input required value={formData.apellidos} onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#e6b010] focus:ring-2 focus:ring-[#e6b010]/20" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Apellidos *</label>
+                  <input required value={formData.apellidos} onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">DNI *</label>
-                <input required maxLength={15} value={formData.dni} onChange={(e) => setFormData({ ...formData, dni: e.target.value })} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#e6b010] focus:ring-2 focus:ring-[#e6b010]/20" />
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">DNI *</label>
+                <input required maxLength={15} value={formData.dni} onChange={(e) => setFormData({ ...formData, dni: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Teléfono</label>
-                  <input value={formData.telefono} onChange={(e) => setFormData({ ...formData, telefono: e.target.value })} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#e6b010] focus:ring-2 focus:ring-[#e6b010]/20" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Teléfono</label>
+                  <input value={formData.telefono} onChange={(e) => setFormData({ ...formData, telefono: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Correo Electrónico</label>
-                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#e6b010] focus:ring-2 focus:ring-[#e6b010]/20" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Correo Electrónico</label>
+                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-all">Cancelar</button>
-                <button type="submit" disabled={guardando} className="flex items-center gap-2 px-6 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white font-bold text-sm rounded-xl shadow-md disabled:opacity-70 transition-all">
-                  {guardando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <div className="pt-3 flex justify-end gap-2 border-t border-gray-100 mt-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-all">Cancelar</button>
+
+                <button type="submit" disabled={guardando} className="flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-medium text-xs rounded-lg shadow-sm disabled:opacity-70 transition-all">
+                  {guardando && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <Save className="w-3.5 h-3.5" />
                   {guardando ? 'Guardando...' : 'Guardar Persona'}
                 </button>
               </div>

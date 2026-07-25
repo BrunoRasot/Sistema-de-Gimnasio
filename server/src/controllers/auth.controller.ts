@@ -35,7 +35,6 @@ const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
     subject: 'Tu código de seguridad',
     text: `Tu código de acceso es ${codigo}. Vence en ${otpMinutes} minutos.`,
     html: generarTemplateOTP(codigo),
-    // Se eliminó la sección de 'attachments' para evitar el error de rutas en Docker
   });
 };
 
@@ -90,7 +89,6 @@ export const login = async (req: Request, res: Response): Promise<any> => {
 
     const codigo = crypto.randomInt(100000, 1000000).toString();
     
-    // Imprimir el código en la consola del servidor de Docker para que lo puedas ver fácilmente
     console.log(`\n🔑 CÓDIGO OTP PARA ${usuario.email}: ${codigo}\n`);
     
     const expiracionOtp = new Date(Date.now() + otpMinutes * 60 * 1000);

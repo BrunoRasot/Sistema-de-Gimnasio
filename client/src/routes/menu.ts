@@ -89,7 +89,6 @@ export const menuGroups: MenuGroup[] = [
         subItems: [
           { path: '/pagos/registro', label: 'Registro de Pagos' },
           { path: '/pagos/metodos', label: 'Métodos de Pago' },
-          { path: '/pagos/comprobantes', label: 'Ver Comprobantes' },
         ]
       },
       { 

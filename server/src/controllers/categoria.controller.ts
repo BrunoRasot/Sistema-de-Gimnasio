@@ -21,7 +21,6 @@ export const crearCategoria = async (req: Request, res: Response): Promise<any> 
   try {
     const { nombre, descripcion, estado } = req.body;
     
-    // Verificar si ya existe
     const existe = await prisma.categoria.findUnique({ where: { nombre } });
     if (existe) return res.status(400).json({ mensaje: 'Ya existe una categoría con este nombre.' });
 

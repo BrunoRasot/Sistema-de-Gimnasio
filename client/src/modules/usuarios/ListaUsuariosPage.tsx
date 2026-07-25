@@ -17,16 +17,16 @@ const turnoIcono: Record<string, ReactElement> = {
 };
 
 const estadoLaboralEstilos: Record<string, string> = {
-  'Activo': 'bg-green-100 text-green-700 border-green-200',
-  'Vacaciones': 'bg-blue-100 text-blue-700 border-blue-200',
-  'Suspendido': 'bg-orange-100 text-orange-700 border-orange-200',
+  'Activo': 'bg-green-50 text-green-700 border-green-200',
+  'Vacaciones': 'bg-blue-50 text-blue-700 border-blue-200',
+  'Suspendido': 'bg-orange-50 text-orange-700 border-orange-200',
   'Retirado': 'bg-gray-100 text-gray-700 border-gray-200',
 };
 
 const estadoCuentaEstilos: Record<string, { badge: string; dot: string }> = {
-  'Activa': { badge: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-500' },
-  'Bloqueada': { badge: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-500' },
-  'Suspendida': { badge: 'bg-yellow-100 text-yellow-700 border-yellow-200', dot: 'bg-yellow-500' },
+  'Activa': { badge: 'bg-green-50 text-green-700 border-green-200', dot: 'bg-green-500' },
+  'Bloqueada': { badge: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
+  'Suspendida': { badge: 'bg-yellow-50 text-yellow-700 border-yellow-200', dot: 'bg-yellow-500' },
 };
 
 const formatFecha = (fecha?: string | null) => {
@@ -72,7 +72,6 @@ export default function ListaUsuariosPage() {
 
   useEffect(() => { cargarUsuarios(); }, []);
 
-  // DISEÑO PREMIUM CLARO (Alineación Perfecta)
   const handleEliminar = (usuario: Usuario) => {
     const nombreMostrar = usuario.nombres || usuario.apellidos 
       ? `${usuario.nombres ?? ''} ${usuario.apellidos ?? ''}`.trim() 
@@ -80,56 +79,45 @@ export default function ListaUsuariosPage() {
 
     Swal.fire({
       padding: 0,
-      showCloseButton: false, // Apagamos el de defecto para usar el nuestro perfectamente alineado
+      showCloseButton: false,
       buttonsStyling: false,
       background: '#ffffff',
       width: 480,
       customClass: {
-        popup: 'rounded-2xl overflow-hidden shadow-2xl border border-gray-200 p-0',
-        actions: 'w-full m-0 p-5 bg-white flex justify-end gap-3',
-        confirmButton: 'px-5 py-2.5 bg-[#dc2626] hover:bg-[#b91c1c] text-white rounded-xl font-bold transition-all shadow-sm',
-        cancelButton: 'px-5 py-2.5 text-gray-700 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl font-bold transition-all'
+        popup: 'rounded-xl overflow-hidden shadow-xl border border-gray-200 p-0',
+        actions: 'w-full m-0 p-4 bg-white flex justify-end gap-2',
+        confirmButton: 'px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-all shadow-sm',
+        cancelButton: 'px-4 py-1.5 text-gray-600 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg text-xs font-medium transition-all'
       },
       html: `
         <div class="flex flex-col text-left">
-          <!-- Header Rojo Claro (A ras de los bordes) -->
-          <div class="bg-[#fef2f2] px-6 py-4 flex items-center justify-between border-b border-red-100">
-            <div class="flex items-center gap-2.5 text-[#dc2626]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <div class="bg-red-50 px-5 py-3.5 flex items-center justify-between border-b border-red-100">
+            <div class="flex items-center gap-2 text-red-600">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
                 <path d="M12 9v4"/><path d="M12 17h.01"/>
               </svg>
-              <h2 class="text-[17px] font-bold m-0 p-0 tracking-tight">Eliminar Trabajador</h2>
+              <h2 class="text-xs font-bold uppercase tracking-wider m-0 p-0">Eliminar Trabajador</h2>
             </div>
-            <!-- Botón Cerrar (X) alineado manualmente -->
             <button type="button" onclick="Swal.close()" class="text-gray-400 hover:text-gray-700 transition-colors focus:outline-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
           </div>
           
-          <!-- Cuerpo Blanco -->
-          <div class="bg-white px-6 pt-6 pb-2">
-            <p class="text-gray-600 text-[15px] m-0 leading-relaxed">
+          <div class="bg-white p-5 space-y-3">
+            <p class="text-gray-600 text-xs leading-relaxed m-0">
               ¿Estás seguro de que deseas eliminar permanentemente a <strong class="text-gray-900 font-bold">${nombreMostrar}</strong>?
             </p>
             
-            <!-- Caja Gris de Advertencia -->
-            <div class="mt-5 p-4 bg-gray-50 border border-gray-200 rounded-xl text-[13.5px] text-gray-500 leading-relaxed shadow-sm">
+            <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg text-[11px] text-gray-500 leading-relaxed">
               Su cuenta será eliminada del sistema (USER) y perderá el acceso de forma inmediata.
             </div>
           </div>
         </div>
       `,
       showCancelButton: true,
-      reverseButtons: true, // ESTO PONE EL BOTÓN CANCELAR A LA IZQUIERDA
-      confirmButtonText: `
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>
-          </svg>
-          <span>Sí, Eliminar</span>
-        </div>
-      `,
+      reverseButtons: true,
+      confirmButtonText: 'Sí, Eliminar',
       cancelButtonText: 'Cancelar',
     }).then(async (result) => {
       if (result.isConfirmed) {
@@ -137,7 +125,6 @@ export default function ListaUsuariosPage() {
           await eliminarUsuario(usuario.id);
           await cargarUsuarios();
 
-          // Alerta de Éxito
           Swal.fire({
             title: '¡Eliminado!',
             text: 'El trabajador ha sido eliminado correctamente.',
@@ -146,13 +133,12 @@ export default function ListaUsuariosPage() {
             color: '#1f2937',
             buttonsStyling: false,
             customClass: {
-              popup: 'rounded-2xl border border-gray-100 shadow-xl',
-              confirmButton: 'px-6 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white rounded-xl font-bold transition-all',
+              popup: 'rounded-xl border border-gray-200 shadow-xl',
+              confirmButton: 'px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium text-xs transition-all',
             }
           });
 
         } catch (error) {
-          // Alerta de Error
           Swal.fire({
             title: 'Error',
             text: 'No se pudo eliminar el trabajador.',
@@ -161,8 +147,8 @@ export default function ListaUsuariosPage() {
             color: '#1f2937',
             buttonsStyling: false,
             customClass: {
-              popup: 'rounded-2xl border border-gray-100 shadow-xl',
-              confirmButton: 'px-6 py-2.5 bg-[#dc2626] hover:bg-[#b91c1c] text-white rounded-xl font-bold transition-all',
+              popup: 'rounded-xl border border-gray-200 shadow-xl',
+              confirmButton: 'px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-xs transition-all',
             }
           });
         }
@@ -214,8 +200,8 @@ export default function ListaUsuariosPage() {
   const getRolBadge = (rol?: string) => {
     const esAdmin = rol === 'ADMIN';
     return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${esAdmin ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
-        {esAdmin ? <ShieldCheck className="w-3.5 h-3.5" /> : <UserCog className="w-3.5 h-3.5" />}
+      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${esAdmin ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+        {esAdmin ? <ShieldCheck className="w-3 h-3" /> : <UserCog className="w-3 h-3" />}
         {esAdmin ? 'Administrador' : 'Estándar'}
       </span>
     );
@@ -224,7 +210,7 @@ export default function ListaUsuariosPage() {
   const getEstadoCuentaBadge = (estado: string) => {
     const estilo = estadoCuentaEstilos[estado] ?? estadoCuentaEstilos['Suspendida'];
     return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${estilo.badge}`}>
+      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${estilo.badge}`}>
         <span className={`w-1.5 h-1.5 rounded-full ${estilo.dot}`}></span>
         {estado}
       </span>
@@ -232,109 +218,104 @@ export default function ListaUsuariosPage() {
   };
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto text-gray-900">
-
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100">
-            <Users className="w-6 h-6 text-[#e6b010]" />
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
+            <Users className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-wide">Gestión de Usuarios</h1>
-            <p className="text-sm text-gray-500 mt-1">Consulta y administra las cuentas registradas.</p>
+            <h1 className="text-base font-bold text-gray-900 tracking-wide">Gestión de Usuarios</h1>
+            <p className="text-[11px] text-gray-500 mt-0.5">Consulta y administra las cuentas registradas.</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={cargarUsuarios} className="p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition-all border border-gray-200">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button onClick={cargarUsuarios} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-900 transition-all border border-gray-200" title="Actualizar">
             <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={handleExportarExcel}
-            className="flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-xl text-sm font-medium transition-all border border-green-200"
+            className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-all border border-green-200 shadow-sm"
           >
-            <FileSpreadsheet className="w-4 h-4" /> Excel
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
           </button>
           <button
             onClick={() => { setUsuarioEditando(null); setModoVista(false); setIsModalOpen(true); }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white font-bold rounded-xl text-sm transition-all shadow-md"
+            className="px-4 py-2 bg-[#141414] hover:bg-black text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm"
           >
-            <Plus className="w-4 h-4" /> Nuevo Usuario
+            <Plus className="w-3.5 h-3.5" /> Nuevo Usuario
           </button>
         </div>
       </div>
 
-      {/* METRICAS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <div className="p-2.5 rounded-xl bg-yellow-50 border border-yellow-100"><Users className="w-4 h-4 text-[#e6b010]" /></div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white border border-gray-200 rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
+          <div className="p-2 rounded-lg bg-yellow-50 border border-yellow-100"><Users className="w-4 h-4 text-[#e6b010]" /></div>
           <div>
-            <p className="text-lg font-bold text-gray-900 leading-none">{usuarios.length}</p>
-            <p className="text-[11px] text-gray-500 mt-1">Total registrados</p>
+            <p className="text-sm font-bold text-gray-900 leading-none">{usuarios.length}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">Total registrados</p>
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <div className="p-2.5 rounded-xl bg-green-50 border border-green-100"><UserCheck className="w-4 h-4 text-green-600" /></div>
+        <div className="bg-white border border-gray-200 rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
+          <div className="p-2 rounded-lg bg-green-50 border border-green-100"><UserCheck className="w-4 h-4 text-green-600" /></div>
           <div>
-            <p className="text-lg font-bold text-gray-900 leading-none">{metricas.activos}</p>
-            <p className="text-[11px] text-gray-500 mt-1">Con acceso activo</p>
+            <p className="text-sm font-bold text-gray-900 leading-none">{metricas.activos}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">Con acceso activo</p>
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <div className="p-2.5 rounded-xl bg-red-50 border border-red-100"><UserX className="w-4 h-4 text-red-600" /></div>
+        <div className="bg-white border border-gray-200 rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
+          <div className="p-2 rounded-lg bg-red-50 border border-red-100"><UserX className="w-4 h-4 text-red-600" /></div>
           <div>
-            <p className="text-lg font-bold text-gray-900 leading-none">{metricas.bloqueados}</p>
-            <p className="text-[11px] text-gray-500 mt-1">Bloqueados / suspendidos</p>
+            <p className="text-sm font-bold text-gray-900 leading-none">{metricas.bloqueados}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">Bloqueados / suspendidos</p>
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-100"><ShieldCheck className="w-4 h-4 text-blue-600" /></div>
+        <div className="bg-white border border-gray-200 rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
+          <div className="p-2 rounded-lg bg-blue-50 border border-blue-100"><ShieldCheck className="w-4 h-4 text-blue-600" /></div>
           <div>
-            <p className="text-lg font-bold text-gray-900 leading-none">{metricas.admins}</p>
-            <p className="text-[11px] text-gray-500 mt-1">Administradores</p>
+            <p className="text-sm font-bold text-gray-900 leading-none">{metricas.admins}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">Administradores</p>
           </div>
         </div>
       </div>
 
-      {/* BUSCADOR */}
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <div className="relative flex items-center">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
           placeholder="Buscar por nombre, DNI, usuario o email..."
           value={buscar}
           onChange={(e) => setBuscar(e.target.value)}
-          className="w-full bg-white border border-gray-300 rounded-xl py-3 pl-11 pr-4 text-sm text-gray-900 focus:border-[#e6b010] focus:ring-1 focus:ring-[#e6b010] outline-none transition-all placeholder-gray-400 shadow-sm"
+          className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-10 pr-4 text-xs text-gray-900 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-all placeholder-gray-400 shadow-sm"
         />
       </div>
 
-      {/* TABLA */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="overflow-x-auto custom-scrollbar flex-1">
           <table className="w-full text-left border-collapse min-w-[1300px]">
             <thead>
-              <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-200">
-                <th className="p-5 pl-6">Usuario</th>
-                <th className="p-5">Identificación</th>
-                <th className="p-5">Cargo / Turno</th>
-                <th className="p-5">Situación Laboral</th>
-                <th className="p-5">Rol</th>
-                <th className="p-5">Contacto</th>
-                <th className="p-5">Antigüedad</th>
-                <th className="p-5 text-center">Estado de Cuenta</th>
-                <th className="p-5 text-center">Acciones</th>
+              <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                <th className="py-3 px-4 pl-5">Usuario</th>
+                <th className="py-3 px-4">Identificación</th>
+                <th className="py-3 px-4">Cargo / Turno</th>
+                <th className="py-3 px-4">Situación Laboral</th>
+                <th className="py-3 px-4">Rol</th>
+                <th className="py-3 px-4">Contacto</th>
+                <th className="py-3 px-4">Antigüedad</th>
+                <th className="py-3 px-4 text-center">Estado de Cuenta</th>
+                <th className="py-3 px-4 text-center pr-5">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="divide-y divide-gray-100 text-xs">
               {cargando ? (
                 <tr>
-                  <td colSpan={9} className="p-12 text-center text-gray-500">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#e6b010]" /> Cargando datos...
+                  <td colSpan={9} className="py-10 text-center text-gray-500">
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#e6b010]" /> Cargando datos...
                   </td>
                 </tr>
               ) : usuariosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-12 text-center text-gray-500">
+                  <td colSpan={9} className="py-10 text-center text-gray-500">
                     No se encontraron usuarios que coincidan con la búsqueda.
                   </td>
                 </tr>
@@ -354,70 +335,70 @@ export default function ListaUsuariosPage() {
                   const iniciales = `${nombres?.charAt(0) ?? u.nombreUsuario?.charAt(0) ?? '?'}${apellidos?.charAt(0) ?? ''}`;
 
                   return (
-                    <tr key={u.id} className="hover:bg-gray-50 transition-colors group">
-                      <td className="p-4 pl-6">
-                        <div className="flex items-center gap-4">
-                          <div className={`relative w-11 h-11 rounded-full bg-gray-100 border flex items-center justify-center font-bold shrink-0 shadow-sm ${esAdmin ? 'border-yellow-300 text-[#e6b010]' : 'border-gray-200 text-gray-600'}`}>
+                    <tr key={u.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="py-3 px-4 pl-5">
+                        <div className="flex items-center gap-3">
+                          <div className={`relative w-8 h-8 rounded-full bg-gray-100 border flex items-center justify-center font-bold text-[10px] shrink-0 shadow-sm ${esAdmin ? 'border-yellow-300 text-[#e6b010]' : 'border-gray-200 text-gray-600'}`}>
                             {iniciales}
                             {esAdmin && (
-                              <span className="absolute -bottom-1 -right-1 bg-[#e6b010] rounded-full p-[3px] border-2 border-white">
-                                <ShieldCheck className="w-2.5 h-2.5 text-white" />
+                              <span className="absolute -bottom-0.5 -right-0.5 bg-[#e6b010] rounded-full p-[1px] border border-white">
+                                <ShieldCheck className="w-2 h-2 text-white" />
                               </span>
                             )}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900 group-hover:text-[#e6b010] transition-colors">
+                            <p className="font-bold text-gray-900 group-hover:text-[#e6b010] transition-colors">
                               {nombres || apellidos ? `${nombres ?? ''} ${apellidos ?? ''}`.trim() : u.nombreUsuario}
                             </p>
-                            <p className="text-xs text-gray-500 mt-0.5">@{u.nombreUsuario}</p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">@{u.nombreUsuario}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <p className="text-gray-900 font-medium tracking-wide">{dni || '---'}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Nac. {formatFecha(fechaNacimiento)}</p>
+                      <td className="py-3 px-4">
+                        <p className="text-gray-900 font-medium">{dni || '---'}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Nac. {formatFecha(fechaNacimiento)}</p>
                       </td>
-                      <td className="p-4">
-                        <span className="inline-flex px-3 py-1 rounded-lg bg-gray-100 border border-gray-200 text-gray-700 text-xs font-medium">
+                      <td className="py-3 px-4">
+                        <span className="inline-flex px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-gray-700 text-[10px] font-medium">
                           {cargo || '---'}
                         </span>
                         {turno && (
-                          <p className="flex items-center gap-1.5 text-xs text-gray-500 mt-1.5 ml-0.5">
-                            {turnoIcono[turno] ?? <Sun className="w-3.5 h-3.5" />} Turno {turno}
+                          <p className="flex items-center gap-1 text-[10px] text-gray-500 mt-1">
+                            {turnoIcono[turno] ?? <Sun className="w-3 h-3" />} Turno {turno}
                           </p>
                         )}
                       </td>
-                      <td className="p-4">
-                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold border ${estadoLaboralEstilos[estadoLaboral ?? ''] ?? estadoLaboralEstilos['Retirado']}`}>
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${estadoLaboralEstilos[estadoLaboral ?? ''] ?? estadoLaboralEstilos['Retirado']}`}>
                           {estadoLaboral ?? '---'}
                         </span>
                       </td>
-                      <td className="p-4">
+                      <td className="py-3 px-4">
                         {getRolBadge(u.rol)}
                       </td>
-                      <td className="p-4">
+                      <td className="py-3 px-4">
                         <p className="text-gray-900">{u.email}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{telefono || 'Sin teléfono'}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">{telefono || 'Sin teléfono'}</p>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1.5 text-gray-900">
-                          <CalendarClock className="w-3.5 h-3.5 text-gray-400" />
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1 text-gray-900">
+                          <CalendarClock className="w-3 h-3 text-gray-400" />
                           {antiguedad ?? '---'}
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5">Desde {formatFecha(fechaIngreso)}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Desde {formatFecha(fechaIngreso)}</p>
                       </td>
-                      <td className="p-4 text-center">
+                      <td className="py-3 px-4 text-center">
                         {getEstadoCuentaBadge(u.estadoCuenta)}
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-center gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => { setUsuarioEditando(u); setModoVista(true); setIsModalOpen(true); }} className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                      <td className="py-3 px-4 text-center pr-5">
+                        <div className="flex items-center justify-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => { setUsuarioEditando(u); setModoVista(true); setIsModalOpen(true); }} className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all" title="Ver Detalles">
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button onClick={() => { setUsuarioEditando(u); setModoVista(false); setIsModalOpen(true); }} className="p-2 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-lg transition-all">
+                          <button onClick={() => { setUsuarioEditando(u); setModoVista(false); setIsModalOpen(true); }} className="p-1.5 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-md transition-all" title="Editar">
                             <Edit2 className="w-4 h-4" />
                           </button>
-                          <button onClick={() => handleEliminar(u)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                          <button onClick={() => handleEliminar(u)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all" title="Eliminar">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -429,12 +410,13 @@ export default function ListaUsuariosPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-5 border-t border-gray-200 flex items-center justify-between bg-gray-50 rounded-b-2xl">
-          <p className="text-xs font-medium text-gray-500">
-            Mostrando <span className="text-gray-900">{usuariosFiltrados.length}</span> de <span className="text-gray-900">{usuarios.length}</span> registros
+        <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+          <p className="text-[11px] font-medium text-gray-500">
+            Mostrando <span className="text-gray-900 font-bold">{usuariosFiltrados.length}</span> de <span className="text-gray-900 font-bold">{usuarios.length}</span> registros
           </p>
         </div>
       </div>
+      
       <UsuarioModal
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setUsuarioEditando(null); }}

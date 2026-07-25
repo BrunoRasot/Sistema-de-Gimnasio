@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Usuario {
@@ -136,10 +135,66 @@ model Producto {
   stockMinimo  Int        @default(5)
   categoriaId  Int
   proveedorId  Int?
-  estado       String     @default("Activo") // Activo, Inactivo
+  estado       String     @default("Activo")
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-
+  detalles DetalleVenta[]
   categoria    Categoria  @relation(fields: [categoriaId], references: [id])
   proveedor    Proveedor? @relation(fields: [proveedorId], references: [id])
+}
+
+model Venta {
+  id              Int            @id @default(autoincrement())
+  codigo          String         @unique
+  cliente         String?
+  total           Decimal        @db.Decimal(10, 2)
+  metodoPago      String
+  numeroOperacion String?        
+  montoRecibido   Decimal?       @db.Decimal(10, 2)
+  vuelto          Decimal?       @db.Decimal(10, 2)
+  estado          String         @default("Completado")
+  createdAt       DateTime       @default(now())
+  detalles        DetalleVenta[]
+  devoluciones    Devolucion[]
+}
+
+model DetalleVenta {
+  id          Int      @id @default(autoincrement())
+  ventaId     Int
+  venta       Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  productoId  Int
+  producto    Producto @relation(fields: [productoId], references: [id])
+  cantidad    Int
+  precioUnit  Decimal  @db.Decimal(10, 2)
+  subtotal    Decimal  @db.Decimal(10, 2)
+}
+
+model Devolucion {
+  id         Int      @id @default(autoincrement())
+  ventaId    Int
+  venta      Venta    @relation(fields: [ventaId], references: [id])
+  motivo     String
+  createdAt  DateTime @default(now())
+}
+
+model MetodoPago {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  pagos       Pago[]
+}
+
+model Pago {
+  id          Int        @id @default(autoincrement())
+  codigo      String     @unique
+  cliente     String?
+  concepto    String
+  monto       Decimal    @db.Decimal(10, 2)
+  metodoId    Int
+  estado      String     @default("Completado") // Completado, Anulado
+  fecha       DateTime   @default(now())
+  
+  metodo      MetodoPago @relation(fields: [metodoId], references: [id])
 }

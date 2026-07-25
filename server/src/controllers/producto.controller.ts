@@ -20,7 +20,6 @@ export const crearProducto = async (req: Request, res: Response): Promise<any> =
   try {
     const { nombre, sku, descripcion, precioCompra, precioVenta, stock, stockMinimo, categoriaId, proveedorId, estado } = req.body;
 
-    // Verificar si el SKU ya existe
     const existeSku = await prisma.producto.findUnique({ where: { sku } });
     if (existeSku) return res.status(400).json({ mensaje: 'El SKU ya está en uso.' });
 
@@ -49,7 +48,6 @@ export const actualizarProducto = async (req: Request, res: Response): Promise<a
     const { id } = req.params;
     const { nombre, sku, descripcion, precioCompra, precioVenta, stock, stockMinimo, categoriaId, proveedorId, estado } = req.body;
 
-    // Verificar si el SKU lo está usando otro producto
     const existeSku = await prisma.producto.findFirst({
       where: { sku, NOT: { id: Number(id) } }
     });

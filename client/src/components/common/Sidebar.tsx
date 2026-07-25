@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import SidebarItem from './SidebarItem';
 import { menuGroups } from '../../routes/menu';
-import logoSidebar from '../../assets/logos/lg-sidebar.png'; 
+import logoSidebar from '../../assets/logos/lg-sidebar.png';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   };
 
   return (
-    <aside 
+    <aside
       className={`
         fixed inset-y-0 left-0 z-50 flex h-screen w-60 flex-col 
         bg-[#1a1a1a]
@@ -26,10 +26,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
       `}
     >
       <div className="flex flex-col items-center justify-center py-6 shrink-0">
-        <img 
-          src={logoSidebar} 
-          alt="Logo TemploGym" 
-          className="w-36 object-contain drop-shadow-md" 
+        <img
+          src={logoSidebar}
+          alt="Logo TemploGym"
+          className="w-36 object-contain drop-shadow-md"
         />
       </div>
 
@@ -43,10 +43,10 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
             </h3>
             <div className="space-y-1">
               {group.items.map((item) => (
-                <SidebarItem 
-                  key={item.path} 
-                  {...item} 
-                  closeSidebar={closeSidebar} 
+                <SidebarItem
+                  key={item.path}
+                  {...item}
+                  closeSidebar={closeSidebar}
                   isOpenDropdown={openItemPath === item.path}
                   onToggle={() => handleToggle(item.path)}
                 />

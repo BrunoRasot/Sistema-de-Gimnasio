@@ -115,7 +115,7 @@ export const inactivarCliente = async (req: Request, res: Response): Promise<any
 
 export const renovarMembresia = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params; // ID del cliente
+    const { id } = req.params;
     const { planId, fechaInicio } = req.body;
 
     if (!planId) return res.status(400).json({ mensaje: 'Debe seleccionar un plan para la renovación.' });

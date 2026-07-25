@@ -113,111 +113,110 @@ export default function RolesPermisosPage() {
   }
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto text-gray-900">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100">
-            <ShieldAlert className="w-6 h-6 text-[#e6b010]" />
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
+      
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
+            <ShieldAlert className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-wide">Roles y Permisos</h1>
-            <p className="text-sm text-gray-500 mt-1">Configura el nivel de acceso a los módulos según el cargo del trabajador.</p>
+            <h1 className="text-base font-bold text-gray-900 tracking-wide">Roles y Permisos</h1>
+            <p className="text-[11px] text-gray-500 mt-0.5">Configura el nivel de acceso a los módulos según el cargo del trabajador.</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={handleGuardar} 
-            disabled={guardando || cargoSeleccionado === 'Administrador'}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#e6b010] hover:bg-[#d4a00e] text-white font-bold rounded-xl text-sm transition-all shadow-md disabled:opacity-50 disabled:hover:shadow-none hover:-translate-y-0.5 active:translate-y-0"
-          >
-            {guardando ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {guardando ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
-        </div>
+        <button 
+          onClick={handleGuardar} 
+          disabled={guardando || cargoSeleccionado === 'Administrador'}
+          className="w-full sm:w-auto px-4 py-2 bg-[#141414] hover:bg-black text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
+        >
+          {guardando ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+          {guardando ? 'Guardando...' : 'Guardar Cambios'}
+        </button>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-4">
         <div className="lg:w-1/4 flex flex-col gap-4">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-gray-100 bg-gray-50">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">Selecciona un Cargo</h3>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="p-3.5 border-b border-gray-100 bg-gray-50/50">
+              <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Selecciona un Cargo</h3>
             </div>
-            <div className="flex flex-col py-2">
+            <div className="flex flex-col py-1">
               {cargos.map(cargo => {
                 const isActive = cargoSeleccionado === cargo;
                 return (
                   <button
                     key={cargo}
                     onClick={() => setCargoSeleccionado(cargo)}
-                    className={`flex items-center justify-between w-full px-5 py-3 transition-all text-sm font-medium relative ${
+                    className={`flex items-center justify-between w-full px-4 py-2.5 transition-all text-xs font-medium relative ${
                       isActive 
-                      ? 'text-yellow-700 bg-yellow-50' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'text-gray-900 bg-yellow-50/60 font-bold' 
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
                     {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#e6b010] rounded-r-full"></div>}
-                    <div className="flex items-center gap-3">
-                      <Shield className={`w-4 h-4 ${isActive ? 'text-[#e6b010]' : 'text-gray-400'}`} />
+                    <div className="flex items-center gap-2.5">
+                      <Shield className={`w-3.5 h-3.5 ${isActive ? 'text-[#e6b010]' : 'text-gray-400'}`} />
                       {cargo}
                     </div>
-                    {isActive && <ChevronRight className="w-4 h-4 opacity-70" />}
+                    {isActive && <ChevronRight className="w-3.5 h-3.5 opacity-70" />}
                   </button>
                 );
               })}
             </div>
           </div>
           
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex gap-3 items-start shadow-sm">
-            <div className="p-1.5 bg-blue-100 rounded-md">
-              <ShieldAlert className="w-4 h-4 text-blue-600" />
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 flex gap-2.5 items-start shadow-sm">
+            <div className="p-1 bg-blue-100 rounded-md shrink-0">
+              <ShieldAlert className="w-3.5 h-3.5 text-blue-600" />
             </div>
-            <p className="text-xs text-blue-800 leading-relaxed">
+            <p className="text-[11px] text-blue-900 leading-relaxed">
               Los usuarios con rol <span className="font-bold">ADMIN</span> ignoran esta matriz, ya que cuentan con acceso irrestricto al sistema.
             </p>
           </div>
         </div>
 
-        <div className="lg:w-3/4 bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col">
-          <div className="p-5 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+        <div className="lg:w-3/4 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col overflow-hidden min-h-[400px]">
+          <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
-                Permisos para: <span className="text-yellow-700 bg-yellow-100 px-3 py-1 rounded-lg border border-yellow-200">{cargoSeleccionado}</span>
+              <h3 className="font-bold text-xs text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                Permisos para: <span className="text-gray-900 bg-yellow-50 px-2 py-0.5 rounded border border-yellow-200 normal-case font-bold">{cargoSeleccionado}</span>
               </h3>
               {cargoSeleccionado === 'Administrador' && (
-                <p className="text-[13px] text-gray-500 mt-1 flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-gray-400" />
+                <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-gray-400" />
                   Este cargo tiene acceso total. Los permisos están bloqueados.
                 </p>
               )}
             </div>
           </div>
 
-          <div className="overflow-x-auto custom-scrollbar flex-1 p-2">
+          <div className="overflow-x-auto custom-scrollbar flex-1">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr>
-                  <th className="py-3 px-4 pl-6 text-[10px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-100">
+                <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                  <th className="py-3 px-4 pl-5">
                     Módulo del Sistema
                   </th>
                   {acciones.map(accion => (
-                    <th key={accion} className="py-3 px-4 text-center text-[10px] font-bold uppercase tracking-widest text-gray-500 border-b border-gray-100">
+                    <th key={accion} className="py-3 px-4 text-center">
                       {accion}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="text-sm">
+              <tbody className="text-xs divide-y divide-gray-100">
                 {modulosSistema.map((modulo) => {
                   let overridesAdmin = cargoSeleccionado === 'Administrador' ? { Ver: true, Crear: true, Editar: true, Eliminar: true } : permisos[cargoSeleccionado][modulo.id];
 
                   return (
-                    <tr key={modulo.id} className="hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 group">
-                      <td className="py-2.5 px-4 pl-6">
-                        <div className="flex items-center gap-3">
-                          <div className="p-1.5 rounded-lg bg-gray-100 border border-gray-200 text-gray-500 group-hover:text-[#e6b010] group-hover:bg-yellow-50 transition-colors">
-                            <modulo.icon className="w-4 h-4" />
+                    <tr key={modulo.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="py-3 px-4 pl-5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-1 rounded-md bg-gray-100 border border-gray-200 text-gray-500 group-hover:text-[#e6b010] group-hover:bg-yellow-50 transition-colors">
+                            <modulo.icon className="w-3.5 h-3.5" />
                           </div>
-                          <span className="font-medium text-gray-700">{modulo.nombre}</span>
+                          <span className="font-bold text-gray-900">{modulo.nombre}</span>
                         </div>
                       </td>
                       {acciones.map(accion => {
@@ -225,7 +224,7 @@ export default function RolesPermisosPage() {
                         const esAdmin = cargoSeleccionado === 'Administrador';
                         
                         return (
-                          <td key={accion} className="py-2.5 px-4 text-center align-middle">
+                          <td key={accion} className="py-3 px-4 text-center align-middle">
                             <div className="flex items-center justify-center">
                               <CustomToggle 
                                 activo={tienePermiso} 

@@ -1,15 +1,13 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const obtenerMembresias = async () => {
-  // 1. Intentamos obtener el token del almacenamiento local
-  const token = localStorage.getItem('token'); // Asegúrate de que esta sea la llave correcta (o 'accessToken')
+  const token = localStorage.getItem('token');
 
   try {
     const response = await fetch(`${API_URL}/miembros`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        // 2. Enviamos el token en el encabezado Authorization
         'Authorization': `Bearer ${token}`
       }
     });
