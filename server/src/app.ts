@@ -13,6 +13,7 @@ import proveedorRoutes from './routes/proveedor.routes.js';
 import ventasRoutes from './routes/ventas.routes.js';
 import pagosRoutes from './routes/pagos.routes.js';
 import asistenciasRoutes from './routes/asistencias.routes.js';
+import reportesRoutes from './routes/reportes.routes.js';
 
 const app = express();
 
@@ -55,5 +56,6 @@ app.use('/api/proveedores', proveedorRoutes);
 app.use('/api/ventas', ventasRoutes);
 app.use('/api/pagos', pagosRoutes);
 app.use('/api/asistencias', asistenciasRoutes);
+app.use('/api/reportes', reportesRoutes);
 
 export default app;
