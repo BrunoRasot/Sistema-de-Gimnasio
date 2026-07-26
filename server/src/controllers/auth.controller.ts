@@ -6,8 +6,20 @@ import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { prisma } from '../database/prisma.js';
 import { generarTemplateOTP } from '../utils/emailTemplate.js';
+import { logger } from '../utils/logger.js';
 
 const otpMinutes = 10;
+
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    logger.error('FATAL ERROR: La variable de entorno JWT_SECRET no está configurada.');
+    throw new Error('FATAL ERROR: La variable de entorno JWT_SECRET no está definida en el servidor.');
+  }
+  return secret;
+};
+
+const JWT_SECRET = getJwtSecret();
 
 const loginSchema = z.object({
   usuario: z.string().trim().min(1, 'Ingresa tu usuario o correo.'),
@@ -38,6 +50,31 @@ const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
   });
 };
 
+const generarTokensSesion = async (usuario: { id: number; rol: string; nombreUsuario: string }) => {
+  const accessToken = jwt.sign(
+    { sub: usuario.id, rol: usuario.rol, nombreUsuario: usuario.nombreUsuario },
+    JWT_SECRET,
+    { expiresIn: '15m' }
+  );
+
+  const refreshToken = jwt.sign(
+    { sub: usuario.id, type: 'refresh' },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  await prisma.refreshToken.create({
+    data: {
+      token: refreshToken,
+      usuarioId: usuario.id,
+      expiresAt,
+    },
+  });
+
+  return { accessToken, refreshToken };
+};
+
 export const login = async (req: Request, res: Response): Promise<any> => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ mensaje: parsed.error.issues[0]?.message });
@@ -50,15 +87,18 @@ export const login = async (req: Request, res: Response): Promise<any> => {
     });
 
     if (!usuario) {
+      logger.warn(`Intento de login fallido: Usuario no encontrado (${identificador})`);
       return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos.' });
     }
 
     if (!usuario.activo) {
+      logger.warn(`Intento de acceso a cuenta inactiva: ${usuario.nombreUsuario}`);
       return res.status(401).json({ mensaje: 'Esta cuenta está desactivada por el administrador.' });
     }
 
     if (usuario.bloqueoHasta && new Date() < new Date(usuario.bloqueoHasta)) {
       const minutosRestantes = Math.ceil((new Date(usuario.bloqueoHasta).getTime() - new Date().getTime()) / 60000);
+      logger.warn(`Intento de acceso a cuenta bloqueada temporalmente: ${usuario.nombreUsuario}`);
       return res.status(403).json({
         mensaje: `Cuenta bloqueada por seguridad. Intenta de nuevo en ${minutosRestantes} minuto(s).`
       });
@@ -73,6 +113,7 @@ export const login = async (req: Request, res: Response): Promise<any> => {
       if (nuevosIntentos >= 3) {
         bloqueoHasta = new Date(Date.now() + 15 * 60 * 1000);
         estadoCuenta = 'Bloqueada';
+        logger.error(`Seguridad: Cuenta bloqueada por exceso de intentos fallidos -> ${usuario.nombreUsuario}`);
       }
 
       await prisma.usuario.update({
@@ -88,9 +129,9 @@ export const login = async (req: Request, res: Response): Promise<any> => {
     }
 
     const codigo = crypto.randomInt(100000, 1000000).toString();
-    
-    console.log(`\n🔑 CÓDIGO OTP PARA ${usuario.email}: ${codigo}\n`);
-    
+
+    logger.info(`Código OTP generado para el usuario ID ${usuario.id} (${usuario.email})`);
+
     const expiracionOtp = new Date(Date.now() + otpMinutes * 60 * 1000);
 
     await prisma.usuario.update({
@@ -108,7 +149,7 @@ export const login = async (req: Request, res: Response): Promise<any> => {
 
     return res.json({ mensaje: 'Te enviamos un código a tu correo.', usuario: usuario.nombreUsuario });
   } catch (error) {
-    console.error("Error en el login:", error);
+    logger.error(`Error crítico en el controlador de login: ${error}`);
     return res.status(500).json({ mensaje: 'No pudimos procesar la solicitud.' });
   }
 };
@@ -136,6 +177,7 @@ export const verificarOtp = async (req: Request, res: Response): Promise<any> =>
       new Date() < new Date(usuario.expiracionOtp);
 
     if (!esValido) {
+      logger.warn(`Intento de verificación OTP fallido para el identificador: ${identificador}`);
       return res.status(401).json({ mensaje: 'El código es inválido o ha vencido.' });
     }
 
@@ -144,24 +186,81 @@ export const verificarOtp = async (req: Request, res: Response): Promise<any> =>
       data: { codigoOtp: null, expiracionOtp: null },
     });
 
-    const token = jwt.sign(
-      { sub: usuario.id, rol: usuario.rol, nombreUsuario: usuario.nombreUsuario },
-      process.env.JWT_SECRET || 'secreto',
-      { expiresIn: '8h' }
-    );
+    const { accessToken, refreshToken } = await generarTokensSesion({
+      id: usuario.id,
+      rol: usuario.rol,
+      nombreUsuario: usuario.nombreUsuario
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    logger.info(`Inicio de sesión exitoso y verificado por OTP: ${usuario.nombreUsuario} [Rol: ${usuario.rol}]`);
 
     return res.json({
-      token,
-      usuario: { 
-        id: usuario.id, 
-        nombreUsuario: usuario.nombreUsuario, 
-        email: usuario.email, 
+      token: accessToken,
+      usuario: {
+        id: usuario.id,
+        nombreUsuario: usuario.nombreUsuario,
+        email: usuario.email,
         rol: usuario.rol,
-        cargo: usuario.cargo 
+        cargo: usuario.cargo
       },
     });
   } catch (error) {
-    console.error("Error en verificarOtp:", error);
+    logger.error(`Error crítico en verificarOtp: ${error}`);
     return res.status(500).json({ mensaje: 'Error al verificar el código.' });
+  }
+};
+
+export const renovarToken = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const tokenCookie = req.cookies?.refreshToken;
+    if (!tokenCookie) {
+      return res.status(401).json({ mensaje: 'No se encontró la sesión activa.' });
+    }
+
+    const tokenRecord = await prisma.refreshToken.findUnique({
+      where: { token: tokenCookie },
+      include: { usuario: true }
+    });
+
+    if (!tokenRecord || new Date() > new Date(tokenRecord.expiresAt)) {
+      return res.status(403).json({ mensaje: 'Sesión expirada. Inicie sesión nuevamente.' });
+    }
+
+    const usuario = tokenRecord.usuario;
+    if (!usuario.activo) {
+      return res.status(403).json({ mensaje: 'Cuenta inactiva.' });
+    }
+
+    const nuevoAccessToken = jwt.sign(
+      { sub: usuario.id, rol: usuario.rol, nombreUsuario: usuario.nombreUsuario },
+      JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    return res.json({ token: nuevoAccessToken });
+  } catch (error) {
+    logger.error(`Error al renovar el token: ${error}`);
+    return res.status(500).json({ mensaje: 'Error interno al procesar el token.' });
+  }
+};
+
+export const logout = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const tokenCookie = req.cookies?.refreshToken;
+    if (tokenCookie) {
+      await prisma.refreshToken.deleteMany({ where: { token: tokenCookie } });
+    }
+    res.clearCookie('refreshToken');
+    return res.json({ mensaje: 'Sesión finalizada exitosamente.' });
+  } catch (error) {
+    logger.error(`Error en logout: ${error}`);
+    return res.status(500).json({ mensaje: 'Error al cerrar sesión.' });
   }
 };

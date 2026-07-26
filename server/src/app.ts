@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
 import usuarioRoutes from './routes/usuario.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import permisosRoutes from './routes/permisos.routes.js';
@@ -45,6 +46,7 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
+app.use(cookieParser());
 
 
 app.use(express.json({ limit: '10mb' }));

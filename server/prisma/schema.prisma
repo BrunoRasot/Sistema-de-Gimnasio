@@ -36,6 +36,7 @@ model Usuario {
   intentosFallidos Int         @default(0)
   bloqueoHasta     DateTime?
   auditorias       Auditoria[]
+  refreshTokens    RefreshToken[]
 }
 
 model Permiso {
@@ -223,4 +224,13 @@ model Configuracion {
   alertasSistema     Boolean  @default(false)
   reportesSemanales  Boolean  @default(true)
   updatedAt          DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 }

@@ -1,7 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/auth';
+import api from './api.js'; // Tu instancia configurada de Axios o fetch
+import { tokenService } from './token.service';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const loginService = async (usuario: string, password: string) => {
-  const response = await fetch(`${API_URL}/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ usuario, password }),
@@ -10,24 +13,15 @@ export const loginService = async (usuario: string, password: string) => {
   if (!response.ok) throw new Error('Credenciales incorrectas');
 
   const data = await response.json();
-
-  if (data.token) {
-    localStorage.setItem('token', data.token);
-
-
-    if (data.usuario) {
-      localStorage.setItem('usuarioRol', data.usuario.rol || 'USER');
-      localStorage.setItem('usuarioCargo', data.usuario.cargo || '');
-    }
-  }
-
+  // El login inicial por ahora solo envía el mensaje y el usuario, el token real llega al verificar el OTP
   return data;
 };
 
 export const verifyOtpService = async (usuario: string, codigo: string) => {
-  const response = await fetch(`${API_URL}/verificar-otp`, {
+  const response = await fetch(`${API_URL}/auth/verificar-otp`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', // Vital para recibir la cookie HttpOnly del Refresh Token
     body: JSON.stringify({ usuario, codigo }),
   });
 
@@ -36,7 +30,8 @@ export const verifyOtpService = async (usuario: string, codigo: string) => {
   const data = await response.json();
 
   if (data.token) {
-    localStorage.setItem('token', data.token);
+    // Almacenamos el Access Token ÚNICAMENTE en memoria RAM
+    tokenService.setAccessToken(data.token);
 
     if (data.usuario) {
       localStorage.setItem('usuarioRol', data.usuario.rol || 'USER');
@@ -47,8 +42,14 @@ export const verifyOtpService = async (usuario: string, codigo: string) => {
   return data;
 };
 
-export const logoutService = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('usuarioRol');
-  localStorage.removeItem('usuarioCargo');
+export const logoutService = async () => {
+  try {
+    await api.post('/auth/logout');
+  } catch (error) {
+    console.error('Error al notificar cierre de sesión al servidor', error);
+  } finally {
+    tokenService.clearAccessToken();
+    localStorage.removeItem('usuarioRol');
+    localStorage.removeItem('usuarioCargo');
+  }
 };
