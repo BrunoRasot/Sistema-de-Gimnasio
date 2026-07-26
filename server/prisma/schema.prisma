@@ -202,9 +202,25 @@ model Pago {
 model Asistencia {
   id        Int      @id @default(autoincrement())
   fechaHora DateTime @default(now())
-  
   miembroId Int
   miembro   Miembro  @relation(fields: [miembroId], references: [id])
-
   @@map("asistencias")
+}
+model Configuracion {
+  id                 Int      @id @default(1)
+  logo               String?
+  nombre             String   @default("Fitness Group")
+  ruc                String   @default("")
+  telefono           String   @default("")
+  email              String   @default("")
+  emailNotificaciones String  @default("")
+  direccion          String   @default("")
+  zonaHoraria        String   @default("América/Lima (GMT-5)")
+  moneda             String   @default("Sol peruano (PEN)")
+  nuevasVentas       Boolean  @default(true)
+  membresiasVencidas Boolean  @default(true)
+  stockBajo          Boolean  @default(true)
+  alertasSistema     Boolean  @default(false)
+  reportesSemanales  Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
 }

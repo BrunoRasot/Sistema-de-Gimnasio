@@ -127,7 +127,6 @@ export const menuGroups: MenuGroup[] = [
         icon: Settings,
         subItems: [
           { path: '/configuracion/info', label: 'Información del Gimnasio' },
-          { path: '/configuracion/metodos', label: 'Métodos de Pago' },
           { path: '/configuracion/notificaciones', label: 'Notificaciones' },
           { path: '/configuracion/seguridad', label: 'Seguridad' },
         ]

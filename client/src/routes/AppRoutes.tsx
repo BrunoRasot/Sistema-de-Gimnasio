@@ -38,7 +38,6 @@ import ReportesAsistenciasPage from '../modules/reportes/ReportesAsistenciasPage
 import ReportesInventarioPage from '../modules/reportes/ReportesInventarioPage';
 
 import InfoGimnasioPage from '../modules/configuracion/InfoGimnasioPage';
-import ConfigMetodosPagoPage from '../modules/configuracion/ConfigMetodosPagoPage';
 import NotificacionesPage from '../modules/configuracion/NotificacionesPage';
 import SeguridadPage from '../modules/configuracion/SeguridadPage';
 
@@ -51,7 +50,6 @@ const AppRoutes = () => {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
-          {/* Default redirect si acceden a la raiz del dashboard */}
           <Route path="/dashboard" element={<DashboardPage />} />
 
           {/* Submódulos Membresías */}
@@ -102,7 +100,6 @@ const AppRoutes = () => {
           {/* Submódulos Configuración */}
           <Route path="/configuracion" element={<Navigate to="/configuracion/info" replace />} />
           <Route path="/configuracion/info" element={<InfoGimnasioPage />} />
-          <Route path="/configuracion/metodos" element={<ConfigMetodosPagoPage />} />
           <Route path="/configuracion/notificaciones" element={<NotificacionesPage />} />
           <Route path="/configuracion/seguridad" element={<SeguridadPage />} />
         </Route>

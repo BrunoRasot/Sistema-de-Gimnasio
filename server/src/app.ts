@@ -14,6 +14,7 @@ import ventasRoutes from './routes/ventas.routes.js';
 import pagosRoutes from './routes/pagos.routes.js';
 import asistenciasRoutes from './routes/asistencias.routes.js';
 import reportesRoutes from './routes/reportes.routes.js';
+import configuracionRoutes from './routes/configuracion.routes.js';
 
 const app = express();
 
@@ -44,7 +45,11 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
-app.use(express.json());
+
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/permisos', permisosRoutes);
@@ -57,5 +62,6 @@ app.use('/api/ventas', ventasRoutes);
 app.use('/api/pagos', pagosRoutes);
 app.use('/api/asistencias', asistenciasRoutes);
 app.use('/api/reportes', reportesRoutes);
+app.use('/api/configuracion', configuracionRoutes);
 
 export default app;
