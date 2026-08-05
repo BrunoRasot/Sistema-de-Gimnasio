@@ -1,8 +1,20 @@
 ﻿import { useState, useEffect } from 'react';
-import { 
-  ShieldAlert, Save, RefreshCw, ChevronRight, 
-  LayoutDashboard, IdCard, User, Package, ShoppingCart, 
-  CreditCard, CalendarCheck, BarChart3, Settings, Shield, Lock
+import {
+  ShieldAlert,
+  Save,
+  RefreshCw,
+  ChevronRight,
+  LayoutDashboard,
+  IdCard,
+  User,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  CalendarCheck,
+  BarChart3,
+  Settings,
+  Shield,
+  Lock,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { obtenerPermisosBD, guardarPermisosBD } from '../../services/permisos.service';
@@ -22,12 +34,12 @@ const modulosSistema = [
 ];
 
 const acciones = ['Ver', 'Crear', 'Editar', 'Eliminar'] as const;
-type Accion = typeof acciones[number];
+type Accion = (typeof acciones)[number];
 
 const permisosIniciales: Record<string, Record<string, Record<Accion, boolean>>> = {};
-cargos.forEach(cargo => {
+cargos.forEach((cargo) => {
   permisosIniciales[cargo] = {};
-  modulosSistema.forEach(mod => {
+  modulosSistema.forEach((mod) => {
     permisosIniciales[cargo][mod.id] = { Ver: false, Crear: false, Editar: false, Eliminar: false };
   });
 });
@@ -43,12 +55,15 @@ export default function RolesPermisosPage() {
       try {
         const datosBD = await obtenerPermisosBD();
         if (datosBD && datosBD.length > 0) {
-          setPermisos(prev => {
+          setPermisos((prev) => {
             const nuevoEstado = JSON.parse(JSON.stringify(prev));
             datosBD.forEach((p: any) => {
               if (nuevoEstado[p.cargo] && nuevoEstado[p.cargo][p.modulo]) {
                 nuevoEstado[p.cargo][p.modulo] = {
-                  Ver: p.ver, Crear: p.crear, Editar: p.editar, Eliminar: p.eliminar
+                  Ver: p.ver,
+                  Crear: p.crear,
+                  Editar: p.editar,
+                  Eliminar: p.eliminar,
                 };
               }
             });
@@ -67,15 +82,15 @@ export default function RolesPermisosPage() {
   const togglePermiso = (moduloId: string, accion: Accion) => {
     if (cargoSeleccionado === 'Administrador') return;
 
-    setPermisos(prev => ({
+    setPermisos((prev) => ({
       ...prev,
       [cargoSeleccionado]: {
         ...prev[cargoSeleccionado],
         [moduloId]: {
           ...prev[cargoSeleccionado][moduloId],
-          [accion]: !prev[cargoSeleccionado][moduloId][accion]
-        }
-      }
+          [accion]: !prev[cargoSeleccionado][moduloId][accion],
+        },
+      },
     }));
   };
 
@@ -85,13 +100,21 @@ export default function RolesPermisosPage() {
       await guardarPermisosBD(cargoSeleccionado, permisos[cargoSeleccionado]);
       toast.success(`Permisos para el cargo "${cargoSeleccionado}" guardados exitosamente.`);
     } catch (error) {
-      toast.error("Hubo un error al guardar los permisos en la base de datos.");
+      toast.error('Hubo un error al guardar los permisos en la base de datos.');
     } finally {
       setGuardando(false);
     }
   };
 
-  const CustomToggle = ({ activo, disabled, onClick }: { activo: boolean, disabled?: boolean, onClick: () => void }) => (
+  const CustomToggle = ({
+    activo,
+    disabled,
+    onClick,
+  }: {
+    activo: boolean;
+    disabled?: boolean;
+    onClick: () => void;
+  }) => (
     <button
       type="button"
       disabled={disabled}
@@ -109,12 +132,15 @@ export default function RolesPermisosPage() {
   );
 
   if (cargando) {
-    return <div className="text-gray-600 p-6 flex items-center gap-2"><RefreshCw className="animate-spin w-5 h-5"/> Cargando configuración...</div>;
+    return (
+      <div className="text-gray-600 p-6 flex items-center gap-2">
+        <RefreshCw className="animate-spin w-5 h-5" /> Cargando configuración...
+      </div>
+    );
   }
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
-      
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
@@ -122,15 +148,21 @@ export default function RolesPermisosPage() {
           </div>
           <div>
             <h1 className="text-base font-bold text-gray-900 tracking-wide">Roles y Permisos</h1>
-            <p className="text-[11px] text-gray-500 mt-0.5">Configura el nivel de acceso a los módulos según el cargo del trabajador.</p>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              Configura el nivel de acceso a los módulos según el cargo del trabajador.
+            </p>
           </div>
         </div>
-        <button 
-          onClick={handleGuardar} 
+        <button
+          onClick={handleGuardar}
           disabled={guardando || cargoSeleccionado === 'Administrador'}
           className="w-full sm:w-auto px-4 py-2 bg-[#141414] hover:bg-black text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50"
         >
-          {guardando ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+          {guardando ? (
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Save className="w-3.5 h-3.5" />
+          )}
           {guardando ? 'Guardando...' : 'Guardar Cambios'}
         </button>
       </div>
@@ -139,24 +171,30 @@ export default function RolesPermisosPage() {
         <div className="lg:w-1/4 flex flex-col gap-4">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="p-3.5 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Selecciona un Cargo</h3>
+              <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                Selecciona un Cargo
+              </h3>
             </div>
             <div className="flex flex-col py-1">
-              {cargos.map(cargo => {
+              {cargos.map((cargo) => {
                 const isActive = cargoSeleccionado === cargo;
                 return (
                   <button
                     key={cargo}
                     onClick={() => setCargoSeleccionado(cargo)}
                     className={`flex items-center justify-between w-full px-4 py-2.5 transition-all text-xs font-medium relative ${
-                      isActive 
-                        ? 'text-gray-900 bg-yellow-50/60 font-bold' 
+                      isActive
+                        ? 'text-gray-900 bg-yellow-50/60 font-bold'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
-                    {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#e6b010] rounded-r-full"></div>}
+                    {isActive && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#e6b010] rounded-r-full"></div>
+                    )}
                     <div className="flex items-center gap-2.5">
-                      <Shield className={`w-3.5 h-3.5 ${isActive ? 'text-[#e6b010]' : 'text-gray-400'}`} />
+                      <Shield
+                        className={`w-3.5 h-3.5 ${isActive ? 'text-[#e6b010]' : 'text-gray-400'}`}
+                      />
                       {cargo}
                     </div>
                     {isActive && <ChevronRight className="w-3.5 h-3.5 opacity-70" />}
@@ -165,13 +203,14 @@ export default function RolesPermisosPage() {
               })}
             </div>
           </div>
-          
+
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 flex gap-2.5 items-start shadow-sm">
             <div className="p-1 bg-blue-100 rounded-md shrink-0">
               <ShieldAlert className="w-3.5 h-3.5 text-blue-600" />
             </div>
             <p className="text-[11px] text-blue-900 leading-relaxed">
-              Los usuarios con rol <span className="font-bold">ADMIN</span> ignoran esta matriz, ya que cuentan con acceso irrestricto al sistema.
+              Los usuarios con rol <span className="font-bold">ADMIN</span> ignoran esta matriz, ya
+              que cuentan con acceso irrestricto al sistema.
             </p>
           </div>
         </div>
@@ -180,7 +219,10 @@ export default function RolesPermisosPage() {
           <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
             <div>
               <h3 className="font-bold text-xs text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                Permisos para: <span className="text-gray-900 bg-yellow-50 px-2 py-0.5 rounded border border-yellow-200 normal-case font-bold">{cargoSeleccionado}</span>
+                Permisos para:{' '}
+                <span className="text-gray-900 bg-yellow-50 px-2 py-0.5 rounded border border-yellow-200 normal-case font-bold">
+                  {cargoSeleccionado}
+                </span>
               </h3>
               {cargoSeleccionado === 'Administrador' && (
                 <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
@@ -195,10 +237,8 @@ export default function RolesPermisosPage() {
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
-                  <th className="py-3 px-4 pl-5">
-                    Módulo del Sistema
-                  </th>
-                  {acciones.map(accion => (
+                  <th className="py-3 px-4 pl-5">Módulo del Sistema</th>
+                  {acciones.map((accion) => (
                     <th key={accion} className="py-3 px-4 text-center">
                       {accion}
                     </th>
@@ -207,7 +247,10 @@ export default function RolesPermisosPage() {
               </thead>
               <tbody className="text-xs divide-y divide-gray-100">
                 {modulosSistema.map((modulo) => {
-                  let overridesAdmin = cargoSeleccionado === 'Administrador' ? { Ver: true, Crear: true, Editar: true, Eliminar: true } : permisos[cargoSeleccionado][modulo.id];
+                  let overridesAdmin =
+                    cargoSeleccionado === 'Administrador'
+                      ? { Ver: true, Crear: true, Editar: true, Eliminar: true }
+                      : permisos[cargoSeleccionado][modulo.id];
 
                   return (
                     <tr key={modulo.id} className="hover:bg-gray-50/50 transition-colors group">
@@ -219,15 +262,15 @@ export default function RolesPermisosPage() {
                           <span className="font-bold text-gray-900">{modulo.nombre}</span>
                         </div>
                       </td>
-                      {acciones.map(accion => {
+                      {acciones.map((accion) => {
                         const tienePermiso = overridesAdmin[accion];
                         const esAdmin = cargoSeleccionado === 'Administrador';
-                        
+
                         return (
                           <td key={accion} className="py-3 px-4 text-center align-middle">
                             <div className="flex items-center justify-center">
-                              <CustomToggle 
-                                activo={tienePermiso} 
+                              <CustomToggle
+                                activo={tienePermiso}
                                 disabled={esAdmin}
                                 onClick={() => togglePermiso(modulo.id, accion)}
                               />

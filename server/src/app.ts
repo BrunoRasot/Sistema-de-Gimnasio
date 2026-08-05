@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
+
 import usuarioRoutes from './routes/usuario.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import permisosRoutes from './routes/permisos.routes.js';
@@ -37,18 +38,29 @@ app.use(cors({
     credentials: true
 }));
 
-const limiter = rateLimit({
+
+const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 150,
-    message: { mensaje: 'Demasiadas peticiones desde tu conexión. Por seguridad, intenta de nuevo en 15 minutos.' },
+    max: 3000, 
+    message: { mensaje: 'Tráfico inusual detectado en la red. Por favor, espera unos minutos.' },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
-app.use(limiter);
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10, 
+    message: { mensaje: 'Demasiados intentos de acceso fallidos. Por seguridad, intenta de nuevo en 15 minutos.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+
+app.use('/api/auth', authLimiter);
+app.use(generalLimiter);
+
 app.use(cookieParser());
-
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
