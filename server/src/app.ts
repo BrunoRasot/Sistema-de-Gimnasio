@@ -22,40 +22,41 @@ const app = express();
 
 app.use(helmet());
 
-const dominiosPermitidos = [
-    'http://localhost:5173',
-    process.env.FRONTEND_URL
-];
+const dominiosPermitidos = ['http://localhost:5173', process.env.FRONTEND_URL];
 
-app.use(cors({
+app.use(
+  cors({
     origin: function (origin, callback) {
-        if (!origin || dominiosPermitidos.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Acceso denegado por políticas de CORS del servidor.'));
-        }
+      if (origin && dominiosPermitidos.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else if (!origin && process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(new Error('Acceso denegado por políticas de CORS del servidor.'));
+      }
     },
-    credentials: true
-}));
-
+    credentials: true,
+  }),
+);
 
 const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 3000, 
-    message: { mensaje: 'Tráfico inusual detectado en la red. Por favor, espera unos minutos.' },
-    standardHeaders: true,
-    legacyHeaders: false,
+  windowMs: 15 * 60 * 1000,
+  max: 3000,
+  message: { mensaje: 'Tráfico inusual detectado en la red. Por favor, espera unos minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
-
 
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10, 
-    message: { mensaje: 'Demasiados intentos de acceso fallidos. Por seguridad, intenta de nuevo en 15 minutos.' },
-    standardHeaders: true,
-    legacyHeaders: false,
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    mensaje:
+      'Demasiados intentos de acceso fallidos. Por seguridad, intenta de nuevo en 15 minutos.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
-
 
 app.use('/api/auth', authLimiter);
 app.use(generalLimiter);

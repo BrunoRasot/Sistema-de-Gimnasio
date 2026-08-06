@@ -5,8 +5,12 @@ import { logger } from '../utils/logger.js';
 const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    logger.error('FATAL ERROR: La variable de entorno JWT_SECRET no está configurada en los middlewares.');
-    throw new Error('FATAL ERROR: La variable de entorno JWT_SECRET no está definida en el servidor.');
+    logger.error(
+      'FATAL ERROR: La variable de entorno JWT_SECRET no está configurada en los middlewares.',
+    );
+    throw new Error(
+      'FATAL ERROR: La variable de entorno JWT_SECRET no está definida en el servidor.',
+    );
   }
   return secret;
 };
@@ -26,6 +30,12 @@ export const verificarToken = (req: AuthRequest, res: Response, next: NextFuncti
   const token = authHeader.split(' ')[1];
   try {
     const payload = jwt.verify(token, JWT_SECRET) as any;
+    if (payload.type !== 'access') {
+      return res
+        .status(401)
+        .json({ mensaje: 'Tipo de token inválido. Se requiere un access token.' });
+    }
+
     req.usuario = { id: payload.sub, rol: payload.rol, nombreUsuario: payload.nombreUsuario };
     next();
   } catch (error) {

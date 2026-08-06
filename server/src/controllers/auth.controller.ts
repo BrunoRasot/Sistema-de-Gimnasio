@@ -14,7 +14,9 @@ const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     logger.error('FATAL ERROR: La variable de entorno JWT_SECRET no está configurada.');
-    throw new Error('FATAL ERROR: La variable de entorno JWT_SECRET no está definida en el servidor.');
+    throw new Error(
+      'FATAL ERROR: La variable de entorno JWT_SECRET no está definida en el servidor.',
+    );
   }
   return secret;
 };
@@ -34,7 +36,14 @@ const verifyOtpSchema = z.object({
 const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
   const emailUser = process.env.EMAIL_USER;
   const emailPass = process.env.EMAIL_PASS;
-  if (!emailUser || !emailPass) throw new Error('Servicio de correo no configurado.');
+
+  if (!emailUser || !emailPass) {
+    if (process.env.NODE_ENV !== 'production') {
+      logger.warn(`Fallback (Desarrollo): El código OTP para ${destinatario} es ${codigo}`);
+      return;
+    }
+    throw new Error('Servicio de correo no configurado.');
+  }
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -52,16 +61,14 @@ const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
 
 const generarTokensSesion = async (usuario: { id: number; rol: string; nombreUsuario: string }) => {
   const accessToken = jwt.sign(
-    { sub: usuario.id, rol: usuario.rol, nombreUsuario: usuario.nombreUsuario },
+    { sub: usuario.id, rol: usuario.rol, nombreUsuario: usuario.nombreUsuario, type: 'access' },
     JWT_SECRET,
-    { expiresIn: '15m' }
+    { expiresIn: '15m' },
   );
 
-  const refreshToken = jwt.sign(
-    { sub: usuario.id, type: 'refresh' },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
+  const refreshToken = jwt.sign({ sub: usuario.id, type: 'refresh' }, JWT_SECRET, {
+    expiresIn: '7d',
+  });
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   await prisma.refreshToken.create({
@@ -93,14 +100,18 @@ export const login = async (req: Request, res: Response): Promise<any> => {
 
     if (!usuario.activo) {
       logger.warn(`Intento de acceso a cuenta inactiva: ${usuario.nombreUsuario}`);
-      return res.status(401).json({ mensaje: 'Esta cuenta está desactivada por el administrador.' });
+      return res
+        .status(401)
+        .json({ mensaje: 'Esta cuenta está desactivada por el administrador.' });
     }
 
     if (usuario.bloqueoHasta && new Date() < new Date(usuario.bloqueoHasta)) {
-      const minutosRestantes = Math.ceil((new Date(usuario.bloqueoHasta).getTime() - new Date().getTime()) / 60000);
+      const minutosRestantes = Math.ceil(
+        (new Date(usuario.bloqueoHasta).getTime() - new Date().getTime()) / 60000,
+      );
       logger.warn(`Intento de acceso a cuenta bloqueada temporalmente: ${usuario.nombreUsuario}`);
       return res.status(403).json({
-        mensaje: `Cuenta bloqueada por seguridad. Intenta de nuevo en ${minutosRestantes} minuto(s).`
+        mensaje: `Cuenta bloqueada por seguridad. Intenta de nuevo en ${minutosRestantes} minuto(s).`,
       });
     }
 
@@ -113,41 +124,50 @@ export const login = async (req: Request, res: Response): Promise<any> => {
       if (nuevosIntentos >= 3) {
         bloqueoHasta = new Date(Date.now() + 15 * 60 * 1000);
         estadoCuenta = 'Bloqueada';
-        logger.error(`Seguridad: Cuenta bloqueada por exceso de intentos fallidos -> ${usuario.nombreUsuario}`);
+        logger.error(
+          `Seguridad: Cuenta bloqueada por exceso de intentos fallidos -> ${usuario.nombreUsuario}`,
+        );
       }
 
       await prisma.usuario.update({
         where: { id: usuario.id },
-        data: { intentosFallidos: nuevosIntentos, bloqueoHasta, estadoCuenta }
+        data: { intentosFallidos: nuevosIntentos, bloqueoHasta, estadoCuenta },
       });
 
       if (nuevosIntentos >= 3) {
-        return res.status(403).json({ mensaje: 'Demasiados intentos fallidos. Tu cuenta ha sido bloqueada temporalmente.' });
+        return res.status(403).json({
+          mensaje: 'Demasiados intentos fallidos. Tu cuenta ha sido bloqueada temporalmente.',
+        });
       }
 
-      return res.status(401).json({ mensaje: `Contraseña incorrecta. Intento ${nuevosIntentos} de 3.` });
+      return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos.' });
     }
 
     const codigo = crypto.randomInt(100000, 1000000).toString();
-
     logger.info(`Código OTP generado para el usuario ID ${usuario.id} (${usuario.email})`);
 
     const expiracionOtp = new Date(Date.now() + otpMinutes * 60 * 1000);
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedOtp = await bcrypt.hash(codigo, salt);
+
     await prisma.usuario.update({
       where: { id: usuario.id },
       data: {
-        codigoOtp: codigo,
+        codigoOtp: hashedOtp,
         expiracionOtp,
         intentosFallidos: 0,
         bloqueoHasta: null,
-        estadoCuenta: usuario.estadoCuenta === 'Bloqueada' ? 'Activa' : usuario.estadoCuenta
+        estadoCuenta: usuario.estadoCuenta === 'Bloqueada' ? 'Activa' : usuario.estadoCuenta,
       },
     });
 
     await enviarCodigoOtp(usuario.email, codigo);
 
-    return res.json({ mensaje: 'Te enviamos un código a tu correo.', usuario: usuario.nombreUsuario });
+    return res.json({
+      mensaje: 'Te enviamos un código a tu correo.',
+      usuario: usuario.nombreUsuario,
+    });
   } catch (error) {
     logger.error(`Error crítico en el controlador de login: ${error}`);
     return res.status(500).json({ mensaje: 'No pudimos procesar la solicitud.' });
@@ -163,43 +183,77 @@ export const verificarOtp = async (req: Request, res: Response): Promise<any> =>
 
     const usuario = await prisma.usuario.findFirst({
       where: {
-        OR: [
-          { nombreUsuario: identificador },
-          { email: identificador.toLowerCase() }
-        ]
-      }
+        OR: [{ nombreUsuario: identificador }, { email: identificador.toLowerCase() }],
+      },
     });
 
-    const esValido = usuario &&
-      usuario.activo &&
-      usuario.codigoOtp === codigo &&
-      usuario.expiracionOtp !== null &&
-      new Date() < new Date(usuario.expiracionOtp);
+    if (
+      !usuario ||
+      !usuario.activo ||
+      !usuario.codigoOtp ||
+      !usuario.expiracionOtp ||
+      new Date() > new Date(usuario.expiracionOtp)
+    ) {
+      logger.warn(`Intento de verificación OTP fallido para el identificador: ${identificador}`);
+      return res.status(401).json({ mensaje: 'El código es inválido o ha vencido.' });
+    }
+
+    if (usuario.bloqueoHasta && new Date() < new Date(usuario.bloqueoHasta)) {
+      return res.status(403).json({ mensaje: 'Cuenta bloqueada temporalmente por seguridad.' });
+    }
+
+    const esValido = await bcrypt.compare(codigo, usuario.codigoOtp);
 
     if (!esValido) {
-      logger.warn(`Intento de verificación OTP fallido para el identificador: ${identificador}`);
+      const nuevosIntentos = (usuario.intentosFallidos || 0) + 1;
+      let bloqueoHasta: Date | null = null;
+      let codigoOtp: string | null = usuario.codigoOtp;
+      let expiracionOtp: Date | null = usuario.expiracionOtp;
+
+      if (nuevosIntentos >= 3) {
+        bloqueoHasta = new Date(Date.now() + 15 * 60 * 1000);
+        codigoOtp = null;
+        expiracionOtp = null;
+        logger.error(
+          `Seguridad: Cuenta bloqueada por exceso de intentos de OTP -> ${usuario.nombreUsuario}`,
+        );
+      }
+
+      await prisma.usuario.update({
+        where: { id: usuario.id },
+        data: { intentosFallidos: nuevosIntentos, bloqueoHasta, codigoOtp, expiracionOtp },
+      });
+
+      if (nuevosIntentos >= 3) {
+        return res
+          .status(403)
+          .json({ mensaje: 'Demasiados intentos fallidos. Código anulado y cuenta bloqueada.' });
+      }
+
       return res.status(401).json({ mensaje: 'El código es inválido o ha vencido.' });
     }
 
     await prisma.usuario.update({
       where: { id: usuario.id },
-      data: { codigoOtp: null, expiracionOtp: null },
+      data: { codigoOtp: null, expiracionOtp: null, intentosFallidos: 0, bloqueoHasta: null },
     });
 
     const { accessToken, refreshToken } = await generarTokensSesion({
       id: usuario.id,
       rol: usuario.rol,
-      nombreUsuario: usuario.nombreUsuario
+      nombreUsuario: usuario.nombreUsuario,
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    logger.info(`Inicio de sesión exitoso y verificado por OTP: ${usuario.nombreUsuario} [Rol: ${usuario.rol}]`);
+    logger.info(
+      `Inicio de sesión exitoso y verificado por OTP: ${usuario.nombreUsuario} [Rol: ${usuario.rol}]`,
+    );
 
     return res.json({
       token: accessToken,
@@ -208,7 +262,7 @@ export const verificarOtp = async (req: Request, res: Response): Promise<any> =>
         nombreUsuario: usuario.nombreUsuario,
         email: usuario.email,
         rol: usuario.rol,
-        cargo: usuario.cargo
+        cargo: usuario.cargo,
       },
     });
   } catch (error) {
@@ -226,7 +280,7 @@ export const renovarToken = async (req: Request, res: Response): Promise<any> =>
 
     const tokenRecord = await prisma.refreshToken.findUnique({
       where: { token: tokenCookie },
-      include: { usuario: true }
+      include: { usuario: true },
     });
 
     if (!tokenRecord || new Date() > new Date(tokenRecord.expiresAt)) {
@@ -239,9 +293,9 @@ export const renovarToken = async (req: Request, res: Response): Promise<any> =>
     }
 
     const nuevoAccessToken = jwt.sign(
-      { sub: usuario.id, rol: usuario.rol, nombreUsuario: usuario.nombreUsuario },
+      { sub: usuario.id, rol: usuario.rol, nombreUsuario: usuario.nombreUsuario, type: 'access' },
       JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '15m' },
     );
 
     return res.json({ token: nuevoAccessToken });

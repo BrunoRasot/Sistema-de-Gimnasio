@@ -20,7 +20,7 @@ const usuarioSchema = z.object({
   nombreUsuario: z.string().min(4, 'Mínimo 4 caracteres'),
   password: z.string().min(8, 'La contraseña debe tener mínimo 8 caracteres').optional(),
   rol: z.string().default('USER'),
-  estadoCuenta: z.string().default('Activa')
+  estadoCuenta: z.string().default('Activa'),
 });
 
 export const obtenerUsuarios = async (req: Request, res: Response): Promise<any> => {
@@ -38,7 +38,7 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
         { nombres: { contains: String(buscar), mode: 'insensitive' } },
         { apellidos: { contains: String(buscar), mode: 'insensitive' } },
         { dni: { contains: String(buscar) } },
-        { nombreUsuario: { contains: String(buscar), mode: 'insensitive' } }
+        { nombreUsuario: { contains: String(buscar), mode: 'insensitive' } },
       ];
     }
 
@@ -65,15 +65,15 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
           estadoLaboral: true,
           fechaIngreso: true,
           fechaNacimiento: true,
-          activo: true
-        }
+          activo: true,
+        },
       }),
-      prisma.usuario.count({ where })
+      prisma.usuario.count({ where }),
     ]);
 
     return res.json({
       data: usuarios,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
     return res.status(500).json({ mensaje: 'Error al obtener usuarios.' });
@@ -83,7 +83,7 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
 export const obtenerUsuarioPorId = async (req: Request, res: Response): Promise<any> => {
   try {
     const usuario = await prisma.usuario.findUnique({
-      where: { id: Number(req.params.id) }
+      where: { id: Number(req.params.id) },
     });
     if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
@@ -96,17 +96,23 @@ export const obtenerUsuarioPorId = async (req: Request, res: Response): Promise<
 
 export const crearUsuario = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nombres, apellidos, dni, email, password, telefono, rol, cargo, nombreUsuario } = req.body;
+    const { nombres, apellidos, dni, email, password, telefono, rol, cargo, nombreUsuario } =
+      req.body;
     const existeComoTrabajador = await prisma.usuario.findUnique({ where: { dni } });
     if (existeComoTrabajador) {
-      return res.status(400).json({ mensaje: 'Este DNI ya está registrado como TRABAJADOR en el sistema.' });
+      return res
+        .status(400)
+        .json({ mensaje: 'Este DNI ya está registrado como TRABAJADOR en el sistema.' });
     }
 
     const existeComoCliente = await prisma.miembro.findUnique({ where: { dni } });
     if (existeComoCliente) {
-      return res.status(400).json({ mensaje: 'Este DNI pertenece a un CLIENTE del gimnasio. No puede registrarse como trabajador.' });
+      return res.status(400).json({
+        mensaje:
+          'Este DNI pertenece a un CLIENTE del gimnasio. No puede registrarse como trabajador.',
+      });
     }
-    
+
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     const nuevoUsuario = await prisma.usuario.create({
@@ -119,8 +125,8 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
         telefono,
         rol: rol || 'USER',
         cargo: cargo || 'Staff',
-        nombreUsuario: nombreUsuario || dni
-      }
+        nombreUsuario: nombreUsuario || dni,
+      },
     });
 
     return res.status(201).json(nuevoUsuario);
@@ -133,17 +139,41 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
 export const actualizarUsuario = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const datosUpdate = { ...req.body };
-    delete datosUpdate.password;
-    delete datosUpdate.dni;
+    const {
+      nombres,
+      apellidos,
+      fechaNacimiento,
+      sexo,
+      direccion,
+      telefono,
+      email,
+      cargo,
+      turno,
+      fechaIngreso,
+      estadoLaboral,
+      nombreUsuario,
+      rol,
+      activo,
+    } = req.body;
 
     await prisma.usuario.update({
       where: { id: Number(id) },
       data: {
-        ...datosUpdate,
-        fechaNacimiento: datosUpdate.fechaNacimiento ? new Date(datosUpdate.fechaNacimiento) : undefined,
-        fechaIngreso: datosUpdate.fechaIngreso ? new Date(datosUpdate.fechaIngreso) : undefined,
-      }
+        nombres,
+        apellidos,
+        sexo,
+        direccion,
+        telefono,
+        email,
+        cargo,
+        turno,
+        estadoLaboral,
+        nombreUsuario,
+        rol,
+        activo,
+        fechaNacimiento: fechaNacimiento ? new Date(fechaNacimiento) : undefined,
+        fechaIngreso: fechaIngreso ? new Date(fechaIngreso) : undefined,
+      },
     });
 
     return res.json({ mensaje: 'Información actualizada correctamente.' });
@@ -172,8 +202,8 @@ export const cambiarEstadoCuenta = async (req: Request, res: Response): Promise<
       where: { id: Number(req.params.id) },
       data: {
         estadoCuenta: estado,
-        activo: estado === 'Activa'
-      }
+        activo: estado === 'Activa',
+      },
     });
 
     return res.json({ mensaje: `Cuenta ${estado.toLowerCase()} exitosamente.` });
@@ -194,7 +224,7 @@ export const restablecerPassword = async (req: Request, res: Response): Promise<
 
     await prisma.usuario.update({
       where: { id: Number(req.params.id) },
-      data: { password: hashedPassword }
+      data: { password: hashedPassword },
     });
 
     return res.json({ mensaje: 'Contraseña restablecida exitosamente.' });

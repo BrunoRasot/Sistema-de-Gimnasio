@@ -6,14 +6,14 @@ export const obtenerVentas = async (req: Request, res: Response): Promise<any> =
     const ventas = await prisma.venta.findMany({
       include: {
         detalles: {
-          include: { producto: true }
-        }
+          include: { producto: true },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
     return res.json(ventas);
   } catch (error: any) {
-    return res.status(500).json({ message: 'Error al obtener el historial de ventas', error: error.message });
+    return res.status(500).json({ message: 'Error interno al obtener el historial de ventas.' });
   }
 };
 
@@ -25,28 +25,40 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
   }
 
   try {
-    const ultimaVenta = await prisma.venta.findFirst({ orderBy: { id: 'desc' } });
-    const numero = ultimaVenta ? ultimaVenta.id + 1 : 1;
-    const codigo = `VNT-${String(numero).padStart(4, '0')}`;
-
-    let totalVenta = 0;
-    const detallesData = items.map((item: any) => {
-      const subtotal = Number(item.cantidad) * Number(item.precioUnit);
-      totalVenta += subtotal;
-      return {
-        productoId: Number(item.productoId),
-        cantidad: Number(item.cantidad),
-        precioUnit: Number(item.precioUnit),
-        subtotal: Number(subtotal)
-      };
-    });
-
     const nuevaVenta = await prisma.$transaction(async (tx) => {
+      const ultimaVenta = await tx.venta.findFirst({ orderBy: { id: 'desc' } });
+      const numero = ultimaVenta ? ultimaVenta.id + 1 : 1;
+      const codigo = `VNT-${String(numero).padStart(4, '0')}`;
+
+      let totalVenta = 0;
+      const detallesData = [];
       for (const item of items) {
         const prod = await tx.producto.findUnique({ where: { id: Number(item.productoId) } });
-        if (!prod || prod.stock < Number(item.cantidad)) {
+
+        if (!prod) {
+          throw new Error(`El producto ID: ${item.productoId} no existe en el sistema`);
+        }
+        if (prod.stock < Number(item.cantidad)) {
           throw new Error(`Stock insuficiente para el producto ID: ${item.productoId}`);
         }
+
+        const precioReal = Number(prod.precioVenta);
+        const cantidadNumerica = Number(item.cantidad);
+        const subtotal = cantidadNumerica * precioReal;
+
+        totalVenta += subtotal;
+
+        detallesData.push({
+          productoId: prod.id,
+          cantidad: cantidadNumerica,
+          precioUnit: precioReal,
+          subtotal: subtotal,
+        });
+
+        await tx.producto.update({
+          where: { id: prod.id },
+          data: { stock: { decrement: cantidadNumerica } },
+        });
       }
 
       const venta = await tx.venta.create({
@@ -59,25 +71,23 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
           montoRecibido: montoRecibido ? Number(montoRecibido) : null,
           vuelto: vuelto !== undefined ? Number(vuelto) : null,
           detalles: {
-            create: detallesData
-          }
+            create: detallesData,
+          },
         },
-        include: { detalles: true }
+        include: { detalles: true },
       });
-
-      for (const item of items) {
-        await tx.producto.update({
-          where: { id: Number(item.productoId) },
-          data: { stock: { decrement: Number(item.cantidad) } }
-        });
-      }
 
       return venta;
     });
 
     return res.status(201).json({ message: 'Venta registrada con éxito', venta: nuevaVenta });
   } catch (error: any) {
-    return res.status(500).json({ message: error.message || 'Error al procesar la venta' });
+    const esErrorControlado =
+      error instanceof Error &&
+      (error.message.includes('producto') || error.message.includes('Stock'));
+    const mensaje = esErrorControlado ? error.message : 'Error interno al procesar la venta.';
+
+    return res.status(500).json({ message: mensaje });
   }
 };
 
@@ -88,16 +98,16 @@ export const obtenerComprobantePorId = async (req: Request, res: Response): Prom
       where: { id: Number(id) },
       include: {
         detalles: {
-          include: { producto: true }
-        }
-      }
+          include: { producto: true },
+        },
+      },
     });
     if (!comprobante) {
       return res.status(404).json({ message: 'Comprobante no encontrado' });
     }
     return res.json(comprobante);
   } catch (error: any) {
-    return res.status(500).json({ message: 'Error al obtener el comprobante', error: error.message });
+    return res.status(500).json({ message: 'Error interno al obtener el comprobante.' });
   }
 };
 
@@ -106,14 +116,16 @@ export const obtenerDevoluciones = async (req: Request, res: Response): Promise<
     const devoluciones = await prisma.devolucion.findMany({
       include: {
         venta: {
-          include: { detalles: { include: { producto: true } } }
-        }
+          include: { detalles: { include: { producto: true } } },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
     return res.json(devoluciones);
   } catch (error: any) {
-    return res.status(500).json({ message: 'Error al obtener devoluciones', error: error.message });
+    return res
+      .status(500)
+      .json({ message: 'Error interno al obtener el historial de devoluciones.' });
   }
 };
 
@@ -124,12 +136,9 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
     const resultado = await prisma.$transaction(async (tx) => {
       const venta = await tx.venta.findFirst({
         where: {
-          OR: [
-            { numeroOperacion: identificador },
-            { codigo: identificador }
-          ]
+          OR: [{ numeroOperacion: identificador }, { codigo: identificador }],
         },
-        include: { detalles: true }
+        include: { detalles: true },
       });
 
       if (!venta) {
@@ -143,20 +152,20 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
       const devolucion = await tx.devolucion.create({
         data: {
           ventaId: venta.id,
-          motivo: motivo || 'Devolución de productos'
-        }
+          motivo: motivo || 'Devolución de productos',
+        },
       });
       for (const detalle of venta.detalles) {
         await tx.producto.update({
           where: { id: detalle.productoId },
           data: {
-            stock: { increment: detalle.cantidad }
-          }
+            stock: { increment: detalle.cantidad },
+          },
         });
       }
       await tx.venta.update({
         where: { id: venta.id },
-        data: { estado: 'Anulado' }
+        data: { estado: 'Anulado' },
       });
 
       return devolucion;
@@ -164,6 +173,8 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
 
     return res.status(201).json({ message: 'Devolución procesada y stock restaurado', resultado });
   } catch (error: any) {
-    return res.status(500).json({ message: error.message || 'Error al procesar devolución' });
+    const esErrorControlado = error instanceof Error && error.message.includes('venta');
+    const mensaje = esErrorControlado ? error.message : 'Error interno al procesar la devolución.';
+    return res.status(500).json({ message: mensaje });
   }
 };
