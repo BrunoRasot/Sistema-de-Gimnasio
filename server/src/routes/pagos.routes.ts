@@ -1,19 +1,48 @@
 import { Router } from 'express';
-import { 
-  obtenerMetodos, crearMetodo, actualizarMetodo, 
-  obtenerPagos, registrarPago, anularPago 
+import {
+  obtenerMetodos,
+  crearMetodo,
+  actualizarMetodo,
+  obtenerPagos,
+  registrarPago,
+  anularPago,
 } from '../controllers/pagos.controller.js';
 import { verificarToken } from '../middlewares/auth.middleware.js';
+import { verificarPermiso } from '../middlewares/permisos.middleware.js';
 import { auditar } from '../middlewares/auditoria.middleware.js';
 
 const router = Router();
 
-router.get('/metodos', verificarToken, obtenerMetodos);
-router.post('/metodos', verificarToken, auditar('Pagos'), crearMetodo);
-router.put('/metodos/:id', verificarToken, auditar('Pagos'), actualizarMetodo);
+router.get('/metodos', verificarToken, verificarPermiso('pagos', 'ver'), obtenerMetodos);
+router.post(
+  '/metodos',
+  verificarToken,
+  verificarPermiso('pagos', 'crear'),
+  auditar('Pagos'),
+  crearMetodo,
+);
+router.put(
+  '/metodos/:id',
+  verificarToken,
+  verificarPermiso('pagos', 'editar'),
+  auditar('Pagos'),
+  actualizarMetodo,
+);
 
-router.get('/', verificarToken, obtenerPagos);
-router.post('/', verificarToken, auditar('Pagos'), registrarPago);
-router.patch('/:id/anular', verificarToken, auditar('Pagos'), anularPago);
+router.get('/', verificarToken, verificarPermiso('pagos', 'ver'), obtenerPagos);
+router.post(
+  '/',
+  verificarToken,
+  verificarPermiso('pagos', 'crear'),
+  auditar('Pagos'),
+  registrarPago,
+);
+router.patch(
+  '/:id/anular',
+  verificarToken,
+  verificarPermiso('pagos', 'eliminar'),
+  auditar('Pagos'),
+  anularPago,
+);
 
 export default router;
