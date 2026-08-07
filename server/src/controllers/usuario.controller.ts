@@ -13,7 +13,6 @@ const usuarioSchema = z.object({
   direccion: z.string().optional(),
   telefono: z.string().optional(),
   email: z.string().email('Correo inválido'),
-  cargo: z.string().min(1, 'Cargo es obligatorio'),
   turno: z.string().optional(),
   fechaIngreso: z.string().optional(),
   estadoLaboral: z.string().default('Activo'),
@@ -25,14 +24,15 @@ const usuarioSchema = z.object({
 
 export const obtenerUsuarios = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { buscar, cargo, estado, pagina = 1, limite = 10 } = req.query;
+    const { buscar, estado, rol, pagina = 1, limite = 10 } = req.query;
     const page = Number(pagina);
     const limit = Number(limite);
     const skip = (page - 1) * limit;
-
     const where: any = {};
-    if (cargo) where.cargo = String(cargo);
+
+    if (rol) where.rol = String(rol);
     if (estado) where.estadoCuenta = String(estado);
+
     if (buscar) {
       where.OR = [
         { nombres: { contains: String(buscar), mode: 'insensitive' } },
@@ -41,7 +41,6 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
         { nombreUsuario: { contains: String(buscar), mode: 'insensitive' } },
       ];
     }
-
     const [usuarios, total] = await prisma.$transaction([
       prisma.usuario.findMany({
         where,
@@ -54,12 +53,10 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
           nombres: true,
           apellidos: true,
           dni: true,
-          cargo: true,
           nombreUsuario: true,
           email: true,
           telefono: true,
           estadoCuenta: true,
-          ultimoAcceso: true,
           rol: true,
           turno: true,
           estadoLaboral: true,
@@ -70,12 +67,12 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
       }),
       prisma.usuario.count({ where }),
     ]);
-
     return res.json({
       data: usuarios,
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
+    console.error('Error al obtener usuarios:', error);
     return res.status(500).json({ mensaje: 'Error al obtener usuarios.' });
   }
 };
@@ -96,8 +93,8 @@ export const obtenerUsuarioPorId = async (req: Request, res: Response): Promise<
 
 export const crearUsuario = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nombres, apellidos, dni, email, password, telefono, rol, cargo, nombreUsuario } =
-      req.body;
+    const { nombres, apellidos, dni, email, password, telefono, rol, nombreUsuario } = req.body;
+
     const existeComoTrabajador = await prisma.usuario.findUnique({ where: { dni } });
     if (existeComoTrabajador) {
       return res
@@ -124,7 +121,6 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
         password: hashedPassword,
         telefono,
         rol: rol || 'USER',
-        cargo: cargo || 'Staff',
         nombreUsuario: nombreUsuario || dni,
       },
     });
@@ -147,7 +143,6 @@ export const actualizarUsuario = async (req: Request, res: Response): Promise<an
       direccion,
       telefono,
       email,
-      cargo,
       turno,
       fechaIngreso,
       estadoLaboral,
@@ -165,7 +160,6 @@ export const actualizarUsuario = async (req: Request, res: Response): Promise<an
         direccion,
         telefono,
         email,
-        cargo,
         turno,
         estadoLaboral,
         nombreUsuario,

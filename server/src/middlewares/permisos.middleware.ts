@@ -9,7 +9,7 @@ export const verificarPermiso = (modulo: string, accion: 'ver' | 'crear' | 'edit
 
             const usuarioDB = await prisma.usuario.findUnique({
                 where: { id: usuarioId },
-                select: { rol: true, cargo: true }
+                select: { rol: true }
             });
 
             if (!usuarioDB) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
@@ -18,19 +18,15 @@ export const verificarPermiso = (modulo: string, accion: 'ver' | 'crear' | 'edit
                 return next();
             }
 
-            if (!usuarioDB.cargo) {
-                return res.status(403).json({ mensaje: 'Acceso denegado: No tienes un cargo asignado en el sistema.' });
-            }
-
             const permiso = await prisma.permiso.findFirst({
                 where: {
-                    cargo: usuarioDB.cargo,
+                    rol: usuarioDB.rol as any,
                     modulo: modulo
                 }
             });
 
             if (!permiso) {
-                return res.status(403).json({ mensaje: `Acceso denegado: Tu cargo (${usuarioDB.cargo}) no tiene configurado el acceso a ${modulo}.` });
+                return res.status(403).json({ mensaje: `Acceso denegado: Tu rol (${usuarioDB.rol}) no tiene configurado el acceso a ${modulo}.` });
             }
 
             const tieneAcceso = permiso[accion];
