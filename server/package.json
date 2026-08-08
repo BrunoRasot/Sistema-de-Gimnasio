@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -51,8 +52,11 @@
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.1",
     "prisma": "^7.9.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.23.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }

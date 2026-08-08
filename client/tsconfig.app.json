@@ -4,7 +4,7 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
     "module": "ESNext",
     "skipLibCheck": true,
     "ignoreDeprecations": "6.0",

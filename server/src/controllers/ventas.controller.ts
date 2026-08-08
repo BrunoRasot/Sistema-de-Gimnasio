@@ -18,10 +18,14 @@ export const obtenerVentas = async (req: Request, res: Response): Promise<any> =
 };
 
 export const crearVenta = async (req: Request, res: Response): Promise<any> => {
-  const { cliente, metodoPago, numeroOperacion, montoRecibido, vuelto, items } = req.body;
+  const { cliente, metodoId, numeroOperacion, montoRecibido, vuelto, items } = req.body;
 
   if (!items || items.length === 0) {
     return res.status(400).json({ message: 'La venta debe contener al menos un producto' });
+  }
+
+  if (!metodoId) {
+    return res.status(400).json({ message: 'Se debe especificar un método de pago válido' });
   }
 
   try {
@@ -32,9 +36,9 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
 
       let totalVenta = 0;
       const detallesData = [];
+
       for (const item of items) {
         const prod = await tx.producto.findUnique({ where: { id: Number(item.productoId) } });
-
         if (!prod) {
           throw new Error(`El producto ID: ${item.productoId} no existe en el sistema`);
         }
@@ -66,7 +70,7 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
           codigo,
           cliente: cliente || 'Público General',
           total: totalVenta,
-          metodoPago: metodoPago || 'Efectivo',
+          metodoId: Number(metodoId),
           numeroOperacion: numeroOperacion || null,
           montoRecibido: montoRecibido ? Number(montoRecibido) : null,
           vuelto: vuelto !== undefined ? Number(vuelto) : null,
@@ -86,7 +90,6 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
       error instanceof Error &&
       (error.message.includes('producto') || error.message.includes('Stock'));
     const mensaje = esErrorControlado ? error.message : 'Error interno al procesar la venta.';
-
     return res.status(500).json({ message: mensaje });
   }
 };
@@ -131,6 +134,11 @@ export const obtenerDevoluciones = async (req: Request, res: Response): Promise<
 
 export const registrarDevolucion = async (req: Request, res: Response): Promise<any> => {
   const { identificador, motivo } = req.body;
+  const usuarioId = (req as any).usuario?.id;
+
+  if (!usuarioId) {
+    return res.status(401).json({ message: 'Usuario no autenticado para realizar esta acción.' });
+  }
 
   try {
     const resultado = await prisma.$transaction(async (tx) => {
@@ -144,7 +152,6 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
       if (!venta) {
         throw new Error('No se encontró ninguna venta con ese número de operación o código.');
       }
-
       if (venta.estado === 'Anulado') {
         throw new Error('Esta venta ya fue anulada anteriormente.');
       }
@@ -152,9 +159,12 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
       const devolucion = await tx.devolucion.create({
         data: {
           ventaId: venta.id,
+          usuarioId: Number(usuarioId),
+          monto: venta.total,
           motivo: motivo || 'Devolución de productos',
         },
       });
+
       for (const detalle of venta.detalles) {
         await tx.producto.update({
           where: { id: detalle.productoId },
@@ -163,6 +173,7 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
           },
         });
       }
+
       await tx.venta.update({
         where: { id: venta.id },
         data: { estado: 'Anulado' },
