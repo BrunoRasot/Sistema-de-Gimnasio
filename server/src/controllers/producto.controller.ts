@@ -6,9 +6,9 @@ export const obtenerProductos = async (req: Request, res: Response): Promise<any
     const productos = await prisma.producto.findMany({
       include: {
         categoria: { select: { nombre: true } },
-        proveedor: { select: { nombre: true } }
+        proveedor: { select: { nombre: true } },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
     return res.json(productos);
   } catch (error) {
@@ -18,7 +18,18 @@ export const obtenerProductos = async (req: Request, res: Response): Promise<any
 
 export const crearProducto = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nombre, sku, descripcion, precioCompra, precioVenta, stock, stockMinimo, categoriaId, proveedorId, estado } = req.body;
+    const {
+      nombre,
+      sku,
+      descripcion,
+      precioCompra,
+      precioVenta,
+      stock,
+      stockMinimo,
+      categoriaId,
+      proveedorId,
+      estado,
+    } = req.body;
 
     const existeSku = await prisma.producto.findUnique({ where: { sku } });
     if (existeSku) return res.status(400).json({ mensaje: 'El SKU ya está en uso.' });
@@ -34,8 +45,8 @@ export const crearProducto = async (req: Request, res: Response): Promise<any> =
         stockMinimo: Number(stockMinimo),
         categoriaId: Number(categoriaId),
         proveedorId: proveedorId ? Number(proveedorId) : null,
-        estado
-      }
+        estado,
+      },
     });
     return res.status(201).json(nuevoProducto);
   } catch (error) {
@@ -46,12 +57,24 @@ export const crearProducto = async (req: Request, res: Response): Promise<any> =
 export const actualizarProducto = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { nombre, sku, descripcion, precioCompra, precioVenta, stock, stockMinimo, categoriaId, proveedorId, estado } = req.body;
+    const {
+      nombre,
+      sku,
+      descripcion,
+      precioCompra,
+      precioVenta,
+      stock,
+      stockMinimo,
+      categoriaId,
+      proveedorId,
+      estado,
+    } = req.body;
 
     const existeSku = await prisma.producto.findFirst({
-      where: { sku, NOT: { id: Number(id) } }
+      where: { sku, NOT: { id: Number(id) } },
     });
-    if (existeSku) return res.status(400).json({ mensaje: 'El SKU ya está en uso por otro producto.' });
+    if (existeSku)
+      return res.status(400).json({ mensaje: 'El SKU ya está en uso por otro producto.' });
 
     const productoActualizado = await prisma.producto.update({
       where: { id: Number(id) },
@@ -65,8 +88,8 @@ export const actualizarProducto = async (req: Request, res: Response): Promise<a
         stockMinimo: Number(stockMinimo),
         categoriaId: Number(categoriaId),
         proveedorId: proveedorId ? Number(proveedorId) : null,
-        estado
-      }
+        estado,
+      },
     });
     return res.json(productoActualizado);
   } catch (error) {
@@ -77,9 +100,23 @@ export const actualizarProducto = async (req: Request, res: Response): Promise<a
 export const eliminarProducto = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
+    const producto = await prisma.producto.findUnique({
+      where: { id: Number(id) },
+      include: { _count: { select: { detalles: true } } },
+    });
+
+    if (producto?._count.detalles && producto._count.detalles > 0) {
+      return res.status(400).json({
+        mensaje:
+          'No se puede eliminar este producto porque tiene ventas asociadas. Desactívalo en su lugar.',
+      });
+    }
+
     await prisma.producto.delete({ where: { id: Number(id) } });
+
     return res.json({ mensaje: 'Producto eliminado correctamente.' });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ mensaje: 'Error al eliminar el producto.' });
   }
 };

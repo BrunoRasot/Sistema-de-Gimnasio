@@ -17,7 +17,7 @@ export const crearMetodo = async (req: Request, res: Response): Promise<any> => 
     if (existe) return res.status(400).json({ mensaje: 'El método de pago ya existe.' });
 
     const nuevoMetodo = await prisma.metodoPago.create({
-      data: { nombre, descripcion, activo }
+      data: { nombre, descripcion, activo },
     });
     return res.status(201).json(nuevoMetodo);
   } catch (error) {
@@ -31,7 +31,7 @@ export const actualizarMetodo = async (req: Request, res: Response): Promise<any
     const { nombre, descripcion, activo } = req.body;
     const actualizado = await prisma.metodoPago.update({
       where: { id: Number(id) },
-      data: { nombre, descripcion, activo }
+      data: { nombre, descripcion, activo },
     });
     return res.json(actualizado);
   } catch (error) {
@@ -43,7 +43,7 @@ export const obtenerPagos = async (req: Request, res: Response): Promise<any> =>
   try {
     const pagos = await prisma.pago.findMany({
       include: { metodo: true },
-      orderBy: { fecha: 'desc' }
+      orderBy: { fecha: 'desc' },
     });
     return res.json(pagos);
   } catch (error) {
@@ -54,21 +54,24 @@ export const obtenerPagos = async (req: Request, res: Response): Promise<any> =>
 export const registrarPago = async (req: Request, res: Response): Promise<any> => {
   try {
     const { cliente, concepto, monto, metodoId } = req.body;
-    const ultimoPago = await prisma.pago.findFirst({ orderBy: { id: 'desc' } });
-    const numero = ultimoPago ? ultimoPago.id + 1 : 1;
-    const codigo = `PAG-${String(numero).padStart(5, '0')}`;
-
+    const codigoTemp = `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const nuevoPago = await prisma.pago.create({
       data: {
-        codigo,
+        codigo: codigoTemp,
         cliente: cliente || 'Público General',
         concepto,
         monto: Number(monto),
-        metodoId: Number(metodoId)
+        metodoId: Number(metodoId),
       },
-      include: { metodo: true }
     });
-    return res.status(201).json(nuevoPago);
+
+    const pagoFinal = await prisma.pago.update({
+      where: { id: nuevoPago.id },
+      data: { codigo: `PAG-${String(nuevoPago.id).padStart(5, '0')}` },
+      include: { metodo: true },
+    });
+
+    return res.status(201).json(pagoFinal);
   } catch (error) {
     return res.status(500).json({ mensaje: 'Error al registrar el pago.' });
   }
@@ -79,7 +82,7 @@ export const anularPago = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;
     const pago = await prisma.pago.update({
       where: { id: Number(id) },
-      data: { estado: 'Anulado' }
+      data: { estado: 'Anulado' },
     });
     return res.json({ mensaje: 'Pago anulado correctamente.', pago });
   } catch (error) {

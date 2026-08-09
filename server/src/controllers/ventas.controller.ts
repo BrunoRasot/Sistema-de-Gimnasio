@@ -30,10 +30,6 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
 
   try {
     const nuevaVenta = await prisma.$transaction(async (tx) => {
-      const ultimaVenta = await tx.venta.findFirst({ orderBy: { id: 'desc' } });
-      const numero = ultimaVenta ? ultimaVenta.id + 1 : 1;
-      const codigo = `VNT-${String(numero).padStart(4, '0')}`;
-
       let totalVenta = 0;
       const detallesData = [];
 
@@ -65,9 +61,13 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
         });
       }
 
-      const venta = await tx.venta.create({
+      // 1. Generamos un código temporal garantizado único para evitar bloqueos
+      const codigoTemp = `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+      // 2. Creamos la venta con el código temporal
+      const ventaTemp = await tx.venta.create({
         data: {
-          codigo,
+          codigo: codigoTemp,
           cliente: cliente || 'Público General',
           total: totalVenta,
           metodoId: Number(metodoId),
@@ -78,10 +78,16 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
             create: detallesData,
           },
         },
+      });
+
+      // 3. Actualizamos la venta con el ID autoincremental real generado por la base de datos
+      const ventaFinal = await tx.venta.update({
+        where: { id: ventaTemp.id },
+        data: { codigo: `VNT-${String(ventaTemp.id).padStart(4, '0')}` },
         include: { detalles: true },
       });
 
-      return venta;
+      return ventaFinal;
     });
 
     return res.status(201).json({ message: 'Venta registrada con éxito', venta: nuevaVenta });

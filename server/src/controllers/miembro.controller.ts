@@ -9,10 +9,10 @@ export const obtenerMiembros = async (req: Request, res: Response): Promise<any>
         membresias: {
           orderBy: { fechaFin: 'desc' },
           take: 1,
-          include: { plan: true }
-        }
+          include: { plan: true },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
     return res.json(miembros);
   } catch (error) {
@@ -26,7 +26,8 @@ export const buscarClientePorDni = async (req: Request, res: Response): Promise<
     const cliente = await prisma.miembro.findUnique({ where: { dni: String(dni) } });
 
     if (!cliente) return res.status(404).json({ mensaje: 'Cliente no encontrado en el sistema.' });
-    if (cliente.estado === 'Inactivo') return res.status(400).json({ mensaje: 'Este cliente está Inactivo/Eliminado.' });
+    if (cliente.estado === 'Inactivo')
+      return res.status(400).json({ mensaje: 'Este cliente está Inactivo/Eliminado.' });
 
     return res.json(cliente);
   } catch (error) {
@@ -39,12 +40,15 @@ export const crearSoloCliente = async (req: Request, res: Response): Promise<any
     const { nombres, apellidos, dni, email, telefono } = req.body;
 
     const existeComoTrabajador = await prisma.usuario.findFirst({ where: { dni } });
-    if (existeComoTrabajador) return res.status(400).json({ mensaje: 'Este DNI pertenece a un TRABAJADOR.' });
+    if (existeComoTrabajador)
+      return res.status(400).json({ mensaje: 'Este DNI pertenece a un TRABAJADOR.' });
     const existeComoCliente = await prisma.miembro.findUnique({ where: { dni } });
 
     if (existeComoCliente) {
       if (existeComoCliente.estado !== 'Inactivo') {
-        return res.status(400).json({ mensaje: 'Este DNI ya está registrado y activo en el Directorio.' });
+        return res
+          .status(400)
+          .json({ mensaje: 'Este DNI ya está registrado y activo en el Directorio.' });
       }
       const clienteReactivado = await prisma.miembro.update({
         where: { id: existeComoCliente.id },
@@ -53,19 +57,19 @@ export const crearSoloCliente = async (req: Request, res: Response): Promise<any
           apellidos,
           email,
           telefono,
-          estado: 'Activo'
-        }
+          estado: 'Activo',
+        },
       });
 
       return res.status(200).json(clienteReactivado);
     }
     const nuevoCliente = await prisma.miembro.create({
-      data: { nombres, apellidos, dni, email, telefono, estado: 'Activo' }
+      data: { nombres, apellidos, dni, email, telefono, estado: 'Activo' },
     });
 
     return res.status(201).json(nuevoCliente);
   } catch (error) {
-    console.error("Error al registrar cliente:", error);
+    console.error('Error al registrar cliente:', error);
     return res.status(500).json({ mensaje: 'Error al registrar al cliente.' });
   }
 };
@@ -74,7 +78,8 @@ export const asignarMembresia = async (req: Request, res: Response): Promise<any
   try {
     const { miembroId, planId, fechaInicio } = req.body;
 
-    if (!miembroId) return res.status(400).json({ mensaje: 'Debe buscar y seleccionar un cliente.' });
+    if (!miembroId)
+      return res.status(400).json({ mensaje: 'Debe buscar y seleccionar un cliente.' });
 
     const plan = await prisma.plan.findUnique({ where: { id: Number(planId) } });
     if (!plan) return res.status(404).json({ mensaje: 'Plan no encontrado.' });
@@ -90,9 +95,16 @@ export const asignarMembresia = async (req: Request, res: Response): Promise<any
         fechaInicio: inicio,
         fechaFin: fin,
         montoPagado: plan.precio,
-        estado: 'Activa'
-      }
+        estado: 'Activa',
+      },
     });
+
+    const membresiaActiva = await prisma.membresia.findFirst({
+      where: { miembroId: Number(miembroId), estado: 'Activa' },
+    });
+    if (membresiaActiva) {
+      return res.status(400).json({ mensaje: 'Este cliente ya tiene una membresía activa.' });
+    }
 
     return res.status(201).json(nuevaMembresia);
   } catch (error) {
@@ -105,7 +117,7 @@ export const inactivarCliente = async (req: Request, res: Response): Promise<any
     const { id } = req.params;
     await prisma.miembro.update({
       where: { id: Number(id) },
-      data: { estado: 'Inactivo' }
+      data: { estado: 'Inactivo' },
     });
     return res.json({ mensaje: 'Cliente inactivado correctamente.' });
   } catch (error) {
@@ -118,7 +130,8 @@ export const renovarMembresia = async (req: Request, res: Response): Promise<any
     const { id } = req.params;
     const { planId, fechaInicio } = req.body;
 
-    if (!planId) return res.status(400).json({ mensaje: 'Debe seleccionar un plan para la renovación.' });
+    if (!planId)
+      return res.status(400).json({ mensaje: 'Debe seleccionar un plan para la renovación.' });
 
     const plan = await prisma.plan.findUnique({ where: { id: Number(planId) } });
     if (!plan) return res.status(404).json({ mensaje: 'El plan seleccionado no existe.' });
@@ -130,30 +143,39 @@ export const renovarMembresia = async (req: Request, res: Response): Promise<any
     await prisma.membresia.updateMany({
       where: {
         miembroId: Number(id),
-        estado: 'Activa'
+        estado: 'Activa',
       },
-      data: { estado: 'Vencida' }
+      data: { estado: 'Vencida' },
     });
 
-    const nuevaMembresia = await prisma.membresia.create({
-      data: {
-        miembroId: Number(id),
-        planId: plan.id,
-        fechaInicio: inicio,
-        fechaFin: fin,
-        montoPagado: plan.precio,
-        estado: 'Activa'
-      }
-    });
+    const nuevaMembresia = await prisma.$transaction(async (tx) => {
+      await tx.membresia.updateMany({
+        where: { miembroId: Number(id), estado: 'Activa' },
+        data: { estado: 'Vencida' },
+      });
 
-    await prisma.miembro.update({
-      where: { id: Number(id) },
-      data: { estado: 'Activo' }
+      const mem = await tx.membresia.create({
+        data: {
+          miembroId: Number(id),
+          planId: plan.id,
+          fechaInicio: inicio,
+          fechaFin: fin,
+          montoPagado: plan.precio,
+          estado: 'Activa',
+        },
+      });
+
+      await tx.miembro.update({
+        where: { id: Number(id) },
+        data: { estado: 'Activo' },
+      });
+
+      return mem;
     });
 
     return res.status(201).json(nuevaMembresia);
   } catch (error) {
-    console.error("Error al renovar membresía:", error);
+    console.error('Error al renovar membresía:', error);
     return res.status(500).json({ mensaje: 'Error interno al procesar la renovación.' });
   }
 };

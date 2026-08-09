@@ -93,7 +93,13 @@ export const obtenerUsuarioPorId = async (req: Request, res: Response): Promise<
 
 export const crearUsuario = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nombres, apellidos, dni, email, password, telefono, rol, nombreUsuario } = req.body;
+    const parsed = usuarioSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({ mensaje: parsed.error.issues[0]?.message });
+    }
+
+    const { nombres, apellidos, dni, email, password, telefono, rol, nombreUsuario } = parsed.data;
 
     const existeComoTrabajador = await prisma.usuario.findUnique({ where: { dni } });
     if (existeComoTrabajador) {
@@ -110,8 +116,15 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
       });
     }
 
+    if (!password) {
+      return res
+        .status(400)
+        .json({ mensaje: 'La contraseña es obligatoria para nuevos usuarios.' });
+    }
+
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     const nuevoUsuario = await prisma.usuario.create({
       data: {
         nombres,
@@ -120,7 +133,7 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
         email,
         password: hashedPassword,
         telefono,
-        rol: rol || 'USER',
+        rol: (rol as any) || 'USER',
         nombreUsuario: nombreUsuario || dni,
       },
     });
