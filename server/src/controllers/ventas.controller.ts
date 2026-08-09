@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../database/prisma.js';
+import { logger } from '../utils/logger.js';
 
 export const obtenerVentas = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -13,17 +14,18 @@ export const obtenerVentas = async (req: Request, res: Response): Promise<any> =
     });
     return res.json(ventas);
   } catch (error: any) {
+    logger.error(`Error al obtener historial de ventas: ${error}`);
     return res.status(500).json({ message: 'Error interno al obtener el historial de ventas.' });
   }
 };
 
 export const crearVenta = async (req: Request, res: Response): Promise<any> => {
   const { cliente, metodoId, numeroOperacion, montoRecibido, vuelto, items } = req.body;
+  const usuarioId = (req as any).usuario?.id;
 
   if (!items || items.length === 0) {
     return res.status(400).json({ message: 'La venta debe contener al menos un producto' });
   }
-
   if (!metodoId) {
     return res.status(400).json({ message: 'Se debe especificar un método de pago válido' });
   }
@@ -61,13 +63,12 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
         });
       }
 
-      // 1. Generamos un código temporal garantizado único para evitar bloqueos
       const codigoTemp = `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-      // 2. Creamos la venta con el código temporal
       const ventaTemp = await tx.venta.create({
         data: {
           codigo: codigoTemp,
+          usuarioId: usuarioId ? Number(usuarioId) : null,
           cliente: cliente || 'Público General',
           total: totalVenta,
           metodoId: Number(metodoId),
@@ -80,7 +81,6 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
         },
       });
 
-      // 3. Actualizamos la venta con el ID autoincremental real generado por la base de datos
       const ventaFinal = await tx.venta.update({
         where: { id: ventaTemp.id },
         data: { codigo: `VNT-${String(ventaTemp.id).padStart(4, '0')}` },
@@ -92,6 +92,7 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
 
     return res.status(201).json({ message: 'Venta registrada con éxito', venta: nuevaVenta });
   } catch (error: any) {
+    logger.error(`Error al procesar la venta: ${error}`);
     const esErrorControlado =
       error instanceof Error &&
       (error.message.includes('producto') || error.message.includes('Stock'));
@@ -116,6 +117,7 @@ export const obtenerComprobantePorId = async (req: Request, res: Response): Prom
     }
     return res.json(comprobante);
   } catch (error: any) {
+    logger.error(`Error al obtener comprobante: ${error}`);
     return res.status(500).json({ message: 'Error interno al obtener el comprobante.' });
   }
 };
@@ -132,6 +134,7 @@ export const obtenerDevoluciones = async (req: Request, res: Response): Promise<
     });
     return res.json(devoluciones);
   } catch (error: any) {
+    logger.error(`Error al obtener devoluciones: ${error}`);
     return res
       .status(500)
       .json({ message: 'Error interno al obtener el historial de devoluciones.' });
@@ -141,7 +144,6 @@ export const obtenerDevoluciones = async (req: Request, res: Response): Promise<
 export const registrarDevolucion = async (req: Request, res: Response): Promise<any> => {
   const { identificador, motivo } = req.body;
   const usuarioId = (req as any).usuario?.id;
-
   if (!usuarioId) {
     return res.status(401).json({ message: 'Usuario no autenticado para realizar esta acción.' });
   }
@@ -154,7 +156,6 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
         },
         include: { detalles: true },
       });
-
       if (!venta) {
         throw new Error('No se encontró ninguna venta con ese número de operación o código.');
       }
@@ -190,6 +191,7 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
 
     return res.status(201).json({ message: 'Devolución procesada y stock restaurado', resultado });
   } catch (error: any) {
+    logger.error(`Error al procesar devolución: ${error}`);
     const esErrorControlado = error instanceof Error && error.message.includes('venta');
     const mensaje = esErrorControlado ? error.message : 'Error interno al procesar la devolución.';
     return res.status(500).json({ message: mensaje });

@@ -6,14 +6,34 @@ import {
   cambiarPassword,
   obtenerAlertasTiempoReal,
 } from '../controllers/configuracion.controller.js';
-import { verificarToken, verificarAdmin } from '../middlewares/auth.middleware.js';
+import { verificarToken } from '../middlewares/auth.middleware.js';
+import { verificarPermiso } from '../middlewares/permisos.middleware.js';
+import { auditar } from '../middlewares/auditoria.middleware.js';
+import { validarSchema } from '../middlewares/validacion.middleware.js';
+import { configuracionInfoSchema } from '../schemas/index.js';
 
 const router = Router();
 
 router.get('/', verificarToken, obtenerConfiguracion);
-router.put('/info', verificarToken, verificarAdmin, actualizarInfo);
-router.put('/notificaciones', verificarToken, verificarAdmin, actualizarNotificaciones);
-router.put('/seguridad/password', verificarToken, cambiarPassword);
-router.get('/alertas-tiempo-real', verificarToken, obtenerAlertasTiempoReal);
+router.get('/alertas', verificarToken, obtenerAlertasTiempoReal);
+
+router.put(
+  '/info',
+  verificarToken,
+  verificarPermiso('configuracion', 'editar'),
+  auditar('Configuración'),
+  validarSchema(configuracionInfoSchema),
+  actualizarInfo,
+);
+
+router.put(
+  '/notificaciones',
+  verificarToken,
+  verificarPermiso('configuracion', 'editar'),
+  auditar('Configuración'),
+  actualizarNotificaciones,
+);
+
+router.post('/cambiar-password', verificarToken, cambiarPassword);
 
 export default router;

@@ -1,50 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../database/prisma.js';
+import { logger } from '../utils/logger.js';
 
 export const auditar = (modulo: string) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const originalSend = res.send;
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const usuarioId = (req as any).usuario?.id;
+    const ip = req.ip || req.socket.remoteAddress;
+    const metodo = req.method;
+    const ruta = req.originalUrl;
 
-    res.send = function (cuerpoRespuesta) {
-      if (
-        res.statusCode >= 200 &&
-        res.statusCode < 300 &&
-        ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)
-      ) {
-        const mapaAcciones: Record<string, string> = {
-          POST: 'CREAR',
-          PUT: 'EDITAR',
-          PATCH: 'ACTUALIZAR',
-          DELETE: 'ELIMINAR',
-        };
-
-        const accion = mapaAcciones[req.method] || req.method;
-        const usuarioId = (req as any).usuario?.id || null;
-        const sanitizedBody = { ...req.body };
-        if (sanitizedBody.password) sanitizedBody.password = '***OCULTO***';
-        if (sanitizedBody.nuevaPassword) sanitizedBody.nuevaPassword = '***OCULTO***';
-
-        const detalles = JSON.stringify({
-          body: sanitizedBody,
-          params: req.params,
-        });
-
-        const ip = req.ip || req.headers['x-forwarded-for']?.toString() || 'Desconocida';
-
-        prisma.auditoria
-          .create({
+    res.on('finish', async () => {
+      if (res.statusCode >= 200 && res.statusCode < 400 && metodo !== 'GET') {
+        try {
+          await prisma.auditoria.create({
             data: {
-              usuarioId,
-              accion,
+              usuarioId: usuarioId ? Number(usuarioId) : null,
+              accion: `${metodo} ${ruta}`,
               modulo,
-              detalles,
-              ip,
+              detalles: JSON.stringify({
+                body: req.body,
+                params: req.params,
+                query: req.query,
+              }),
+              ip: String(ip),
             },
-          })
-          .catch((err) => console.error('Error al registrar auditoría:', err));
+          });
+        } catch (err) {
+          logger.error('Error al registrar auditoría: ' + err);
+        }
       }
-      return originalSend.call(this, cuerpoRespuesta);
-    };
+    });
+
     next();
   };
 };

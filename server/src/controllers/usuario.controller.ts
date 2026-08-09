@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../database/prisma.js';
+import { serializarUsuario } from '../utils/serializer.js';
+import { logger } from '../utils/logger.js';
 
 const usuarioSchema = z.object({
   foto: z.string().optional(),
@@ -74,7 +76,7 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
-    console.error('Error al obtener usuarios:', error);
+    logger.error('Error al obtener usuarios: ' + error);
     return res.status(500).json({ mensaje: 'Error al obtener usuarios.' });
   }
 };
@@ -141,17 +143,18 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
         nombreUsuario: nombreUsuario || dni,
       },
     });
-
-    return res.status(201).json(nuevoUsuario);
+    return res.status(201).json(serializarUsuario(nuevoUsuario));
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ mensaje: 'Error interno al registrar al usuario.' });
+    logger.error('Error al actualizar trabajador: ' + error);
+    return res.status(500).json({ mensaje: 'Error al actualizar trabajador.' });
   }
 };
 
 export const actualizarUsuario = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
+    const usuarioSesionId = (req as any).usuario?.id;
+
     const {
       nombres,
       apellidos,
@@ -168,6 +171,19 @@ export const actualizarUsuario = async (req: Request, res: Response): Promise<an
       cargo,
       activo,
     } = req.body;
+
+    if (Number(id) === Number(usuarioSesionId)) {
+      if (rol === 'USER') {
+        return res.status(400).json({
+          mensaje: 'Por seguridad, no puedes quitarte el rol de ADMINISTRADOR a ti mismo.',
+        });
+      }
+      if (activo === false || estadoLaboral === 'Inactivo') {
+        return res.status(400).json({
+          mensaje: 'Por seguridad, no puedes desactivar tu propia cuenta.',
+        });
+      }
+    }
 
     await prisma.usuario.update({
       where: { id: Number(id) },
@@ -197,10 +213,25 @@ export const actualizarUsuario = async (req: Request, res: Response): Promise<an
 
 export const eliminarUsuario = async (req: Request, res: Response): Promise<any> => {
   try {
-    await prisma.usuario.delete({ where: { id: Number(req.params.id) } });
-    return res.json({ mensaje: 'Trabajador eliminado del sistema.' });
+    const { id } = req.params;
+    const usuarioSesionId = (req as any).usuario?.id;
+    if (Number(id) === Number(usuarioSesionId)) {
+      return res.status(400).json({
+        mensaje: 'Acción bloqueada: No puedes eliminar tu propio usuario.',
+      });
+    }
+
+    await prisma.usuario.update({
+      where: { id: Number(id) },
+      data: {
+        activo: false,
+        estadoLaboral: 'Inactivo',
+      },
+    });
+
+    return res.json({ mensaje: 'Trabajador desactivado del sistema de forma segura.' });
   } catch (error) {
-    return res.status(500).json({ mensaje: 'No se pudo eliminar al trabajador.' });
+    return res.status(500).json({ mensaje: 'No se pudo desactivar al trabajador.' });
   }
 };
 

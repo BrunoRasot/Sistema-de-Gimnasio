@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../database/prisma.js';
+import { logger } from '../utils/logger.js';
 
 export const verificarPermiso = (
   modulo: string,
@@ -10,20 +11,16 @@ export const verificarPermiso = (
       const usuarioId = (req as any).usuario?.id;
       if (!usuarioId) return res.status(401).json({ mensaje: 'No autenticado.' });
 
-      // Ahora traemos también el cargo del usuario
       const usuarioDB = await prisma.usuario.findUnique({
         where: { id: usuarioId },
         select: { rol: true, cargo: true },
       });
 
       if (!usuarioDB) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
-
-      // El ADMIN tiene pase libre global
       if (usuarioDB.rol === 'ADMIN') {
         return next();
       }
 
-      // Buscamos los permisos usando el CARGO en lugar del ROL
       const permiso = await prisma.permiso.findFirst({
         where: {
           cargo: usuarioDB.cargo,
@@ -32,11 +29,9 @@ export const verificarPermiso = (
       });
 
       if (!permiso) {
-        return res
-          .status(403)
-          .json({
-            mensaje: `Acceso denegado: Tu cargo (${usuarioDB.cargo}) no tiene configurado el acceso a ${modulo}.`,
-          });
+        return res.status(403).json({
+          mensaje: `Acceso denegado: Tu cargo (${usuarioDB.cargo}) no tiene configurado el acceso a ${modulo}.`,
+        });
       }
 
       const tieneAcceso = permiso[accion];
@@ -48,8 +43,8 @@ export const verificarPermiso = (
 
       next();
     } catch (error) {
-      console.error('Error en middleware de permisos:', error);
-      res.status(500).json({ mensaje: 'Error interno al verificar permisos de seguridad.' });
+      logger.error('Error en middleware de permisos: ' + error);
+      return res.status(500).json({ mensaje: 'Error interno al verificar permisos' });
     }
   };
 };
