@@ -10,6 +10,8 @@ import {
 import { verificarToken } from '../middlewares/auth.middleware.js';
 import { verificarPermiso } from '../middlewares/permisos.middleware.js';
 import { auditar } from '../middlewares/auditoria.middleware.js';
+import { validarSchema } from '../middlewares/validacion.middleware.js';
+import { pagoSchema } from '../schemas/index.js';
 
 const router = Router();
 
@@ -35,6 +37,7 @@ router.post(
   verificarToken,
   verificarPermiso('pagos', 'crear'),
   auditar('Pagos'),
+  validarSchema(pagoSchema),
   registrarPago,
 );
 router.patch(

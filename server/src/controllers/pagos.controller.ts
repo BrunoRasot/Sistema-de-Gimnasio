@@ -54,10 +54,13 @@ export const obtenerPagos = async (req: Request, res: Response): Promise<any> =>
 export const registrarPago = async (req: Request, res: Response): Promise<any> => {
   try {
     const { cliente, concepto, monto, metodoId } = req.body;
+    const usuarioId = (req as any).usuario?.id;
+
     const codigoTemp = `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const nuevoPago = await prisma.pago.create({
       data: {
         codigo: codigoTemp,
+        usuarioId: usuarioId ? Number(usuarioId) : null,
         cliente: cliente || 'Público General',
         concepto,
         monto: Number(monto),

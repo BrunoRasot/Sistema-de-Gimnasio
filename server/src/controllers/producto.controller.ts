@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../database/prisma.js';
+import { logger } from '../utils/logger.js';
 
 export const obtenerProductos = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -12,6 +13,7 @@ export const obtenerProductos = async (req: Request, res: Response): Promise<any
     });
     return res.json(productos);
   } catch (error) {
+    logger.error(`Error al obtener los productos: ${error}`);
     return res.status(500).json({ mensaje: 'Error al obtener los productos.' });
   }
 };
@@ -30,7 +32,6 @@ export const crearProducto = async (req: Request, res: Response): Promise<any> =
       proveedorId,
       estado,
     } = req.body;
-
     const existeSku = await prisma.producto.findUnique({ where: { sku } });
     if (existeSku) return res.status(400).json({ mensaje: 'El SKU ya está en uso.' });
 
@@ -50,6 +51,7 @@ export const crearProducto = async (req: Request, res: Response): Promise<any> =
     });
     return res.status(201).json(nuevoProducto);
   } catch (error) {
+    logger.error(`Error al crear el producto: ${error}`);
     return res.status(500).json({ mensaje: 'Error al crear el producto.' });
   }
 };
@@ -93,6 +95,7 @@ export const actualizarProducto = async (req: Request, res: Response): Promise<a
     });
     return res.json(productoActualizado);
   } catch (error) {
+    logger.error(`Error al actualizar el producto: ${error}`);
     return res.status(500).json({ mensaje: 'Error al actualizar el producto.' });
   }
 };
@@ -104,19 +107,16 @@ export const eliminarProducto = async (req: Request, res: Response): Promise<any
       where: { id: Number(id) },
       include: { _count: { select: { detalles: true } } },
     });
-
     if (producto?._count.detalles && producto._count.detalles > 0) {
       return res.status(400).json({
         mensaje:
           'No se puede eliminar este producto porque tiene ventas asociadas. Desactívalo en su lugar.',
       });
     }
-
     await prisma.producto.delete({ where: { id: Number(id) } });
-
     return res.json({ mensaje: 'Producto eliminado correctamente.' });
   } catch (error) {
-    console.error(error);
+    logger.error(`Error al eliminar el producto: ${error}`);
     return res.status(500).json({ mensaje: 'Error al eliminar el producto.' });
   }
 };

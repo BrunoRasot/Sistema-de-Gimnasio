@@ -26,17 +26,15 @@ const dominiosPermitidos = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   process.env.FRONTEND_URL,
-];
+].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || dominiosPermitidos.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else if (process.env.NODE_ENV !== 'production') {
+      if (!origin || dominiosPermitidos.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Acceso denegado por políticas de CORS del servidor.'));
+        callback(new Error(`Acceso denegado por políticas de CORS. Origen: ${origin}`));
       }
     },
     credentials: true,
@@ -51,20 +49,7 @@ const generalLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: {
-    mensaje:
-      'Demasiados intentos de acceso fallidos. Por seguridad, intenta de nuevo en 15 minutos.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use('/api/auth', authLimiter);
 app.use(generalLimiter);
-
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));

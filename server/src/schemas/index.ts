@@ -1,0 +1,53 @@
+import { z } from 'zod';
+
+export const productoSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es obligatorio'),
+  sku: z.string().min(1, 'El SKU es obligatorio'),
+  descripcion: z.string().optional().nullable(),
+  precioCompra: z.coerce.number().min(0, 'El precio de compra no puede ser negativo'),
+  precioVenta: z.coerce.number().min(0, 'El precio de venta no puede ser negativo'),
+  stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo'),
+  stockMinimo: z.coerce.number().int().min(0, 'El stock mínimo no puede ser negativo'),
+  categoriaId: z.coerce.number().int().positive('La categoría es obligatoria'),
+  proveedorId: z.coerce.number().int().positive().optional().nullable(),
+  estado: z.string().default('Activo'),
+});
+
+export const ventaSchema = z.object({
+  cliente: z.string().optional().nullable(),
+  metodoId: z.coerce.number().int().positive('El método de pago es obligatorio'),
+  numeroOperacion: z.string().optional().nullable(),
+  montoRecibido: z.coerce.number().min(0).optional().nullable(),
+  vuelto: z.coerce.number().min(0).optional().nullable(),
+  items: z
+    .array(
+      z.object({
+        productoId: z.coerce.number().int().positive('El ID del producto es inválido'),
+        cantidad: z.coerce.number().int().positive('La cantidad debe ser mayor a 0'),
+      }),
+    )
+    .min(1, 'La venta debe contener al menos un producto'),
+});
+
+export const pagoSchema = z.object({
+  cliente: z.string().optional().nullable(),
+  concepto: z.string().min(1, 'El concepto es obligatorio'),
+  monto: z.coerce.number().positive('El monto debe ser mayor a 0'),
+  metodoId: z.coerce.number().int().positive('El método de pago es obligatorio'),
+});
+
+export const planSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es obligatorio'),
+  descripcion: z.string().optional().nullable(),
+  precio: z.coerce.number().min(0, 'El precio no puede ser negativo'),
+  duracionDias: z.coerce.number().int().positive('La duración debe ser de al menos 1 día'),
+  estado: z.string().default('Activo'),
+});
+
+export const miembroSchema = z.object({
+  nombres: z.string().min(1, 'Los nombres son obligatorios'),
+  apellidos: z.string().min(1, 'Los apellidos son obligatorios'),
+  dni: z.string().min(8, 'DNI inválido').max(15),
+  email: z.union([z.string().email('Email inválido'), z.literal(''), z.null()]).optional(),
+  telefono: z.string().optional().nullable(),
+});
