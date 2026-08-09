@@ -19,6 +19,7 @@ const usuarioSchema = z.object({
   nombreUsuario: z.string().min(4, 'Mínimo 4 caracteres'),
   password: z.string().min(8, 'La contraseña debe tener mínimo 8 caracteres').optional(),
   rol: z.string().default('USER'),
+  cargo: z.string().default('Recepcionista'),
   estadoCuenta: z.string().default('Activa'),
 });
 
@@ -58,6 +59,7 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
           telefono: true,
           estadoCuenta: true,
           rol: true,
+          cargo: true,
           turno: true,
           estadoLaboral: true,
           fechaIngreso: true,
@@ -99,7 +101,8 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
       return res.status(400).json({ mensaje: parsed.error.issues[0]?.message });
     }
 
-    const { nombres, apellidos, dni, email, password, telefono, rol, nombreUsuario } = parsed.data;
+    const { nombres, apellidos, dni, email, password, telefono, rol, cargo, nombreUsuario } =
+      parsed.data;
 
     const existeComoTrabajador = await prisma.usuario.findUnique({ where: { dni } });
     if (existeComoTrabajador) {
@@ -134,6 +137,7 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
         password: hashedPassword,
         telefono,
         rol: (rol as any) || 'USER',
+        cargo: cargo || 'Recepcionista',
         nombreUsuario: nombreUsuario || dni,
       },
     });
@@ -161,6 +165,7 @@ export const actualizarUsuario = async (req: Request, res: Response): Promise<an
       estadoLaboral,
       nombreUsuario,
       rol,
+      cargo,
       activo,
     } = req.body;
 
@@ -177,6 +182,7 @@ export const actualizarUsuario = async (req: Request, res: Response): Promise<an
         estadoLaboral,
         nombreUsuario,
         rol,
+        cargo,
         activo,
         fechaNacimiento: fechaNacimiento ? new Date(fechaNacimiento) : undefined,
         fechaIngreso: fechaIngreso ? new Date(fechaIngreso) : undefined,
@@ -201,8 +207,10 @@ export const eliminarUsuario = async (req: Request, res: Response): Promise<any>
 export const cambiarEstadoCuenta = async (req: Request, res: Response): Promise<any> => {
   try {
     const { estado } = req.body;
-    if (!['Activa', 'Bloqueada', 'Suspendida'].includes(estado)) {
-      return res.status(400).json({ mensaje: 'Estado inválido.' });
+    if (!['Activa', 'Bloqueada'].includes(estado)) {
+      return res
+        .status(400)
+        .json({ mensaje: 'Estado inválido. Solo se permite Activa o Bloqueada.' });
     }
 
     await prisma.usuario.update({

@@ -262,6 +262,7 @@ export const verificarOtp = async (req: Request, res: Response): Promise<any> =>
         nombreUsuario: usuario.nombreUsuario,
         email: usuario.email,
         rol: usuario.rol,
+        cargo: usuario.cargo,
       },
     });
   } catch (error) {

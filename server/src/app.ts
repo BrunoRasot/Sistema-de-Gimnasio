@@ -22,14 +22,18 @@ const app = express();
 
 app.use(helmet());
 
-const dominiosPermitidos = ['http://localhost:5173', process.env.FRONTEND_URL];
+const dominiosPermitidos = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  process.env.FRONTEND_URL,
+];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (origin && dominiosPermitidos.indexOf(origin) !== -1) {
+      if (!origin || dominiosPermitidos.indexOf(origin) !== -1) {
         callback(null, true);
-      } else if (!origin && process.env.NODE_ENV !== 'production') {
+      } else if (process.env.NODE_ENV !== 'production') {
         callback(null, true);
       } else {
         callback(new Error('Acceso denegado por políticas de CORS del servidor.'));

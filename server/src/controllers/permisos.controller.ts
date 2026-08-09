@@ -15,7 +15,7 @@ export const guardarPermisos = async (req: Request, res: Response): Promise<any>
     const { cargo, permisos } = req.body;
     const operaciones = Object.entries(permisos).map(([modulo, acciones]: any) => {
       return prisma.permiso.upsert({
-        where: { rol_modulo: { rol: cargo as any, modulo } },
+        where: { cargo_modulo: { cargo, modulo } },
         update: {
           ver: acciones.Ver,
           crear: acciones.Crear,
@@ -23,7 +23,7 @@ export const guardarPermisos = async (req: Request, res: Response): Promise<any>
           eliminar: acciones.Eliminar,
         },
         create: {
-          rol: cargo as any,
+          cargo,
           modulo,
           ver: acciones.Ver,
           crear: acciones.Crear,
