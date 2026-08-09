@@ -51,6 +51,7 @@ export const miembroSchema = z.object({
   email: z.union([z.string().email('Email inválido'), z.literal(''), z.null()]).optional(),
   telefono: z.string().optional().nullable(),
 });
+<<<<<<< HEAD
 
 export const categoriaSchema = z.object({
   nombre: z.string().min(1, 'El nombre de la categoría es obligatorio'),
@@ -75,3 +76,5 @@ export const configuracionInfoSchema = z.object({
   direccion: z.string().optional().nullable(),
   moneda: z.string().min(1, 'La moneda es obligatoria'),
 });
+=======
+>>>>>>> df9fa46db323fa25d718a3e91d3f4d3281a1c1fa

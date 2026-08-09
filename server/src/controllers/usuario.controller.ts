@@ -3,7 +3,10 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../database/prisma.js';
 import { serializarUsuario } from '../utils/serializer.js';
+<<<<<<< HEAD
 import { logger } from '../utils/logger.js';
+=======
+>>>>>>> df9fa46db323fa25d718a3e91d3f4d3281a1c1fa
 
 const usuarioSchema = z.object({
   foto: z.string().optional(),
