@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { prisma } from '../database/prisma.js';
 import { logger } from '../utils/logger.js';
+import { miembroSchema, asignarMembresiaSchema, renovarMembresiaSchema } from '../schemas/index.js';
 
 export const obtenerMiembros = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -38,11 +40,13 @@ export const buscarClientePorDni = async (req: Request, res: Response): Promise<
 
 export const crearSoloCliente = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nombres, apellidos, dni, email, telefono } = req.body;
-    const existeComoTrabajador = await prisma.usuario.findFirst({ where: { dni } });
+    const datos = req.body as z.infer<typeof miembroSchema>;
+
+    const existeComoTrabajador = await prisma.usuario.findFirst({ where: { dni: datos.dni } });
     if (existeComoTrabajador)
       return res.status(400).json({ mensaje: 'Este DNI pertenece a un TRABAJADOR.' });
-    const existeComoCliente = await prisma.miembro.findUnique({ where: { dni } });
+
+    const existeComoCliente = await prisma.miembro.findUnique({ where: { dni: datos.dni } });
     if (existeComoCliente) {
       if (existeComoCliente.estado !== 'Inactivo') {
         return res
@@ -52,17 +56,25 @@ export const crearSoloCliente = async (req: Request, res: Response): Promise<any
       const clienteReactivado = await prisma.miembro.update({
         where: { id: existeComoCliente.id },
         data: {
-          nombres,
-          apellidos,
-          email,
-          telefono,
+          nombres: datos.nombres,
+          apellidos: datos.apellidos,
+          email: datos.email,
+          telefono: datos.telefono,
           estado: 'Activo',
         },
       });
       return res.status(200).json(clienteReactivado);
     }
+
     const nuevoCliente = await prisma.miembro.create({
-      data: { nombres, apellidos, dni, email, telefono, estado: 'Activo' },
+      data: {
+        nombres: datos.nombres,
+        apellidos: datos.apellidos,
+        dni: datos.dni,
+        email: datos.email,
+        telefono: datos.telefono,
+        estado: 'Activo',
+      },
     });
     return res.status(201).json(nuevoCliente);
   } catch (error) {
@@ -73,25 +85,25 @@ export const crearSoloCliente = async (req: Request, res: Response): Promise<any
 
 export const asignarMembresia = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { miembroId, planId, fechaInicio } = req.body;
-    if (!miembroId)
-      return res.status(400).json({ mensaje: 'Debe buscar y seleccionar un cliente.' });
-    const plan = await prisma.plan.findUnique({ where: { id: Number(planId) } });
+    const datos = req.body as z.infer<typeof asignarMembresiaSchema>;
+
+    const plan = await prisma.plan.findUnique({ where: { id: datos.planId } });
     if (!plan) return res.status(404).json({ mensaje: 'Plan no encontrado.' });
-    const inicio = new Date(fechaInicio);
+
+    const inicio = datos.fechaInicio ? new Date(datos.fechaInicio) : new Date();
     const fin = new Date(inicio);
     fin.setDate(fin.getDate() + plan.duracionDias);
 
     const nuevaMembresia = await prisma.$transaction(async (tx) => {
       const membresiaActiva = await tx.membresia.findFirst({
-        where: { miembroId: Number(miembroId), estado: 'Activa' },
+        where: { miembroId: datos.miembroId, estado: 'Activa' },
       });
       if (membresiaActiva) {
         throw new Error('Este cliente ya tiene una membresía activa.');
       }
       return await tx.membresia.create({
         data: {
-          miembroId: Number(miembroId),
+          miembroId: datos.miembroId,
           planId: plan.id,
           fechaInicio: inicio,
           fechaFin: fin,
@@ -100,7 +112,6 @@ export const asignarMembresia = async (req: Request, res: Response): Promise<any
         },
       });
     });
-
     return res.status(201).json(nuevaMembresia);
   } catch (error: any) {
     if (error.message === 'Este cliente ya tiene una membresía activa.') {
@@ -128,12 +139,12 @@ export const inactivarCliente = async (req: Request, res: Response): Promise<any
 export const renovarMembresia = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { planId, fechaInicio } = req.body;
-    if (!planId)
-      return res.status(400).json({ mensaje: 'Debe seleccionar un plan para la renovación.' });
-    const plan = await prisma.plan.findUnique({ where: { id: Number(planId) } });
+    const datos = req.body as z.infer<typeof renovarMembresiaSchema>;
+
+    const plan = await prisma.plan.findUnique({ where: { id: datos.planId } });
     if (!plan) return res.status(404).json({ mensaje: 'El plan seleccionado no existe.' });
-    const inicio = fechaInicio ? new Date(fechaInicio) : new Date();
+
+    const inicio = datos.fechaInicio ? new Date(datos.fechaInicio) : new Date();
     const fin = new Date(inicio);
     fin.setDate(fin.getDate() + plan.duracionDias);
 

@@ -1,17 +1,9 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
-const AuthLayout = () => {
-  const token = localStorage.getItem('token');
-
-  if (token) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
+export default function AuthLayout() {
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
       <Outlet />
     </div>
   );
-};
-
-export default AuthLayout;
+}

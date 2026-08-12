@@ -1,29 +1,20 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
-const getHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${localStorage.getItem('token')}`
-});
+import { api } from './api';
 
 export const reportesService = {
   obtenerReporteVentas: async () => {
-    const res = await fetch(`${API_URL}/reportes/ventas`, { headers: getHeaders() });
-    if (!res.ok) throw new Error('Error al obtener reporte de ventas');
-    return res.json();
+    const { data } = await api.get('/reportes/ventas');
+    return data;
   },
   obtenerReporteMembresias: async () => {
-    const res = await fetch(`${API_URL}/reportes/membresias`, { headers: getHeaders() });
-    if (!res.ok) throw new Error('Error al obtener reporte de membresías');
-    return res.json();
+    const { data } = await api.get('/reportes/membresias');
+    return data;
   },
   obtenerReporteAsistencias: async () => {
-    const res = await fetch(`${API_URL}/reportes/asistencias`, { headers: getHeaders() });
-    if (!res.ok) throw new Error('Error al obtener reporte de asistencias');
-    return res.json();
+    const { data } = await api.get('/reportes/asistencias');
+    return data;
   },
   obtenerReporteInventario: async () => {
-    const res = await fetch(`${API_URL}/reportes/inventario`, { headers: getHeaders() });
-    if (!res.ok) throw new Error('Error al obtener reporte de inventario');
-    return res.json();
-  }
+    const { data } = await api.get('/reportes/inventario');
+    return data;
+  },
 };

@@ -1,47 +1,24 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
-const getHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${localStorage.getItem('token')}`
-});
+import { api } from './api';
 
 export const configuracionService = {
-  obtenerDatos: async () => {
-    const res = await fetch(`${API_URL}/configuracion`, { headers: getHeaders() });
-    if (!res.ok) throw new Error('Error al obtener configuración');
-    return res.json();
+  obtenerConfiguracion: async () => {
+    const { data } = await api.get('/configuracion');
+    return data;
   },
-
-  actualizarInfo: async (data: any) => {
-    const res = await fetch(`${API_URL}/configuracion/info`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Error al actualizar información');
-    return json;
+  obtenerAlertasTiempoReal: async () => {
+    const { data } = await api.get('/configuracion/alertas');
+    return data;
   },
-
-  actualizarNotificaciones: async (data: any) => {
-    const res = await fetch(`${API_URL}/configuracion/notificaciones`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify(data)
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Error al actualizar notificaciones');
-    return json;
+  actualizarInfo: async (infoData: any) => {
+    const { data } = await api.put('/configuracion/info', infoData);
+    return data;
   },
-
-  cambiarPassword: async (actual: string, nueva: string) => {
-    const res = await fetch(`${API_URL}/configuracion/seguridad/password`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify({ actual, nueva })
-    });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Error al cambiar contraseña');
-    return json;
-  }
+  actualizarNotificaciones: async (notificacionesData: any) => {
+    const { data } = await api.put('/configuracion/notificaciones', notificacionesData);
+    return data;
+  },
+  cambiarPassword: async (passwordData: any) => {
+    const { data } = await api.post('/configuracion/cambiar-password', passwordData);
+    return data;
+  },
 };

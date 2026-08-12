@@ -15,7 +15,7 @@ import { configuracionInfoSchema } from '../schemas/index.js';
 const router = Router();
 
 router.get('/', verificarToken, obtenerConfiguracion);
-router.get('/alertas', verificarToken, obtenerAlertasTiempoReal);
+router.get('/alertas-tiempo-real', verificarToken, obtenerAlertasTiempoReal);
 
 router.put(
   '/info',
