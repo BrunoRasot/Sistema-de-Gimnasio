@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "idx_unica_membresia_activa" ON "Membresia"("miembroId") WHERE estado = 'Activa';

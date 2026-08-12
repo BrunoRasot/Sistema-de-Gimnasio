@@ -3,10 +3,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../database/prisma.js';
 import { serializarUsuario } from '../utils/serializer.js';
-<<<<<<< HEAD
 import { logger } from '../utils/logger.js';
-=======
->>>>>>> df9fa46db323fa25d718a3e91d3f4d3281a1c1fa
 
 const usuarioSchema = z.object({
   foto: z.string().optional(),
@@ -34,8 +31,8 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
     const page = Number(pagina);
     const limit = Number(limite);
     const skip = (page - 1) * limit;
-    const where: any = {};
 
+    const where: any = {};
     if (rol) where.rol = String(rol);
     if (estado) where.estadoCuenta = String(estado);
 
@@ -47,6 +44,7 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
         { nombreUsuario: { contains: String(buscar), mode: 'insensitive' } },
       ];
     }
+
     const [usuarios, total] = await prisma.$transaction([
       prisma.usuario.findMany({
         where,
@@ -74,6 +72,7 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
       }),
       prisma.usuario.count({ where }),
     ]);
+
     return res.json({
       data: usuarios,
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
@@ -90,7 +89,6 @@ export const obtenerUsuarioPorId = async (req: Request, res: Response): Promise<
       where: { id: Number(req.params.id) },
     });
     if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
-
     const { password, ...usuarioSinPassword } = usuario;
     return res.json(usuarioSinPassword);
   } catch (error) {
@@ -101,7 +99,6 @@ export const obtenerUsuarioPorId = async (req: Request, res: Response): Promise<
 export const crearUsuario = async (req: Request, res: Response): Promise<any> => {
   try {
     const parsed = usuarioSchema.safeParse(req.body);
-
     if (!parsed.success) {
       return res.status(400).json({ mensaje: parsed.error.issues[0]?.message });
     }
@@ -146,6 +143,7 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
         nombreUsuario: nombreUsuario || dni,
       },
     });
+
     return res.status(201).json(serializarUsuario(nuevoUsuario));
   } catch (error) {
     logger.error('Error al actualizar trabajador: ' + error);
@@ -157,7 +155,6 @@ export const actualizarUsuario = async (req: Request, res: Response): Promise<an
   try {
     const { id } = req.params;
     const usuarioSesionId = (req as any).usuario?.id;
-
     const {
       nombres,
       apellidos,
@@ -207,7 +204,6 @@ export const actualizarUsuario = async (req: Request, res: Response): Promise<an
         fechaIngreso: fechaIngreso ? new Date(fechaIngreso) : undefined,
       },
     });
-
     return res.json({ mensaje: 'Información actualizada correctamente.' });
   } catch (error) {
     return res.status(500).json({ mensaje: 'Error al actualizar trabajador.' });
@@ -218,6 +214,7 @@ export const eliminarUsuario = async (req: Request, res: Response): Promise<any>
   try {
     const { id } = req.params;
     const usuarioSesionId = (req as any).usuario?.id;
+
     if (Number(id) === Number(usuarioSesionId)) {
       return res.status(400).json({
         mensaje: 'Acción bloqueada: No puedes eliminar tu propio usuario.',
@@ -254,7 +251,6 @@ export const cambiarEstadoCuenta = async (req: Request, res: Response): Promise<
         activo: estado === 'Activa',
       },
     });
-
     return res.json({ mensaje: `Cuenta ${estado.toLowerCase()} exitosamente.` });
   } catch (error) {
     return res.status(500).json({ mensaje: 'Error al cambiar estado de la cuenta.' });

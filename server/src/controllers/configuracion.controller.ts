@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import { z } from 'zod';
 import { prisma } from '../database/prisma.js';
+import { configuracionInfoSchema } from '../schemas/index.js';
 
 const obtenerConfig = async () => {
   let config = await prisma.configuracion.findUnique({ where: { id: 1 } });
@@ -15,21 +17,31 @@ export const obtenerConfiguracion = async (req: Request, res: Response): Promise
     const config = await obtenerConfig();
     return res.json(config);
   } catch (error) {
-    return res.status(500).json({ message: 'Error al obtener la configuración' });
+    return res.status(500).json({ mensaje: 'Error al obtener la configuración' });
   }
 };
 
 export const actualizarInfo = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nombre, ruc, telefono, email, direccion, moneda, logo } = req.body;
+    const datos = req.body as z.infer<typeof configuracionInfoSchema>;
+    const logo = req.body.logo; // El logo viene por fuera del schema de texto
+
     await obtenerConfig();
     const configActualizada = await prisma.configuracion.update({
       where: { id: 1 },
-      data: { nombre, ruc, telefono, email, direccion, moneda, logo },
+      data: {
+        nombre: datos.nombre,
+        ruc: datos.ruc ?? '',
+        telefono: datos.telefono ?? '',
+        email: datos.email ?? '',
+        direccion: datos.direccion ?? '',
+        moneda: datos.moneda,
+        logo,
+      },
     });
-    return res.json({ message: 'Información actualizada', config: configActualizada });
+    return res.json({ mensaje: 'Información actualizada', config: configActualizada });
   } catch (error) {
-    return res.status(500).json({ message: 'Error al actualizar información' });
+    return res.status(500).json({ mensaje: 'Error al actualizar información' });
   }
 };
 
@@ -42,9 +54,9 @@ export const actualizarNotificaciones = async (req: Request, res: Response): Pro
       where: { id: 1 },
       data: { nuevasVentas, membresiasVencidas, stockBajo, alertasSistema, reportesSemanales },
     });
-    return res.json({ message: 'Notificaciones actualizadas', config: configActualizada });
+    return res.json({ mensaje: 'Notificaciones actualizadas', config: configActualizada });
   } catch (error) {
-    return res.status(500).json({ message: 'Error al actualizar notificaciones' });
+    return res.status(500).json({ mensaje: 'Error al actualizar notificaciones' });
   }
 };
 
@@ -54,11 +66,11 @@ export const cambiarPassword = async (req: Request, res: Response): Promise<any>
     const { actual, nueva } = req.body;
 
     const usuario = await prisma.usuario.findUnique({ where: { id: Number(usuarioId) } });
-    if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' });
+    if (!usuario) return res.status(404).json({ mensaje: 'Usuario no encontrado' });
 
     const passwordCorrecta = await bcrypt.compare(actual, usuario.password);
     if (!passwordCorrecta) {
-      return res.status(400).json({ message: 'La contraseña actual es incorrecta' });
+      return res.status(400).json({ mensaje: 'La contraseña actual es incorrecta' });
     }
 
     const hashedPassword = await bcrypt.hash(nueva, 10);
@@ -67,9 +79,9 @@ export const cambiarPassword = async (req: Request, res: Response): Promise<any>
       data: { password: hashedPassword },
     });
 
-    return res.json({ message: 'Contraseña actualizada exitosamente' });
+    return res.json({ mensaje: 'Contraseña actualizada exitosamente' });
   } catch (error) {
-    return res.status(500).json({ message: 'Error al cambiar la contraseña' });
+    return res.status(500).json({ mensaje: 'Error al cambiar la contraseña' });
   }
 };
 
@@ -165,6 +177,6 @@ export const obtenerAlertasTiempoReal = async (req: Request, res: Response): Pro
 
     return res.json(alertas);
   } catch (error) {
-    return res.status(500).json({ message: 'Error al obtener alertas en tiempo real' });
+    return res.status(500).json({ mensaje: 'Error al obtener alertas en tiempo real' });
   }
 };

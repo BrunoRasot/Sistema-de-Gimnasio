@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { prisma } from '../database/prisma.js';
+import { planSchema } from '../schemas/index.js';
 
 export const obtenerPlanes = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -12,23 +14,39 @@ export const obtenerPlanes = async (req: Request, res: Response): Promise<any> =
 
 export const crearPlan = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nombre, descripcion, precio, duracionDias, estado } = req.body;
+    const datos = req.body as z.infer<typeof planSchema>;
+
     const nuevoPlan = await prisma.plan.create({
-      data: { nombre, descripcion, precio: Number(precio), duracionDias: Number(duracionDias), estado }
+      data: {
+        nombre: datos.nombre,
+        descripcion: datos.descripcion,
+        precio: datos.precio, // Ya es numérico gracias a Zod
+        duracionDias: datos.duracionDias, // Ya es numérico gracias a Zod
+        estado: datos.estado as any,
+      },
     });
     return res.status(201).json(nuevoPlan);
   } catch (error) {
-    return res.status(500).json({ mensaje: 'Error al crear el plan. Puede que el nombre ya exista.' });
+    return res
+      .status(500)
+      .json({ mensaje: 'Error al crear el plan. Puede que el nombre ya exista.' });
   }
 };
 
 export const actualizarPlan = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, precio, duracionDias, estado } = req.body;
+    const datos = req.body as z.infer<typeof planSchema>;
+
     const planActualizado = await prisma.plan.update({
       where: { id: Number(id) },
-      data: { nombre, descripcion, precio: Number(precio), duracionDias: Number(duracionDias), estado }
+      data: {
+        nombre: datos.nombre,
+        descripcion: datos.descripcion,
+        precio: datos.precio, // Ya es numérico gracias a Zod
+        duracionDias: datos.duracionDias, // Ya es numérico gracias a Zod
+        estado: datos.estado as any,
+      },
     });
     return res.json(planActualizado);
   } catch (error) {

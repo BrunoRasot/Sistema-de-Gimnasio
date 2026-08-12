@@ -97,10 +97,16 @@ export default function RolesPermisosPage() {
   const handleGuardar = async () => {
     setGuardando(true);
     try {
-      await guardarPermisosBD(cargoSeleccionado, permisos[cargoSeleccionado]);
+      await guardarPermisosBD({
+        cargo: cargoSeleccionado,
+        permisos: permisos[cargoSeleccionado],
+      });
       toast.success(`Permisos para el cargo "${cargoSeleccionado}" guardados exitosamente.`);
-    } catch (error) {
-      toast.error('Hubo un error al guardar los permisos en la base de datos.');
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.mensaje ||
+          'Hubo un error al guardar los permisos en la base de datos.',
+      );
     } finally {
       setGuardando(false);
     }

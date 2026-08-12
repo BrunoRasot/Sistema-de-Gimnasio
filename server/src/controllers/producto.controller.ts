@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { prisma } from '../database/prisma.js';
 import { logger } from '../utils/logger.js';
+import { productoSchema } from '../schemas/index.js';
 
 export const obtenerProductos = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -20,33 +22,23 @@ export const obtenerProductos = async (req: Request, res: Response): Promise<any
 
 export const crearProducto = async (req: Request, res: Response): Promise<any> => {
   try {
-    const {
-      nombre,
-      sku,
-      descripcion,
-      precioCompra,
-      precioVenta,
-      stock,
-      stockMinimo,
-      categoriaId,
-      proveedorId,
-      estado,
-    } = req.body;
-    const existeSku = await prisma.producto.findUnique({ where: { sku } });
+    const datos = req.body as z.infer<typeof productoSchema>;
+
+    const existeSku = await prisma.producto.findUnique({ where: { sku: datos.sku } });
     if (existeSku) return res.status(400).json({ mensaje: 'El SKU ya está en uso.' });
 
     const nuevoProducto = await prisma.producto.create({
       data: {
-        nombre,
-        sku,
-        descripcion,
-        precioCompra: Number(precioCompra),
-        precioVenta: Number(precioVenta),
-        stock: Number(stock),
-        stockMinimo: Number(stockMinimo),
-        categoriaId: Number(categoriaId),
-        proveedorId: proveedorId ? Number(proveedorId) : null,
-        estado,
+        nombre: datos.nombre,
+        sku: datos.sku,
+        descripcion: datos.descripcion,
+        precioCompra: datos.precioCompra,
+        precioVenta: datos.precioVenta,
+        stock: datos.stock,
+        stockMinimo: datos.stockMinimo,
+        categoriaId: datos.categoriaId,
+        proveedorId: datos.proveedorId ? datos.proveedorId : null,
+        estado: datos.estado as any,
       },
     });
     return res.status(201).json(nuevoProducto);
@@ -59,21 +51,10 @@ export const crearProducto = async (req: Request, res: Response): Promise<any> =
 export const actualizarProducto = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const {
-      nombre,
-      sku,
-      descripcion,
-      precioCompra,
-      precioVenta,
-      stock,
-      stockMinimo,
-      categoriaId,
-      proveedorId,
-      estado,
-    } = req.body;
+    const datos = req.body as z.infer<typeof productoSchema>;
 
     const existeSku = await prisma.producto.findFirst({
-      where: { sku, NOT: { id: Number(id) } },
+      where: { sku: datos.sku, NOT: { id: Number(id) } },
     });
     if (existeSku)
       return res.status(400).json({ mensaje: 'El SKU ya está en uso por otro producto.' });
@@ -81,16 +62,16 @@ export const actualizarProducto = async (req: Request, res: Response): Promise<a
     const productoActualizado = await prisma.producto.update({
       where: { id: Number(id) },
       data: {
-        nombre,
-        sku,
-        descripcion,
-        precioCompra: Number(precioCompra),
-        precioVenta: Number(precioVenta),
-        stock: Number(stock),
-        stockMinimo: Number(stockMinimo),
-        categoriaId: Number(categoriaId),
-        proveedorId: proveedorId ? Number(proveedorId) : null,
-        estado,
+        nombre: datos.nombre,
+        sku: datos.sku,
+        descripcion: datos.descripcion,
+        precioCompra: datos.precioCompra,
+        precioVenta: datos.precioVenta,
+        stock: datos.stock,
+        stockMinimo: datos.stockMinimo,
+        categoriaId: datos.categoriaId,
+        proveedorId: datos.proveedorId ? datos.proveedorId : null,
+        estado: datos.estado as any,
       },
     });
     return res.json(productoActualizado);

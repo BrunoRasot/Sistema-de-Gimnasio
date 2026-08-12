@@ -1,13 +1,15 @@
-let accessTokenInMemory: string | null = null;
+const TOKEN_KEY = 'accessToken';
 
 export const tokenService = {
-  setAccessToken(token: string) {
-    accessTokenInMemory = token;
+  getAccessToken: (): string | null => {
+    return localStorage.getItem(TOKEN_KEY);
   },
-  getAccessToken(): string | null {
-    return accessTokenInMemory;
+
+  setAccessToken: (token: string): void => {
+    localStorage.setItem(TOKEN_KEY, token);
   },
-  clearAccessToken() {
-    accessTokenInMemory = null;
-  }
+
+  clearAccessToken: (): void => { 
+    localStorage.removeItem(TOKEN_KEY);
+  },
 };

@@ -1,6 +1,16 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
+import crypto from 'node:crypto';
 import { prisma } from '../database/prisma.js';
 import { logger } from '../utils/logger.js';
+import { ventaSchema } from '../schemas/index.js';
+
+// Utilidad para generar códigos únicos sin necesidad de doble inserción
+const generarCodigoUnico = (prefijo: string) => {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = crypto.randomBytes(2).toString('hex').toUpperCase();
+  return `${prefijo}-${timestamp}${random}`;
+};
 
 export const obtenerVentas = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -15,89 +25,76 @@ export const obtenerVentas = async (req: Request, res: Response): Promise<any> =
     return res.json(ventas);
   } catch (error: any) {
     logger.error(`Error al obtener historial de ventas: ${error}`);
-    return res.status(500).json({ message: 'Error interno al obtener el historial de ventas.' });
+    return res.status(500).json({ mensaje: 'Error interno al obtener el historial de ventas.' });
   }
 };
 
 export const crearVenta = async (req: Request, res: Response): Promise<any> => {
-  const { cliente, metodoId, numeroOperacion, montoRecibido, vuelto, items } = req.body;
-  const usuarioId = (req as any).usuario?.id;
-
-  if (!items || items.length === 0) {
-    return res.status(400).json({ message: 'La venta debe contener al menos un producto' });
-  }
-  if (!metodoId) {
-    return res.status(400).json({ message: 'Se debe especificar un método de pago válido' });
-  }
-
   try {
+    // 1. Zod valida y convierte a número automáticamente
+    const datos = req.body as z.infer<typeof ventaSchema>;
+    const usuarioId = (req as any).usuario?.id;
+
+    // 2. Transacción única en BD
     const nuevaVenta = await prisma.$transaction(async (tx) => {
       let totalVenta = 0;
       const detallesData = [];
 
-      for (const item of items) {
-        const prod = await tx.producto.findUnique({ where: { id: Number(item.productoId) } });
+      for (const item of datos.items) {
+        const prod = await tx.producto.findUnique({ where: { id: item.productoId } });
         if (!prod) {
           throw new Error(`El producto ID: ${item.productoId} no existe en el sistema`);
         }
-        if (prod.stock < Number(item.cantidad)) {
+        if (prod.stock < item.cantidad) {
           throw new Error(`Stock insuficiente para el producto ID: ${item.productoId}`);
         }
 
         const precioReal = Number(prod.precioVenta);
-        const cantidadNumerica = Number(item.cantidad);
-        const subtotal = cantidadNumerica * precioReal;
+        const subtotal = item.cantidad * precioReal;
 
         totalVenta += subtotal;
 
         detallesData.push({
           productoId: prod.id,
-          cantidad: cantidadNumerica,
+          cantidad: item.cantidad,
           precioUnit: precioReal,
           subtotal: subtotal,
         });
 
         await tx.producto.update({
           where: { id: prod.id },
-          data: { stock: { decrement: cantidadNumerica } },
+          data: { stock: { decrement: item.cantidad } },
         });
       }
 
-      const codigoTemp = `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-      const ventaTemp = await tx.venta.create({
+      // 3. Inserción directa (Adiós al TEMP- y doble escritura)
+      return await tx.venta.create({
         data: {
-          codigo: codigoTemp,
+          codigo: generarCodigoUnico('VNT'),
           usuarioId: usuarioId ? Number(usuarioId) : null,
-          cliente: cliente || 'Público General',
+          cliente: datos.cliente || 'Público General',
           total: totalVenta,
-          metodoId: Number(metodoId),
-          numeroOperacion: numeroOperacion || null,
-          montoRecibido: montoRecibido ? Number(montoRecibido) : null,
-          vuelto: vuelto !== undefined ? Number(vuelto) : null,
+          metodoId: datos.metodoId,
+          numeroOperacion: datos.numeroOperacion || null,
+          montoRecibido: datos.montoRecibido ? datos.montoRecibido : null,
+          vuelto: datos.vuelto !== undefined ? datos.vuelto : null,
           detalles: {
             create: detallesData,
           },
         },
-      });
-
-      const ventaFinal = await tx.venta.update({
-        where: { id: ventaTemp.id },
-        data: { codigo: `VNT-${String(ventaTemp.id).padStart(4, '0')}` },
         include: { detalles: true },
       });
-
-      return ventaFinal;
     });
 
-    return res.status(201).json({ message: 'Venta registrada con éxito', venta: nuevaVenta });
+    return res.status(201).json({ mensaje: 'Venta registrada con éxito', venta: nuevaVenta });
   } catch (error: any) {
     logger.error(`Error al procesar la venta: ${error}`);
     const esErrorControlado =
       error instanceof Error &&
       (error.message.includes('producto') || error.message.includes('Stock'));
+
     const mensaje = esErrorControlado ? error.message : 'Error interno al procesar la venta.';
-    return res.status(500).json({ message: mensaje });
+    return res.status(500).json({ mensaje: mensaje });
   }
 };
 
@@ -112,13 +109,15 @@ export const obtenerComprobantePorId = async (req: Request, res: Response): Prom
         },
       },
     });
+
     if (!comprobante) {
-      return res.status(404).json({ message: 'Comprobante no encontrado' });
+      return res.status(404).json({ mensaje: 'Comprobante no encontrado' });
     }
+
     return res.json(comprobante);
   } catch (error: any) {
     logger.error(`Error al obtener comprobante: ${error}`);
-    return res.status(500).json({ message: 'Error interno al obtener el comprobante.' });
+    return res.status(500).json({ mensaje: 'Error interno al obtener el comprobante.' });
   }
 };
 
@@ -137,15 +136,16 @@ export const obtenerDevoluciones = async (req: Request, res: Response): Promise<
     logger.error(`Error al obtener devoluciones: ${error}`);
     return res
       .status(500)
-      .json({ message: 'Error interno al obtener el historial de devoluciones.' });
+      .json({ mensaje: 'Error interno al obtener el historial de devoluciones.' });
   }
 };
 
 export const registrarDevolucion = async (req: Request, res: Response): Promise<any> => {
   const { identificador, motivo } = req.body;
   const usuarioId = (req as any).usuario?.id;
+
   if (!usuarioId) {
-    return res.status(401).json({ message: 'Usuario no autenticado para realizar esta acción.' });
+    return res.status(401).json({ mensaje: 'Usuario no autenticado para realizar esta acción.' });
   }
 
   try {
@@ -156,9 +156,11 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
         },
         include: { detalles: true },
       });
+
       if (!venta) {
         throw new Error('No se encontró ninguna venta con ese número de operación o código.');
       }
+
       if (venta.estado === 'Anulado') {
         throw new Error('Esta venta ya fue anulada anteriormente.');
       }
@@ -189,11 +191,11 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
       return devolucion;
     });
 
-    return res.status(201).json({ message: 'Devolución procesada y stock restaurado', resultado });
+    return res.status(201).json({ mensaje: 'Devolución procesada y stock restaurado', resultado });
   } catch (error: any) {
     logger.error(`Error al procesar devolución: ${error}`);
     const esErrorControlado = error instanceof Error && error.message.includes('venta');
     const mensaje = esErrorControlado ? error.message : 'Error interno al procesar la devolución.';
-    return res.status(500).json({ message: mensaje });
+    return res.status(500).json({ mensaje: mensaje });
   }
 };

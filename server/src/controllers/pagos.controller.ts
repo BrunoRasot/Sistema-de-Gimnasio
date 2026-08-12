@@ -1,5 +1,14 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
+import crypto from 'node:crypto';
 import { prisma } from '../database/prisma.js';
+import { pagoSchema } from '../schemas/index.js';
+
+const generarCodigoUnico = (prefijo: string) => {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = crypto.randomBytes(2).toString('hex').toUpperCase();
+  return `${prefijo}-${timestamp}${random}`;
+};
 
 export const obtenerMetodos = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -29,6 +38,7 @@ export const actualizarMetodo = async (req: Request, res: Response): Promise<any
   try {
     const { id } = req.params;
     const { nombre, descripcion, activo } = req.body;
+
     const actualizado = await prisma.metodoPago.update({
       where: { id: Number(id) },
       data: { nombre, descripcion, activo },
@@ -53,24 +63,20 @@ export const obtenerPagos = async (req: Request, res: Response): Promise<any> =>
 
 export const registrarPago = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { cliente, concepto, monto, metodoId } = req.body;
+    // 1. Validado y tipeado por Zod
+    const datos = req.body as z.infer<typeof pagoSchema>;
     const usuarioId = (req as any).usuario?.id;
 
-    const codigoTemp = `TEMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const nuevoPago = await prisma.pago.create({
+    // 2. Inserción directa con código único
+    const pagoFinal = await prisma.pago.create({
       data: {
-        codigo: codigoTemp,
+        codigo: generarCodigoUnico('PAG'),
         usuarioId: usuarioId ? Number(usuarioId) : null,
-        cliente: cliente || 'Público General',
-        concepto,
-        monto: Number(monto),
-        metodoId: Number(metodoId),
+        cliente: datos.cliente || 'Público General',
+        concepto: datos.concepto,
+        monto: datos.monto,
+        metodoId: datos.metodoId,
       },
-    });
-
-    const pagoFinal = await prisma.pago.update({
-      where: { id: nuevoPago.id },
-      data: { codigo: `PAG-${String(nuevoPago.id).padStart(5, '0')}` },
       include: { metodo: true },
     });
 

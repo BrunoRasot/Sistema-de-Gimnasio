@@ -1,15 +1,13 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { prisma } from '../database/prisma.js';
+import { proveedorSchema } from '../schemas/index.js';
 
 export const obtenerProveedores = async (req: Request, res: Response): Promise<any> => {
   try {
     const proveedores = await prisma.proveedor.findMany({
-      include: {
-        _count: {
-          select: { productos: true }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
+      include: { _count: { select: { productos: true } } },
+      orderBy: { createdAt: 'desc' },
     });
     return res.json(proveedores);
   } catch (error) {
@@ -19,9 +17,17 @@ export const obtenerProveedores = async (req: Request, res: Response): Promise<a
 
 export const crearProveedor = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nombre, contacto, telefono, email, direccion, estado } = req.body;
+    const datos = req.body as z.infer<typeof proveedorSchema>;
+
     const nuevoProveedor = await prisma.proveedor.create({
-      data: { nombre, contacto, telefono, email, direccion, estado }
+      data: {
+        nombre: datos.nombre,
+        contacto: datos.contacto,
+        telefono: datos.telefono,
+        email: datos.email,
+        direccion: datos.direccion,
+        estado: datos.estado,
+      },
     });
     return res.status(201).json(nuevoProveedor);
   } catch (error) {
@@ -32,11 +38,18 @@ export const crearProveedor = async (req: Request, res: Response): Promise<any> 
 export const actualizarProveedor = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { nombre, contacto, telefono, email, direccion, estado } = req.body;
-    
+    const datos = req.body as z.infer<typeof proveedorSchema>;
+
     const proveedorActualizado = await prisma.proveedor.update({
       where: { id: Number(id) },
-      data: { nombre, contacto, telefono, email, direccion, estado }
+      data: {
+        nombre: datos.nombre,
+        contacto: datos.contacto,
+        telefono: datos.telefono,
+        email: datos.email,
+        direccion: datos.direccion,
+        estado: datos.estado,
+      },
     });
     return res.json(proveedorActualizado);
   } catch (error) {
@@ -47,14 +60,19 @@ export const actualizarProveedor = async (req: Request, res: Response): Promise<
 export const eliminarProveedor = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    
+
     const proveedor = await prisma.proveedor.findUnique({
       where: { id: Number(id) },
-      include: { _count: { select: { productos: true } } }
+      include: { _count: { select: { productos: true } } },
     });
 
     if (proveedor?._count.productos && proveedor._count.productos > 0) {
-      return res.status(400).json({ mensaje: 'No puedes eliminar este proveedor porque tiene productos asociados. Desactívalo en su lugar.' });
+      return res
+        .status(400)
+        .json({
+          mensaje:
+            'No puedes eliminar este proveedor porque tiene productos asociados. Desactívalo en su lugar.',
+        });
     }
 
     await prisma.proveedor.delete({ where: { id: Number(id) } });

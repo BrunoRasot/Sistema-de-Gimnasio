@@ -51,7 +51,6 @@ export const miembroSchema = z.object({
   email: z.union([z.string().email('Email inválido'), z.literal(''), z.null()]).optional(),
   telefono: z.string().optional().nullable(),
 });
-<<<<<<< HEAD
 
 export const categoriaSchema = z.object({
   nombre: z.string().min(1, 'El nombre de la categoría es obligatorio'),
@@ -76,5 +75,27 @@ export const configuracionInfoSchema = z.object({
   direccion: z.string().optional().nullable(),
   moneda: z.string().min(1, 'La moneda es obligatoria'),
 });
-=======
->>>>>>> df9fa46db323fa25d718a3e91d3f4d3281a1c1fa
+
+export const permisoSchema = z.object({
+  cargo: z.string().min(1, 'El cargo es obligatorio'),
+  permisos: z.record(
+    z.string(),
+    z.object({
+      Ver: z.boolean().optional(),
+      Crear: z.boolean().optional(),
+      Editar: z.boolean().optional(),
+      Eliminar: z.boolean().optional(),
+    }),
+  ),
+});
+
+export const asignarMembresiaSchema = z.object({
+  miembroId: z.coerce.number().int().positive('El cliente es obligatorio'),
+  planId: z.coerce.number().int().positive('El plan es obligatorio'),
+  fechaInicio: z.string().optional().nullable(),
+});
+
+export const renovarMembresiaSchema = z.object({
+  planId: z.coerce.number().int().positive('El plan es obligatorio'),
+  fechaInicio: z.string().optional().nullable(),
+});
