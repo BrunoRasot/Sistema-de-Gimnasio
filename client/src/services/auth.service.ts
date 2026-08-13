@@ -1,4 +1,4 @@
-import { api } from './api'; // Tu instancia configurada de Axios o fetch
+import { api } from './api';
 import { tokenService } from './token.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -34,6 +34,7 @@ export const verifyOtpService = async (usuario: string, codigo: string) => {
     if (data.usuario) {
       localStorage.setItem('usuarioRol', data.usuario.rol || 'USER');
       localStorage.setItem('usuarioCargo', data.usuario.cargo || '');
+      localStorage.setItem('usuario', JSON.stringify(data.usuario));
     }
   }
 

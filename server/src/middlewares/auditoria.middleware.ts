@@ -12,7 +12,6 @@ export const auditar = (modulo: string) => {
     res.on('finish', async () => {
       if (res.statusCode >= 200 && res.statusCode < 400 && metodo !== 'GET') {
         try {
-          // CLONAR Y SANEAR EL BODY PARA NO FILTRAR CONTRASEÑAS
           const sanitizedBody = { ...req.body };
           if (sanitizedBody.password) sanitizedBody.password = '***OCULTO***';
           if (sanitizedBody.nuevaPassword) sanitizedBody.nuevaPassword = '***OCULTO***';

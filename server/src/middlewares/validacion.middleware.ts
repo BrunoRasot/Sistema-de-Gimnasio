@@ -10,7 +10,6 @@ export const validarSchema =
     } catch (error) {
       if (error instanceof ZodError) {
         return res.status(400).json({
-          // Usamos .issues y le damos un tipo explícito a 'e'
           mensaje: error.issues.map((e: any) => e.message).join(', '),
         });
       }

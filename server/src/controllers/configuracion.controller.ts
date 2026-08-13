@@ -24,7 +24,7 @@ export const obtenerConfiguracion = async (req: Request, res: Response): Promise
 export const actualizarInfo = async (req: Request, res: Response): Promise<any> => {
   try {
     const datos = req.body as z.infer<typeof configuracionInfoSchema>;
-    const logo = req.body.logo; // El logo viene por fuera del schema de texto
+    const logo = req.body.logo;
 
     await obtenerConfig();
     const configActualizada = await prisma.configuracion.update({
@@ -166,11 +166,14 @@ export const obtenerAlertasTiempoReal = async (req: Request, res: Response): Pro
     }
 
     if (config.alertasSistema) {
+      const usuariosActivos = await prisma.usuario.count({ where: { activo: true } });
+      const productosActivos = await prisma.producto.count({ where: { estado: 'Activo' } });
+
       alertas.push({
-        id: 'sistema-mantenimiento',
+        id: 'sistema-estado',
         tipo: 'sistema',
-        texto: 'Mantenimiento del sistema programado para el fin de semana. Funciones estables.',
-        hora: 'Sistema',
+        texto: `Sistema operativo con normalidad: ${usuariosActivos} usuario(s) activos y ${productosActivos} producto(s) en catálogo.`,
+        hora: 'Ahora',
         leida: false,
       });
     }

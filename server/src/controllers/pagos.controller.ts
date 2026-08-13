@@ -63,11 +63,8 @@ export const obtenerPagos = async (req: Request, res: Response): Promise<any> =>
 
 export const registrarPago = async (req: Request, res: Response): Promise<any> => {
   try {
-    // 1. Validado y tipeado por Zod
     const datos = req.body as z.infer<typeof pagoSchema>;
     const usuarioId = (req as any).usuario?.id;
-
-    // 2. Inserción directa con código único
     const pagoFinal = await prisma.pago.create({
       data: {
         codigo: generarCodigoUnico('PAG'),

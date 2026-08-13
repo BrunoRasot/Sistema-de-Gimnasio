@@ -10,14 +10,12 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = tokenService.getAccessToken();
   if (token && config.headers) {
-    // Seguro: eliminamos comillas dobles si el token quedó corrupto de antes
     const cleanToken = token.replace(/^["']|["']$/g, '');
     config.headers.Authorization = `Bearer ${cleanToken}`;
   }
   return config;
 });
 
-// --- SISTEMA DE COLA PARA PETICIONES SIMULTÁNEAS ---
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (value?: unknown) => void; reject: (reason?: any) => void }> = [];
 
@@ -37,27 +35,23 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 1. Evitamos bucle si falla el propio refresh-token
     if (originalRequest.url?.includes('/auth/refresh-token')) {
       tokenService.clearAccessToken();
       return Promise.reject(error);
     }
 
-    // 2. Si falla por autorización y no hemos reintentado ya
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Si ya se está renovando el token, ENCOLAMOS las demás peticiones (Productos, Alertas, etc.)
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest); // Reintentamos la petición encolada
+            return api(originalRequest);
           })
           .catch((err) => Promise.reject(err));
       }
 
-      // Si somos la primera petición en fallar, iniciamos la renovación
       originalRequest._retry = true;
       isRefreshing = true;
 
@@ -72,12 +66,12 @@ api.interceptors.response.use(
         tokenService.setAccessToken(cleanToken);
         originalRequest.headers.Authorization = `Bearer ${cleanToken}`;
 
-        processQueue(null, cleanToken); // Liberamos la cola con éxito
+        processQueue(null, cleanToken);
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null); // Liberamos la cola con error
+        processQueue(refreshError, null);
         tokenService.clearAccessToken();
-        window.location.href = '/'; // Redirigimos al Login
+        window.location.href = '/';
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

@@ -49,7 +49,7 @@ model Usuario {
   nombreUsuario    String         @unique
   password         String
   rol              RolUsuario     @default(USER)
-  cargo            String         @default("Recepcionista") // <-- NUEVO CAMPO
+  cargo            String         @default("Recepcionista")
   estadoLaboral    EstadoGeneral  @default(Activo)
   estadoCuenta     EstadoCuenta   @default(Activa)
   activo           Boolean        @default(true)
@@ -68,14 +68,14 @@ model Usuario {
 
 model Permiso {
   id       Int     @id @default(autoincrement())
-  cargo    String // <-- CAMBIADO: Antes era 'rol RolUsuario'
+  cargo    String
   modulo   String
   ver      Boolean @default(false)
   crear    Boolean @default(false)
   editar   Boolean @default(false)
   eliminar Boolean @default(false)
 
-  @@unique([cargo, modulo]) // <-- CAMBIADO: Antes era [rol, modulo]
+  @@unique([cargo, modulo]) 
 }
 
 model Plan {

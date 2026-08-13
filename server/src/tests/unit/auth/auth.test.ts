@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import app from '../app.js';
+import app from '../app.ts';
 
 describe('Pruebas de Autenticación y Seguridad', () => {
   it('Debería rechazar un login con datos vacíos y devolver estado 400', async () => {

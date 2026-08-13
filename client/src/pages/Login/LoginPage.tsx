@@ -57,7 +57,6 @@ const LoginPage = () => {
     >
       <div className="absolute inset-0 bg-black/60"></div>
       <div className="relative z-10 mt-12 w-full max-w-[420px] rounded-xl bg-[#0a0a0a] p-8 pt-12 shadow-[0_0_50px_rgba(0,0,0,0.7)]">
-        {/* Logo flotante */}
         <div className="absolute -top-10 left-1/2 flex h-20 w-20 -translate-x-1/2 items-center justify-center rounded-full bg-[#0a0a0a] p-1.5 shadow-xl">
           <img src={logoImage} alt="Logo" className="h-full w-full rounded-full object-cover" />
         </div>
@@ -126,7 +125,6 @@ const LoginPage = () => {
             </button>
           </form>
         ) : (
-          /* ----- FORMULARIO PASO 2 (CÓDIGO OTP) ----- */
           <form onSubmit={handleVerificarOtp} className="space-y-6">
             <div>
               <label className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-gray-400">

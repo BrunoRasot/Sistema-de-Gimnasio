@@ -5,7 +5,6 @@ import { prisma } from '../database/prisma.js';
 import { logger } from '../utils/logger.js';
 import { ventaSchema } from '../schemas/index.js';
 
-// Utilidad para generar códigos únicos sin necesidad de doble inserción
 const generarCodigoUnico = (prefijo: string) => {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = crypto.randomBytes(2).toString('hex').toUpperCase();
@@ -31,11 +30,8 @@ export const obtenerVentas = async (req: Request, res: Response): Promise<any> =
 
 export const crearVenta = async (req: Request, res: Response): Promise<any> => {
   try {
-    // 1. Zod valida y convierte a número automáticamente
     const datos = req.body as z.infer<typeof ventaSchema>;
     const usuarioId = (req as any).usuario?.id;
-
-    // 2. Transacción única en BD
     const nuevaVenta = await prisma.$transaction(async (tx) => {
       let totalVenta = 0;
       const detallesData = [];
@@ -67,7 +63,6 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
         });
       }
 
-      // 3. Inserción directa (Adiós al TEMP- y doble escritura)
       return await tx.venta.create({
         data: {
           codigo: generarCodigoUnico('VNT'),

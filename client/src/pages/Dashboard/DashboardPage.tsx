@@ -39,7 +39,7 @@ export default function DashboardPage() {
           obtenerMembresias(),
           obtenerProductos()
         ]);
-        
+
         setUsuarios(dataUsuarios.usuarios || dataUsuarios || []);
         setMembresias(dataMembresias.membresias || dataMembresias || []);
         setProductos(dataProductos || []);
@@ -59,7 +59,7 @@ export default function DashboardPage() {
   }).slice(0, 5);
 
   const membresiasActivas = membresias.filter(m => m.estado === 'Activa' || m.estado === 'Activo').length;
-  
+
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
   const membresiasVencenHoy = membresias.filter(m => {
@@ -87,8 +87,6 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
-      
-      {/* TARJETA 1: Encabezado */}
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
@@ -108,7 +106,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-        {/* INGRESOS */}
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-gray-900 transition-colors">
           <div className="flex justify-between items-start">
             <div>
@@ -129,7 +126,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* MEMBRESÍAS */}
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-gray-900 transition-colors">
           <div className="flex justify-between items-start">
             <div>
@@ -159,7 +155,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* PERSONAL */}
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-gray-900 transition-colors">
           <div className="flex justify-between items-start">
             <div>
@@ -182,7 +177,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ALERTAS DE STOCK */}
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-gray-900 transition-colors">
           <div className="flex justify-between items-start">
             <div>
@@ -205,7 +199,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* GRÁFICOS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm lg:col-span-2 xl:col-span-2 flex flex-col">
           <div className="mb-3">
@@ -277,9 +270,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* TABLA INFERIOR Y ALERTAS REALES */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        
+
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden lg:col-span-2 flex flex-col">
           <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -328,7 +320,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* WIDGET DE ALERTAS DE STOCK REALES */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
             <div className="flex items-center gap-2">

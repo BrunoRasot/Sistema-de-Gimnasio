@@ -32,7 +32,7 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
     const limit = Number(limite);
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = { activo: true };
     if (rol) where.rol = String(rol);
     if (estado) where.estadoCuenta = String(estado);
 

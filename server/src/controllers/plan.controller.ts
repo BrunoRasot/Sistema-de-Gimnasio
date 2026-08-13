@@ -43,8 +43,8 @@ export const actualizarPlan = async (req: Request, res: Response): Promise<any> 
       data: {
         nombre: datos.nombre,
         descripcion: datos.descripcion,
-        precio: datos.precio, // Ya es numérico gracias a Zod
-        duracionDias: datos.duracionDias, // Ya es numérico gracias a Zod
+        precio: datos.precio,
+        duracionDias: datos.duracionDias,
         estado: datos.estado as any,
       },
     });
