@@ -68,6 +68,7 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
           fechaIngreso: true,
           fechaNacimiento: true,
           activo: true,
+          createdAt: true,
         },
       }),
       prisma.usuario.count({ where }),

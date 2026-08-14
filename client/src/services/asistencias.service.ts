@@ -6,7 +6,7 @@ export const buscarPorDni = async (dni: string) => {
 };
 
 export const registrarAsistencia = async (asistenciaData: { miembroId: number }) => {
-  const { data } = await api.post('/asistencias', asistenciaData);
+  const { data } = await api.post('/asistencias/registrar', asistenciaData);
   return data;
 };
 

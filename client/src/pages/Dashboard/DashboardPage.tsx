@@ -5,25 +5,10 @@ import { obtenerUsuarios } from '../../services/usuarios.service';
 import { Usuario } from '../../types/usuario';
 import { obtenerMembresias } from '../../services/membresias.service';
 import { obtenerProductos } from '../../services/productos.service';
+import { reportesService } from '../../services/reportes.service';
+import { ventasService } from '../../services/ventas.service';
 
-const datosIngresos = [
-  { name: 'Lun', total: 1200 }, { name: 'Mar', total: 900 },
-  { name: 'Mié', total: 1600 }, { name: 'Jue', total: 1400 },
-  { name: 'Vie', total: 2100 }, { name: 'Sáb', total: 1800 },
-  { name: 'Dom', total: 800 },
-];
-
-const datosAsistencias = [
-  { time: '06:00', count: 12 }, { time: '09:00', count: 45 },
-  { time: '12:00', count: 20 }, { time: '15:00', count: 15 },
-  { time: '18:00', count: 65 }, { time: '21:00', count: 40 },
-];
-
-const datosMembresiasGrafico = [
-  { name: 'Mensual', value: 120, color: '#e6b010' },
-  { name: 'Trimestral', value: 80, color: '#f59e0b' },
-  { name: 'Anual', value: 48, color: '#fbbf24' },
-];
+const COLORES_PLANES = ['#e6b010', '#f59e0b', '#fbbf24', '#d97706', '#b45309'];
 
 export default function DashboardPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -31,18 +16,67 @@ export default function DashboardPage() {
   const [productos, setProductos] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
 
+  const [datosIngresos, setDatosIngresos] = useState<{ name: string; total: number }[]>([]);
+  const [datosAsistencias, setDatosAsistencias] = useState<{ time: string; count: number }[]>([]);
+  const [datosMembresiasGrafico, setDatosMembresiasGrafico] = useState<{ name: string; value: number; color: string }[]>([]);
+  const [ingresosMes, setIngresosMes] = useState(0);
+  const [variacionMes, setVariacionMes] = useState<number | null>(null);
+
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const [dataUsuarios, dataMembresias, dataProductos] = await Promise.all([
+        const [dataUsuarios, dataMembresias, dataProductos, repVentas, repAsistencias, repMembresias, todasVentas] = await Promise.all([
           obtenerUsuarios({}),
           obtenerMembresias(),
-          obtenerProductos()
+          obtenerProductos(),
+          reportesService.obtenerReporteVentas(),
+          reportesService.obtenerReporteAsistencias(),
+          reportesService.obtenerReporteMembresias(),
+          ventasService.obtenerVentas(),
         ]);
 
         setUsuarios(dataUsuarios.usuarios || dataUsuarios || []);
         setMembresias(dataMembresias.membresias || dataMembresias || []);
         setProductos(dataProductos || []);
+
+        setDatosIngresos(
+          (repVentas.chartData || []).map((d: any) => ({ name: d.fecha, total: d.ingresos }))
+        );
+        setDatosAsistencias(
+          (repAsistencias.chartData || []).map((d: any) => ({ time: d.hora, count: d.ingresos }))
+        );
+        setDatosMembresiasGrafico(
+          (repMembresias.chartData || []).map((d: any, i: number) => ({
+            name: d.name,
+            value: d.value,
+            color: COLORES_PLANES[i % COLORES_PLANES.length],
+          }))
+        );
+
+        // Ingresos del mes actual vs. mes anterior, calculado desde las ventas reales
+        const ahora = new Date();
+        const mesActual = ahora.getMonth();
+        const anioActual = ahora.getFullYear();
+        const mesAnteriorDate = new Date(anioActual, mesActual - 1, 1);
+
+        const ventasCompletadas = (todasVentas || []).filter((v: any) => v.estado === 'Completado');
+
+        const totalMesActual = ventasCompletadas
+          .filter((v: any) => {
+            const f = new Date(v.createdAt);
+            return f.getMonth() === mesActual && f.getFullYear() === anioActual;
+          })
+          .reduce((acc: number, v: any) => acc + Number(v.total), 0);
+
+        const totalMesAnterior = ventasCompletadas
+          .filter((v: any) => {
+            const f = new Date(v.createdAt);
+            return f.getMonth() === mesAnteriorDate.getMonth() && f.getFullYear() === mesAnteriorDate.getFullYear();
+          })
+          .reduce((acc: number, v: any) => acc + Number(v.total), 0);
+
+        setIngresosMes(totalMesActual);
+        setVariacionMes(totalMesAnterior > 0 ? ((totalMesActual - totalMesAnterior) / totalMesAnterior) * 100 : null);
       } catch (error) {
         console.error("Error al cargar datos del dashboard:", error);
       } finally {
@@ -110,19 +144,24 @@ export default function DashboardPage() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Ingresos (Mes)</p>
-              <h3 className="text-xl font-extrabold text-gray-900">S/ 12,450</h3>
+              <h3 className="text-xl font-extrabold text-gray-900">S/ {ingresosMes.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
             </div>
             <div className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-100 group-hover:scale-105 transition-transform">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3 flex items-center justify-between text-xs border-t border-gray-100 pt-2">
-            <div className="flex items-center">
-              <ArrowUpRight className="w-3.5 h-3.5 text-green-500 mr-1" />
-              <span className="text-green-600 font-semibold mr-1">+14.5%</span>
-              <span className="text-gray-400 text-[10px]">vs mes ant.</span>
-            </div>
-            <span className="text-gray-400 text-[10px] font-medium">Meta: 85%</span>
+            {variacionMes !== null ? (
+              <div className="flex items-center">
+                <ArrowUpRight className={`w-3.5 h-3.5 mr-1 ${variacionMes >= 0 ? 'text-green-500' : 'text-red-500 rotate-90'}`} />
+                <span className={`font-semibold mr-1 ${variacionMes >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {variacionMes >= 0 ? '+' : ''}{variacionMes.toFixed(1)}%
+                </span>
+                <span className="text-gray-400 text-[10px]">vs mes ant.</span>
+              </div>
+            ) : (
+              <span className="text-gray-400 text-[10px]">Sin ventas el mes anterior para comparar</span>
+            )}
           </div>
         </div>
 
