@@ -33,6 +33,10 @@ const processQueue = (error: any, token: string | null = null) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (error.response?.data?.mensaje) {
+      error.message = error.response.data.mensaje;
+    }
+
     const originalRequest = error.config;
 
     if (originalRequest.url?.includes('/auth/refresh-token')) {

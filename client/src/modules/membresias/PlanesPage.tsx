@@ -1,6 +1,11 @@
 ﻿import { useState, useEffect } from 'react';
 import { Dumbbell, Plus, Tag, Edit, Trash2, Loader2, X } from 'lucide-react';
-import { obtenerPlanes, crearPlan, actualizarPlan, eliminarPlan } from '../../services/planes.service';
+import {
+  obtenerPlanes,
+  crearPlan,
+  actualizarPlan,
+  eliminarPlan,
+} from '../../services/planes.service';
 import toast from 'react-hot-toast';
 
 interface Plan {
@@ -25,7 +30,7 @@ export default function PlanesPage() {
     descripcion: '',
     precio: '',
     duracionDias: '',
-    estado: 'Activo'
+    estado: 'Activo',
   });
 
   const cargarPlanes = async () => {
@@ -34,7 +39,7 @@ export default function PlanesPage() {
       const data = await obtenerPlanes();
       setPlanes(data);
     } catch (error: any) {
-      toast.error(error.message || 'Error al cargar los planes');
+      toast.error(error.response?.data?.mensaje || 'Error al cargar los planes');
     } finally {
       setCargando(false);
     }
@@ -52,7 +57,7 @@ export default function PlanesPage() {
         descripcion: plan.descripcion || '',
         precio: plan.precio.toString(),
         duracionDias: plan.duracionDias.toString(),
-        estado: plan.estado
+        estado: plan.estado,
       });
     } else {
       setPlanEditando(null);
@@ -80,7 +85,7 @@ export default function PlanesPage() {
         descripcion: formData.descripcion,
         precio: Number(formData.precio),
         duracionDias: Number(formData.duracionDias),
-        estado: formData.estado
+        estado: formData.estado,
       };
 
       if (planEditando) {
@@ -93,7 +98,7 @@ export default function PlanesPage() {
       cerrarModal();
       cargarPlanes();
     } catch (error: any) {
-      toast.error(error.message || 'Error al guardar el plan');
+      toast.error(error.response?.data?.mensaje || 'Error al guardar el plan');
     } finally {
       setGuardando(false);
     }
@@ -106,13 +111,13 @@ export default function PlanesPage() {
       toast.success('Plan eliminado');
       cargarPlanes();
     } catch (error: any) {
-      toast.error(error.message || 'Error al eliminar. Puede que tenga membresías asociadas.');
+      toast.error(
+        error.response?.data?.mensaje || 'Error al eliminar. Puede que tenga membresías asociadas.',
+      );
     }
   };
-
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto text-gray-900 space-y-4">
-
       <div className="bg-white p-3 md:px-5 md:py-3.5 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="p-2 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
@@ -120,7 +125,9 @@ export default function PlanesPage() {
           </div>
           <div>
             <h1 className="text-base font-bold text-gray-900 tracking-wide">Planes y Precios</h1>
-            <p className="text-[11px] text-gray-500 mt-0.5">Administra las tarifas y opciones de membresía.</p>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              Administra las tarifas y opciones de membresía.
+            </p>
           </div>
         </div>
         <button
@@ -161,7 +168,11 @@ export default function PlanesPage() {
                   <tr key={plan.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-2.5 px-4">
                       <p className="font-bold text-gray-900">{plan.nombre}</p>
-                      {plan.descripcion && <p className="text-[10px] text-gray-500 truncate max-w-xs">{plan.descripcion}</p>}
+                      {plan.descripcion && (
+                        <p className="text-[10px] text-gray-500 truncate max-w-xs">
+                          {plan.descripcion}
+                        </p>
+                      )}
                     </td>
                     <td className="py-2.5 px-4 text-center text-gray-600">
                       {plan.duracionDias} días
@@ -170,8 +181,13 @@ export default function PlanesPage() {
                       S/ {Number(plan.precio).toFixed(2)}
                     </td>
                     <td className="py-2.5 px-4 text-center">
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${plan.estado === 'Activo' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'
-                        }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                          plan.estado === 'Activo'
+                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            : 'bg-gray-100 text-gray-600 border border-gray-200'
+                        }`}
+                      >
                         {plan.estado}
                       </span>
                     </td>
@@ -204,7 +220,6 @@ export default function PlanesPage() {
       {modalAbierto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
-
             <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="text-sm font-bold text-gray-900">
                 {planEditando ? 'Editar Plan' : 'Nuevo Plan'}
@@ -216,7 +231,9 @@ export default function PlanesPage() {
 
             <form onSubmit={guardarPlan} className="p-4 space-y-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Nombre *</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+                  Nombre *
+                </label>
                 <input
                   type="text"
                   required
@@ -229,7 +246,9 @@ export default function PlanesPage() {
 
               <div className="flex gap-3">
                 <div className="w-1/2">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Precio (S/) *</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+                    Precio (S/) *
+                  </label>
                   <input
                     type="number"
                     required
@@ -241,7 +260,9 @@ export default function PlanesPage() {
                   />
                 </div>
                 <div className="w-1/2">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Duración (Días) *</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+                    Duración (Días) *
+                  </label>
                   <input
                     type="number"
                     required
@@ -254,7 +275,9 @@ export default function PlanesPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Descripción</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+                  Descripción
+                </label>
                 <textarea
                   rows={2}
                   value={formData.descripcion}
@@ -265,7 +288,9 @@ export default function PlanesPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+                  Estado
+                </label>
                 <select
                   value={formData.estado}
                   onChange={(e) => setFormData({ ...formData, estado: e.target.value })}

@@ -1,5 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Loader2, Users, UserPlus, X, Save, Trash2, Mail, Phone, ShieldAlert } from 'lucide-react';
+import {
+  Search,
+  Loader2,
+  Users,
+  UserPlus,
+  X,
+  Save,
+  Trash2,
+  Mail,
+  Phone,
+  ShieldAlert,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { obtenerMiembros, crearCliente, inactivarCliente } from '../../services/miembros.service';
 
@@ -19,12 +30,14 @@ export default function ClientesPage() {
       const data = await obtenerMiembros();
       setClientes(data);
     } catch (err) {
-      console.error("Error al cargar clientes:", err);
+      console.error('Error al cargar clientes:', err);
     }
     setCargando(false);
   };
 
-  useEffect(() => { cargarDatos(); }, []);
+  useEffect(() => {
+    cargarDatos();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,14 +49,16 @@ export default function ClientesPage() {
       cargarDatos();
       toast.success('Cliente registrado exitosamente');
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.mensaje || 'No se pudo registrar al cliente.');
     } finally {
       setGuardando(false);
     }
   };
 
   const handleInactivar = async (id: number, nombre: string) => {
-    const confirmar = window.confirm(`¿Estás seguro de que deseas eliminar a ${nombre} del sistema? (Sus pagos históricos se mantendrán)`);
+    const confirmar = window.confirm(
+      `¿Estás seguro de que deseas eliminar a ${nombre} del sistema? (Sus pagos históricos se mantendrán)`,
+    );
     if (!confirmar) return;
 
     try {
@@ -51,12 +66,12 @@ export default function ClientesPage() {
       cargarDatos();
       toast.success('Cliente eliminado correctamente');
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.mensaje || 'No se pudo eliminar al cliente.');
     }
   };
 
   const clientesFiltrados = useMemo(() => {
-    return clientes.filter(c => {
+    return clientes.filter((c) => {
       const term = buscar.toLowerCase();
       return (
         c.nombres.toLowerCase().includes(term) ||
@@ -74,8 +89,12 @@ export default function ClientesPage() {
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-gray-900 tracking-wide">Directorio de Clientes</h1>
-            <p className="text-[11px] text-gray-500 mt-0.5">Gestión general de personas registradas en el gimnasio.</p>
+            <h1 className="text-base font-bold text-gray-900 tracking-wide">
+              Directorio de Clientes
+            </h1>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              Gestión general de personas registradas en el gimnasio.
+            </p>
           </div>
         </div>
         <button
@@ -88,9 +107,13 @@ export default function ClientesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3.5 shadow-sm">
-          <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-100"><Users className="w-4 h-4 text-blue-600" /></div>
+          <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-100">
+            <Users className="w-4 h-4 text-blue-600" />
+          </div>
           <div>
-            <p className="text-xl font-bold text-gray-900 leading-none">{clientesFiltrados.length}</p>
+            <p className="text-xl font-bold text-gray-900 leading-none">
+              {clientesFiltrados.length}
+            </p>
             <p className="text-[11px] text-gray-500 mt-1">Total Registrados</p>
           </div>
         </div>
@@ -121,7 +144,8 @@ export default function ClientesPage() {
               {cargando ? (
                 <tr>
                   <td colSpan={4} className="py-14 text-center text-gray-500">
-                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#e6b010]" /> Cargando directorio...
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#e6b010]" />{' '}
+                    Cargando directorio...
                   </td>
                 </tr>
               ) : clientesFiltrados.length === 0 ? (
@@ -138,10 +162,13 @@ export default function ClientesPage() {
                       <td className="py-3 px-4 pl-5">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 font-bold text-gray-600 text-[10px] shrink-0">
-                            {c.nombres.charAt(0)}{c.apellidos.charAt(0)}
+                            {c.nombres.charAt(0)}
+                            {c.apellidos.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-gray-900">{c.nombres} {c.apellidos}</p>
+                            <p className="font-bold text-gray-900">
+                              {c.nombres} {c.apellidos}
+                            </p>
                             <p className="text-[10px] text-gray-500 font-medium">DNI: {c.dni}</p>
                           </div>
                         </div>
@@ -191,9 +218,14 @@ export default function ClientesPage() {
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
               <div>
                 <h2 className="text-sm font-bold text-gray-900">Registrar Persona</h2>
-                <p className="text-[11px] text-gray-500">Añade a un cliente a la agenda del gimnasio.</p>
+                <p className="text-[11px] text-gray-500">
+                  Añade a un cliente a la agenda del gimnasio.
+                </p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 text-gray-400 hover:text-gray-700 rounded-lg transition-all">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 text-gray-400 hover:text-gray-700 rounded-lg transition-all"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -201,40 +233,88 @@ export default function ClientesPage() {
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg flex gap-2.5 text-blue-900 text-xs">
                 <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-blue-600" />
-                <p>Al registrar aquí, el cliente <b>no tendrá membresía activa</b>. Luego ve a "Miembros Activos" para asignarle un plan buscándolo por su DNI.</p>
+                <p>
+                  Al registrar aquí, el cliente <b>no tendrá membresía activa</b>. Luego ve a
+                  "Miembros Activos" para asignarle un plan buscándolo por su DNI.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nombres *</label>
-                  <input required value={formData.nombres} onChange={(e) => setFormData({ ...formData, nombres: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Nombres *
+                  </label>
+                  <input
+                    required
+                    value={formData.nombres}
+                    onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900"
+                  />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Apellidos *</label>
-                  <input required value={formData.apellidos} onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Apellidos *
+                  </label>
+                  <input
+                    required
+                    value={formData.apellidos}
+                    onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900"
+                  />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">DNI *</label>
-                <input required maxLength={15} value={formData.dni} onChange={(e) => setFormData({ ...formData, dni: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  DNI *
+                </label>
+                <input
+                  required
+                  maxLength={15}
+                  value={formData.dni}
+                  onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                  className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Teléfono</label>
-                  <input value={formData.telefono} onChange={(e) => setFormData({ ...formData, telefono: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Teléfono
+                  </label>
+                  <input
+                    value={formData.telefono}
+                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900"
+                  />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Correo Electrónico</label>
-                  <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900" />
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                    Correo Electrónico
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-gray-900"
+                  />
                 </div>
               </div>
 
               <div className="pt-3 flex justify-end gap-2 border-t border-gray-100 mt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-all">Cancelar</button>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                >
+                  Cancelar
+                </button>
 
-                <button type="submit" disabled={guardando} className="flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-medium text-xs rounded-lg shadow-sm disabled:opacity-70 transition-all">
+                <button
+                  type="submit"
+                  disabled={guardando}
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-medium text-xs rounded-lg shadow-sm disabled:opacity-70 transition-all"
+                >
                   {guardando && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <Save className="w-3.5 h-3.5" />
                   {guardando ? 'Guardando...' : 'Guardar Persona'}

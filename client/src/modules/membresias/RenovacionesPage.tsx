@@ -13,22 +13,27 @@ export default function RenovacionesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clienteSeleccionado, setClienteSeleccionado] = useState<any>(null);
   const [guardando, setGuardando] = useState(false);
-  const [formData, setFormData] = useState({ planId: '', fechaInicio: new Date().toISOString().split('T')[0] });
+  const [formData, setFormData] = useState({
+    planId: '',
+    fechaInicio: new Date().toISOString().split('T')[0],
+  });
 
   const cargarDatos = async () => {
     setCargando(true);
     try {
       const dataPlanes = await obtenerPlanes();
       setPlanes(dataPlanes.filter((p: any) => p.estado?.toLowerCase() === 'activo'));
-    } catch (err) { }
+    } catch (err) {}
     try {
       const dataMiembros = await obtenerMiembros();
       setMiembros(dataMiembros);
-    } catch (err) { }
+    } catch (err) {}
     setCargando(false);
   };
 
-  useEffect(() => { cargarDatos(); }, []);
+  useEffect(() => {
+    cargarDatos();
+  }, []);
 
   const calcularDiasRestantes = (fechaFin: string) => {
     const fin = new Date(fechaFin).getTime();
@@ -37,7 +42,7 @@ export default function RenovacionesPage() {
   };
 
   const proximosAVencer = useMemo(() => {
-    return miembros.filter(m => {
+    return miembros.filter((m) => {
       const ultimaMembresia = m.membresias?.[0];
       if (!ultimaMembresia) return false;
       const diasRestantes = calcularDiasRestantes(ultimaMembresia.fechaFin);
@@ -45,7 +50,11 @@ export default function RenovacionesPage() {
       if (diasRestantes < 0 || diasRestantes > 7) return false;
 
       const term = buscar.toLowerCase();
-      return m.nombres.toLowerCase().includes(term) || m.apellidos.toLowerCase().includes(term) || m.dni.includes(term);
+      return (
+        m.nombres.toLowerCase().includes(term) ||
+        m.apellidos.toLowerCase().includes(term) ||
+        m.dni.includes(term)
+      );
     });
   }, [miembros, buscar]);
 
@@ -58,8 +67,8 @@ export default function RenovacionesPage() {
       setFormData({ planId: '', fechaInicio: new Date().toISOString().split('T')[0] });
       cargarDatos();
       toast.success('Membresía renovada con éxito');
-    } catch (error) {
-      toast.error('Error al renovar la membresía.');
+    } catch (error: any) {
+      toast.error(error.response?.data?.mensaje || 'Error al renovar la membresía.');
     } finally {
       setGuardando(false);
     }
@@ -67,7 +76,6 @@ export default function RenovacionesPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
-
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="p-2.5 bg-orange-50 rounded-lg border border-orange-100 text-orange-500">
@@ -75,14 +83,18 @@ export default function RenovacionesPage() {
           </div>
           <div>
             <h1 className="text-base font-bold text-gray-900 tracking-wide">Próximos a Vencer</h1>
-            <p className="text-[11px] text-gray-500 mt-0.5">Membresías que caducan en los próximos 7 días.</p>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              Membresías que caducan en los próximos 7 días.
+            </p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3.5 shadow-sm">
-          <div className="p-2.5 rounded-lg bg-orange-50 border border-orange-100"><Clock className="w-4 h-4 text-orange-500" /></div>
+          <div className="p-2.5 rounded-lg bg-orange-50 border border-orange-100">
+            <Clock className="w-4 h-4 text-orange-500" />
+          </div>
           <div>
             <p className="text-xl font-bold text-gray-900 leading-none">{proximosAVencer.length}</p>
             <p className="text-[11px] text-gray-500 mt-1">Requieren Renovación</p>
@@ -116,7 +128,8 @@ export default function RenovacionesPage() {
               {cargando ? (
                 <tr>
                   <td colSpan={5} className="py-14 text-center text-gray-500">
-                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#e6b010]" /> Cargando datos...
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#e6b010]" />{' '}
+                    Cargando datos...
                   </td>
                 </tr>
               ) : proximosAVencer.length === 0 ? (
@@ -136,25 +149,40 @@ export default function RenovacionesPage() {
                       <td className="py-3 px-4 pl-5">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center border border-orange-100 font-bold text-orange-600 text-[10px] shrink-0">
-                            {m.nombres.charAt(0)}{m.apellidos.charAt(0)}
+                            {m.nombres.charAt(0)}
+                            {m.apellidos.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-gray-900">{m.nombres} {m.apellidos}</p>
-                            <p className="text-[10px] text-gray-500 font-medium">Telf: {m.telefono || 'N/A'}</p>
+                            <p className="font-bold text-gray-900">
+                              {m.nombres} {m.apellidos}
+                            </p>
+                            <p className="text-[10px] text-gray-500 font-medium">
+                              Telf: {m.telefono || 'N/A'}
+                            </p>
                           </div>
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         <p className="font-medium text-gray-800">{membresia.plan.nombre}</p>
                       </td>
-                      <td className="py-3 px-4 text-center text-gray-600 font-medium">{fechaFin}</td>
+                      <td className="py-3 px-4 text-center text-gray-600 font-medium">
+                        {fechaFin}
+                      </td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`inline-flex px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md border ${diasRestantes === 0 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-orange-50 text-orange-600 border-orange-200'}`}>
+                        <span
+                          className={`inline-flex px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md border ${diasRestantes === 0 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-orange-50 text-orange-600 border-orange-200'}`}
+                        >
                           {diasRestantes === 0 ? '¡Vence Hoy!' : `${diasRestantes} días`}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center pr-5">
-                        <button onClick={() => { setClienteSeleccionado(m); setIsModalOpen(true); }} className="px-3 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-medium rounded-lg transition-all shadow-sm">
+                        <button
+                          onClick={() => {
+                            setClienteSeleccionado(m);
+                            setIsModalOpen(true);
+                          }}
+                          className="px-3 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-medium rounded-lg transition-all shadow-sm"
+                        >
                           Renovar Adelantado
                         </button>
                       </td>
@@ -173,37 +201,71 @@ export default function RenovacionesPage() {
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
               <div>
                 <h2 className="text-sm font-bold text-gray-900">Renovación Anticipada</h2>
-                <p className="text-[11px] text-gray-500">Cliente: {clienteSeleccionado.nombres} {clienteSeleccionado.apellidos}</p>
+                <p className="text-[11px] text-gray-500">
+                  Cliente: {clienteSeleccionado.nombres} {clienteSeleccionado.apellidos}
+                </p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 text-gray-400 hover:text-gray-700 rounded-lg transition-all">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 text-gray-400 hover:text-gray-700 rounded-lg transition-all"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSubmitRenovacion} className="p-5 space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Nuevo Plan a Asignar *</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  Nuevo Plan a Asignar *
+                </label>
                 <div className="relative">
                   <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                  <select required value={formData.planId} onChange={(e) => setFormData({ ...formData, planId: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg py-1.5 pl-9 pr-3 text-xs font-medium outline-none focus:border-gray-900">
+                  <select
+                    required
+                    value={formData.planId}
+                    onChange={(e) => setFormData({ ...formData, planId: e.target.value })}
+                    className="w-full bg-white border border-gray-200 rounded-lg py-1.5 pl-9 pr-3 text-xs font-medium outline-none focus:border-gray-900"
+                  >
                     <option value="">-- Seleccionar --</option>
-                    {planes.map(p => <option key={p.id} value={p.id}>{p.nombre} (S/ {p.precio})</option>)}
+                    {planes.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre} (S/ {p.precio})
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Fecha de Inicio de Renovación *</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                  Fecha de Inicio de Renovación *
+                </label>
                 <div className="relative">
                   <CalendarCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                  <input required type="date" value={formData.fechaInicio} onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })} className="w-full bg-white border border-gray-200 rounded-lg py-1.5 pl-9 pr-3 text-xs outline-none focus:border-gray-900" />
+                  <input
+                    required
+                    type="date"
+                    value={formData.fechaInicio}
+                    onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })}
+                    className="w-full bg-white border border-gray-200 rounded-lg py-1.5 pl-9 pr-3 text-xs outline-none focus:border-gray-900"
+                  />
                 </div>
               </div>
 
               <div className="pt-3 flex justify-end gap-2 border-t border-gray-100 mt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-all">Cancelar</button>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
+                >
+                  Cancelar
+                </button>
 
-                <button type="submit" disabled={guardando} className="flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-medium text-xs rounded-lg shadow-sm disabled:opacity-70 transition-all">
+                <button
+                  type="submit"
+                  disabled={guardando}
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-medium text-xs rounded-lg shadow-sm disabled:opacity-70 transition-all"
+                >
                   {guardando && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <Save className="w-3.5 h-3.5" />
                   {guardando ? 'Procesando...' : 'Confirmar Pago'}
