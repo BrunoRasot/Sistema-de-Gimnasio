@@ -1,12 +1,12 @@
 import { api } from './api';
 
 export const configuracionService = {
-  obtenerConfiguracion: async () => {
+  obtenerDatos: async () => {
     const { data } = await api.get('/configuracion');
     return data;
   },
   obtenerAlertasTiempoReal: async () => {
-    const { data } = await api.get('/configuracion/alertas');
+    const { data } = await api.get('/configuracion/alertas-tiempo-real');
     return data;
   },
   actualizarInfo: async (infoData: any) => {

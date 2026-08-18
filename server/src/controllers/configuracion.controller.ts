@@ -47,12 +47,25 @@ export const actualizarInfo = async (req: Request, res: Response): Promise<any> 
 
 export const actualizarNotificaciones = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { nuevasVentas, membresiasVencidas, stockBajo, alertasSistema, reportesSemanales } =
-      req.body;
+    const {
+      emailNotificaciones,
+      nuevasVentas,
+      membresiasVencidas,
+      stockBajo,
+      alertasSistema,
+      reportesSemanales,
+    } = req.body;
     await obtenerConfig();
     const configActualizada = await prisma.configuracion.update({
       where: { id: 1 },
-      data: { nuevasVentas, membresiasVencidas, stockBajo, alertasSistema, reportesSemanales },
+      data: {
+        emailNotificaciones,
+        nuevasVentas,
+        membresiasVencidas,
+        stockBajo,
+        alertasSistema,
+        reportesSemanales,
+      },
     });
     return res.json({ mensaje: 'Notificaciones actualizadas', config: configActualizada });
   } catch (error) {

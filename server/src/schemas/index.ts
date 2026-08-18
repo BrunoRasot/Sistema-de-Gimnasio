@@ -74,6 +74,7 @@ export const configuracionInfoSchema = z.object({
   email: z.string().email('Email inválido').optional().nullable(),
   direccion: z.string().optional().nullable(),
   moneda: z.string().min(1, 'La moneda es obligatoria'),
+  logo: z.string().optional().nullable(),
 });
 
 export const permisoSchema = z.object({

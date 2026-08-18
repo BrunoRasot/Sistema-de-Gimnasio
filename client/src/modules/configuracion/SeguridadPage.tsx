@@ -8,7 +8,7 @@ export default function SeguridadPage() {
   const [passwords, setPasswords] = useState({
     actual: '',
     nueva: '',
-    confirmacion: ''
+    confirmacion: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,7 +28,10 @@ export default function SeguridadPage() {
 
     setGuardando(true);
     try {
-      await configuracionService.cambiarPassword(passwords.actual, passwords.nueva);
+      await configuracionService.cambiarPassword({
+        actual: passwords.actual,
+        nueva: passwords.nueva,
+      });
       toast.success('Contraseña actualizada correctamente');
       setPasswords({ actual: '', nueva: '', confirmacion: '' });
     } catch (error: any) {
@@ -43,7 +46,9 @@ export default function SeguridadPage() {
       <div className="flex items-center justify-between pb-2 border-b border-gray-100">
         <div>
           <h1 className="text-xl font-bold text-gray-900 tracking-tight">Seguridad de la Cuenta</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Gestione sus credenciales de acceso y la protección de su perfil.</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Gestione sus credenciales de acceso y la protección de su perfil.
+          </p>
         </div>
         <div className="p-2.5 bg-red-50 border border-red-100 rounded-xl text-red-600 shadow-sm">
           <ShieldCheck className="w-5 h-5" />
@@ -57,7 +62,8 @@ export default function SeguridadPage() {
           <div>
             <h2 className="text-sm font-bold text-gray-900">Actualizar Contraseña</h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              Por seguridad, requerimos su contraseña actual para validar que es usted quien realiza el cambio.
+              Por seguridad, requerimos su contraseña actual para validar que es usted quien realiza
+              el cambio.
             </p>
           </div>
         </div>
@@ -80,7 +86,9 @@ export default function SeguridadPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Nueva Contraseña</label>
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Nueva Contraseña
+              </label>
               <input
                 type="password"
                 name="nueva"
@@ -92,7 +100,9 @@ export default function SeguridadPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Confirmar Contraseña</label>
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Confirmar Contraseña
+              </label>
               <input
                 type="password"
                 name="confirmacion"
@@ -106,9 +116,10 @@ export default function SeguridadPage() {
 
           <div className="flex items-center gap-2 text-xs text-gray-400 pt-1">
             <AlertCircle className="w-4 h-4 flex-shrink-0 text-blue-500" />
-            <span>Asegúrese de usar una combinación de letras, números y símbolos para mayor seguridad.</span>
+            <span>
+              Asegúrese de usar una combinación de letras, números y símbolos para mayor seguridad.
+            </span>
           </div>
-
         </div>
 
         <div className="px-6 md:px-8 py-4 bg-gray-50/60 border-t border-gray-100 flex justify-end">
@@ -121,7 +132,6 @@ export default function SeguridadPage() {
             {guardando ? 'Actualizando...' : 'Actualizar Contraseña'}
           </button>
         </div>
-
       </div>
     </div>
   );

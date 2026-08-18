@@ -75,7 +75,7 @@ model Permiso {
   editar   Boolean @default(false)
   eliminar Boolean @default(false)
 
-  @@unique([cargo, modulo]) 
+  @@unique([cargo, modulo])
 }
 
 model Plan {
@@ -292,20 +292,21 @@ model Asistencia {
 }
 
 model Configuracion {
-  id                 Int      @id @default(1)
-  logo               String?
-  nombre             String   @default("Fitness Group")
-  ruc                String   @default("")
-  telefono           String   @default("")
-  email              String   @default("")
-  direccion          String   @default("")
-  moneda             String   @default("Sol peruano (PEN)")
-  nuevasVentas       Boolean  @default(true)
-  membresiasVencidas Boolean  @default(true)
-  stockBajo          Boolean  @default(true)
-  alertasSistema     Boolean  @default(false)
-  reportesSemanales  Boolean  @default(true)
-  updatedAt          DateTime @updatedAt
+  id                  Int      @id @default(1)
+  logo                String?
+  nombre              String   @default("Fitness Group")
+  ruc                 String   @default("")
+  telefono            String   @default("")
+  email               String   @default("")
+  direccion           String   @default("")
+  emailNotificaciones String?  @default("")
+  moneda              String   @default("Sol peruano (PEN)")
+  nuevasVentas        Boolean  @default(true)
+  membresiasVencidas  Boolean  @default(true)
+  stockBajo           Boolean  @default(true)
+  alertasSistema      Boolean  @default(false)
+  reportesSemanales   Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
 }
 
 model RefreshToken {
