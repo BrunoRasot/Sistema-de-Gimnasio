@@ -2,6 +2,7 @@
 import { configuracionService } from '../../services/configuracion.service';
 import { ShieldCheck, Save, KeyRound, Lock, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { logoutService } from '../../services/auth.service';
 
 export default function SeguridadPage() {
   const [guardando, setGuardando] = useState(false);
@@ -22,8 +23,14 @@ export default function SeguridadPage() {
     if (passwords.nueva !== passwords.confirmacion) {
       return toast.error('La nueva contraseña y la confirmación no coinciden');
     }
-    if (passwords.nueva.length < 8) {
-      return toast.error('La nueva contraseña debe tener al menos 8 caracteres');
+    if (
+      passwords.nueva.length < 12 ||
+      !/[a-z]/.test(passwords.nueva) ||
+      !/[A-Z]/.test(passwords.nueva) ||
+      !/\d/.test(passwords.nueva) ||
+      !/[^A-Za-z0-9]/.test(passwords.nueva)
+    ) {
+      return toast.error('Usa al menos 12 caracteres con mayúscula, minúscula, número y símbolo');
     }
 
     setGuardando(true);
@@ -32,8 +39,10 @@ export default function SeguridadPage() {
         actual: passwords.actual,
         nueva: passwords.nueva,
       });
-      toast.success('Contraseña actualizada correctamente');
+      await logoutService();
+      toast.success('Contraseña actualizada. Inicia sesión nuevamente');
       setPasswords({ actual: '', nueva: '', confirmacion: '' });
+      window.location.assign('/');
     } catch (error: any) {
       toast.error(error.message || 'Error al actualizar la contraseña');
     } finally {
@@ -92,7 +101,7 @@ export default function SeguridadPage() {
               <input
                 type="password"
                 name="nueva"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínimo 12 caracteres, número y símbolo"
                 value={passwords.nueva}
                 onChange={handleChange}
                 className="w-full bg-white border border-gray-200 rounded-xl py-3 px-3.5 text-sm text-gray-900 placeholder:text-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all"

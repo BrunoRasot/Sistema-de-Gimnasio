@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { tokenService } from '../services/token.service';
@@ -7,43 +7,35 @@ import { api } from '../services/api';
 import { ProtectedRoute } from './ProtectedRoute';
 import AuthLayout from '../layouts/AuthLayout';
 import DashboardLayout from '../layouts/DashboardLayout';
-import LoginPage from '../pages/Login/LoginPage';
-import DashboardPage from '../pages/Dashboard/DashboardPage';
-
-import PlanesPage from '../modules/membresias/PlanesPage';
-import ClientesPage from '../modules/membresias/ClientesPage';
-import MiembrosActivosPage from '../modules/membresias/MiembrosActivosPage';
-import MembresiasVencidasPage from '../modules/membresias/MembresiasVencidasPage';
-import RenovacionesPage from '../modules/membresias/RenovacionesPage';
-
-import ListaUsuariosPage from '../modules/usuarios/ListaUsuariosPage';
-import RolesPermisosPage from '../modules/usuarios/RolesPermisosPage';
-import AdministradoresPage from '../modules/usuarios/AdministradoresPage';
-
-import InventarioPage from '../modules/productos/InventarioPage';
-import CategoriasPage from '../modules/productos/CategoriasPage';
-import ProveedoresPage from '../modules/productos/ProveedoresPage';
-import StockAlertasPage from '../modules/productos/StockAlertasPage';
-
-import HistorialVentasPage from '../modules/ventas/HistorialVentasPage';
-import NuevaVentaPage from '../modules/ventas/NuevaVentaPage';
-import DevolucionesPage from '../modules/ventas/DevolucionesPage';
-import ComprobantesVentasPage from '../modules/ventas/ComprobantesVentasPage';
-
-import RegistroPagosPage from '../modules/pagos/RegistroPagosPage';
-import MetodosPagoPage from '../modules/pagos/MetodosPagoPage';
-
-import RegistroAsistenciaPage from '../modules/asistencias/RegistroAsistenciaPage';
-import ResumenAsistenciasPage from '../modules/asistencias/ResumenAsistenciasPage';
-
-import ReportesVentasPage from '../modules/reportes/ReportesVentasPage';
-import ReportesMembresiasPage from '../modules/reportes/ReportesMembresiasPage';
-import ReportesAsistenciasPage from '../modules/reportes/ReportesAsistenciasPage';
-import ReportesInventarioPage from '../modules/reportes/ReportesInventarioPage';
-
-import InfoGimnasioPage from '../modules/configuracion/InfoGimnasioPage';
-import NotificacionesPage from '../modules/configuracion/NotificacionesPage';
-import SeguridadPage from '../modules/configuracion/SeguridadPage';
+const LoginPage = lazy(() => import('../modules/auth/LoginPage'));
+const DashboardPage = lazy(() => import('../modules/dashboard/DashboardPage'));
+const PlanesPage = lazy(() => import('../modules/membresias/PlanesPage'));
+const ClientesPage = lazy(() => import('../modules/membresias/ClientesPage'));
+const MiembrosActivosPage = lazy(() => import('../modules/membresias/MiembrosActivosPage'));
+const MembresiasVencidasPage = lazy(() => import('../modules/membresias/MembresiasVencidasPage'));
+const RenovacionesPage = lazy(() => import('../modules/membresias/RenovacionesPage'));
+const ListaUsuariosPage = lazy(() => import('../modules/usuarios/ListaUsuariosPage'));
+const RolesPermisosPage = lazy(() => import('../modules/usuarios/RolesPermisosPage'));
+const AdministradoresPage = lazy(() => import('../modules/usuarios/AdministradoresPage'));
+const InventarioPage = lazy(() => import('../modules/productos/InventarioPage'));
+const CategoriasPage = lazy(() => import('../modules/productos/CategoriasPage'));
+const ProveedoresPage = lazy(() => import('../modules/productos/ProveedoresPage'));
+const StockAlertasPage = lazy(() => import('../modules/productos/StockAlertasPage'));
+const HistorialVentasPage = lazy(() => import('../modules/ventas/HistorialVentasPage'));
+const NuevaVentaPage = lazy(() => import('../modules/ventas/NuevaVentaPage'));
+const DevolucionesPage = lazy(() => import('../modules/ventas/DevolucionesPage'));
+const ComprobantesVentasPage = lazy(() => import('../modules/ventas/ComprobantesVentasPage'));
+const RegistroPagosPage = lazy(() => import('../modules/pagos/RegistroPagosPage'));
+const MetodosPagoPage = lazy(() => import('../modules/pagos/MetodosPagoPage'));
+const RegistroAsistenciaPage = lazy(() => import('../modules/asistencias/RegistroAsistenciaPage'));
+const ResumenAsistenciasPage = lazy(() => import('../modules/asistencias/ResumenAsistenciasPage'));
+const ReportesVentasPage = lazy(() => import('../modules/reportes/ReportesVentasPage'));
+const ReportesMembresiasPage = lazy(() => import('../modules/reportes/ReportesMembresiasPage'));
+const ReportesAsistenciasPage = lazy(() => import('../modules/reportes/ReportesAsistenciasPage'));
+const ReportesInventarioPage = lazy(() => import('../modules/reportes/ReportesInventarioPage'));
+const InfoGimnasioPage = lazy(() => import('../modules/configuracion/InfoGimnasioPage'));
+const NotificacionesPage = lazy(() => import('../modules/configuracion/NotificacionesPage'));
+const SeguridadPage = lazy(() => import('../modules/configuracion/SeguridadPage'));
 
 const AppInitializer = ({ children }: { children: React.ReactNode }) => {
   const [cargandoSesion, setCargandoSesion] = useState(true);
@@ -56,6 +48,11 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
         const { data } = await api.post('/auth/refresh-token');
         if (data?.token && isMounted) {
           tokenService.setAccessToken(data.token);
+          if (data.usuario) {
+            localStorage.setItem('usuario', JSON.stringify(data.usuario));
+            localStorage.setItem('usuarioRol', data.usuario.rol || 'USER');
+            localStorage.setItem('usuarioCargo', data.usuario.cargo || '');
+          }
         }
       } catch (error) {
         tokenService.clearAccessToken();
@@ -92,6 +89,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   return (
     <AppInitializer>
+      <Suspense fallback={<div className="p-6 text-sm text-gray-500">Cargando módulo...</div>}>
       <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/" element={<LoginPage />} />
@@ -154,6 +152,7 @@ const AppRoutes = () => {
           </Route>
         </Route>
       </Routes>
+      </Suspense>
     </AppInitializer>
   );
 };

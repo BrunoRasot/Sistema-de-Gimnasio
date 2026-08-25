@@ -18,12 +18,18 @@ const colors = {
 
 winston.addColors(colors);
 
-const format = winston.format.combine(
+const humanFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
   winston.format.printf(
     (info) => `[${info.timestamp}] [${info.level}]: ${info.message}`
   )
+);
+
+const productionFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.errors({ stack: true }),
+  winston.format.json(),
 );
 
 const transports = [
@@ -36,8 +42,8 @@ const transports = [
 ];
 
 export const logger = winston.createLogger({
-  level: 'info',
+  level: process.env.LOG_LEVEL ?? 'info',
   levels,
-  format,
+  format: process.env.NODE_ENV === 'production' ? productionFormat : humanFormat,
   transports,
 });

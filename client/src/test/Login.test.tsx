@@ -2,9 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import LoginPage from '../pages/Login/LoginPage';
+import LoginPage from '../modules/auth/LoginPage';
 
-vi.mock('axios');
+vi.mock('../services/api', () => ({
+  api: { post: vi.fn() },
+}));
 
 describe('Pruebas del Componente de Login', () => {
   const renderLogin = () => {

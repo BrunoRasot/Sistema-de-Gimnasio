@@ -15,6 +15,19 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     setOpenItemPath((prev) => (prev === path ? null : path));
   };
 
+  const storedUser = localStorage.getItem('usuario');
+  let usuario = null;
+  try {
+    usuario = storedUser ? JSON.parse(storedUser) : null;
+  } catch {
+    usuario = null;
+  }
+  const esAdmin = usuario?.rol === 'ADMIN' || usuario?.rol === 'SUPER_ADMIN';
+  const puedeVer = (path: string) => {
+    const modulo = path.split('/')[1];
+    return esAdmin || modulo === 'dashboard' || usuario?.permisos?.[modulo]?.ver;
+  };
+
   return (
     <aside
       className={`
@@ -42,7 +55,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
               {group.title}
             </h3>
             <div className="space-y-1">
-              {group.items.map((item) => (
+              {group.items.filter((item) => puedeVer(item.path)).map((item) => (
                 <SidebarItem
                   key={item.path}
                   {...item}

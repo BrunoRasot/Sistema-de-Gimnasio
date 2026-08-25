@@ -9,10 +9,12 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
 *.local
 /generated/prisma/
 
 .env
+!.env.example
 
 .vscode/*
 !.vscode/extensions.json

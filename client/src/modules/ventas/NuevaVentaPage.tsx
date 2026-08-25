@@ -12,7 +12,7 @@ export default function NuevaVentaPage() {
   const [busqueda, setBusqueda] = useState('');
   const [carrito, setCarrito] = useState<any[]>([]);
   const [cliente, setCliente] = useState('');
-  const [metodoPago, setMetodoPago] = useState('');
+  const [metodoId, setMetodoId] = useState<number | null>(null);
   const [montoRecibido, setMontoRecibido] = useState<string>('');
   const [procesando, setProcesando] = useState(false);
 
@@ -31,9 +31,9 @@ export default function NuevaVentaPage() {
         setMetodosPago(metodosActivos);
         
         if (metodosActivos.length > 0) {
-          setMetodoPago(metodosActivos[0].nombre);
+          setMetodoId(metodosActivos[0].id);
         } else {
-          setMetodoPago('Efectivo');
+          setMetodoId(null);
         }
 
       } catch (error) {
@@ -106,6 +106,10 @@ export default function NuevaVentaPage() {
       toast.error('El monto recibido es menor al total');
       return;
     }
+    if (!metodoId) {
+      toast.error('Seleccione un método de pago activo');
+      return;
+    }
 
     try {
       setProcesando(true);
@@ -117,7 +121,7 @@ export default function NuevaVentaPage() {
 
       await ventasService.crearVenta({
         cliente: cliente.trim() || 'Público General',
-        metodoPago,
+        metodoId,
         montoRecibido: montoRecibido ? Number(montoRecibido) : undefined,
         vuelto: vuelto > 0 ? vuelto : 0,
         items
@@ -222,15 +226,15 @@ export default function NuevaVentaPage() {
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Método de Pago</label>
               <select 
-                value={metodoPago}
-                onChange={(e) => setMetodoPago(e.target.value)}
+                value={metodoId ?? ''}
+                onChange={(e) => setMetodoId(Number(e.target.value) || null)}
                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-gray-900"
               >
                 {metodosPago.length === 0 ? (
-                  <option value="Efectivo">Efectivo</option>
+                  <option value="">No hay métodos activos</option>
                 ) : (
                   metodosPago.map((m) => (
-                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                    <option key={m.id} value={m.id}>{m.nombre}</option>
                   ))
                 )}
               </select>

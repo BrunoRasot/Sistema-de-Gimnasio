@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+export const passwordSeguraSchema = z
+  .string()
+  .min(12, 'La contraseña debe tener al menos 12 caracteres')
+  .max(128, 'La contraseña no puede superar 128 caracteres')
+  .regex(/[a-z]/, 'La contraseña debe incluir una letra minúscula')
+  .regex(/[A-Z]/, 'La contraseña debe incluir una letra mayúscula')
+  .regex(/\d/, 'La contraseña debe incluir un número')
+  .regex(/[^A-Za-z0-9]/, 'La contraseña debe incluir un símbolo');
+
 export const productoSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
   sku: z.string().min(1, 'El SKU es obligatorio'),
@@ -34,6 +43,26 @@ export const pagoSchema = z.object({
   concepto: z.string().min(1, 'El concepto es obligatorio'),
   monto: z.coerce.number().positive('El monto debe ser mayor a 0'),
   metodoId: z.coerce.number().int().positive('El método de pago es obligatorio'),
+});
+
+export const metodoPagoSchema = z.object({
+  nombre: z.string().trim().min(1, 'El nombre es obligatorio'),
+  descripcion: z.string().trim().optional().nullable(),
+  activo: z.boolean().default(true),
+});
+
+export const notificacionesSchema = z.object({
+  emailNotificaciones: z.union([z.string().email('Email inválido'), z.literal('')]).optional(),
+  nuevasVentas: z.boolean(),
+  membresiasVencidas: z.boolean(),
+  stockBajo: z.boolean(),
+  alertasSistema: z.boolean(),
+  reportesSemanales: z.boolean(),
+});
+
+export const cambiarPasswordSchema = z.object({
+  actual: z.string().min(1, 'La contraseña actual es obligatoria'),
+  nueva: passwordSeguraSchema,
 });
 
 export const planSchema = z.object({
@@ -93,10 +122,10 @@ export const permisoSchema = z.object({
 export const asignarMembresiaSchema = z.object({
   miembroId: z.coerce.number().int().positive('El cliente es obligatorio'),
   planId: z.coerce.number().int().positive('El plan es obligatorio'),
-  fechaInicio: z.string().optional().nullable(),
+  fechaInicio: z.string().date('La fecha de inicio es inválida').optional().nullable(),
 });
 
 export const renovarMembresiaSchema = z.object({
   planId: z.coerce.number().int().positive('El plan es obligatorio'),
-  fechaInicio: z.string().optional().nullable(),
+  fechaInicio: z.string().date('La fecha de inicio es inválida').optional().nullable(),
 });

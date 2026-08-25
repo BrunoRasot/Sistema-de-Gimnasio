@@ -128,6 +128,8 @@ model Membresia {
 
   @@index([fechaFin])
   @@index([estado])
+  @@index([miembroId])
+  @@index([planId])
 }
 
 model Auditoria {
@@ -140,6 +142,9 @@ model Auditoria {
   createdAt DateTime @default(now())
 
   usuario Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@index([createdAt])
 }
 
 model Categoria {
@@ -186,6 +191,9 @@ model Producto {
   detallesDevueltos DetalleDevolucion[]
   categoria         Categoria           @relation(fields: [categoriaId], references: [id])
   proveedor         Proveedor?          @relation(fields: [proveedorId], references: [id])
+
+  @@index([categoriaId])
+  @@index([proveedorId])
 }
 
 model Venta {
@@ -211,6 +219,9 @@ model Venta {
 
   @@index([createdAt])
   @@index([estado])
+  @@index([usuarioId])
+  @@index([miembroId])
+  @@index([metodoId])
 }
 
 model DetalleVenta {
@@ -223,6 +234,9 @@ model DetalleVenta {
 
   venta    Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
   producto Producto @relation(fields: [productoId], references: [id])
+
+  @@index([ventaId])
+  @@index([productoId])
 }
 
 model Devolucion {
@@ -236,6 +250,9 @@ model Devolucion {
   venta    Venta               @relation(fields: [ventaId], references: [id])
   usuario  Usuario             @relation(fields: [usuarioId], references: [id])
   detalles DetalleDevolucion[]
+
+  @@index([ventaId])
+  @@index([usuarioId])
 }
 
 model DetalleDevolucion {
@@ -247,6 +264,9 @@ model DetalleDevolucion {
 
   devolucion Devolucion @relation(fields: [devolucionId], references: [id], onDelete: Cascade)
   producto   Producto   @relation(fields: [productoId], references: [id])
+
+  @@index([devolucionId])
+  @@index([productoId])
 }
 
 model MetodoPago {
@@ -278,6 +298,9 @@ model Pago {
 
   @@index([fecha])
   @@index([estado])
+  @@index([usuarioId])
+  @@index([miembroId])
+  @@index([metodoId])
 }
 
 model Asistencia {
@@ -288,6 +311,7 @@ model Asistencia {
   miembro Miembro @relation(fields: [miembroId], references: [id])
 
   @@index([fechaHora])
+  @@index([miembroId])
   @@map("asistencias")
 }
 
@@ -317,4 +341,7 @@ model RefreshToken {
   expiresAt DateTime
 
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@index([expiresAt])
 }

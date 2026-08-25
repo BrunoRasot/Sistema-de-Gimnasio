@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useCallback } from 'react';
 import { Search, Printer, Loader2, FileText } from 'lucide-react';
 import { ventasService } from '../../services/ventas.service';
 import toast from 'react-hot-toast';
@@ -12,26 +13,26 @@ export default function ComprobantesVentasPage() {
   const [comprobante, setComprobante] = useState<any>(null);
   const [cargando, setCargando] = useState(false);
 
-  const buscarComprobante = async (idToSearch?: string) => {
+  const buscarComprobante = useCallback(async (idToSearch?: string) => {
     const targetId = idToSearch || comprobanteId;
     if (!targetId) return;
     try {
       setCargando(true);
       const data = await ventasService.obtenerComprobantePorId(Number(targetId));
       setComprobante(data);
-    } catch (error: any) {
+    } catch {
       toast.error('Comprobante no encontrado');
       setComprobante(null);
     } finally {
       setCargando(false);
     }
-  };
+  }, [comprobanteId]);
 
   useEffect(() => {
     if (idParam) {
       buscarComprobante(idParam);
     }
-  }, [idParam]);
+  }, [idParam, buscarComprobante]);
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
@@ -85,9 +86,9 @@ export default function ComprobantesVentasPage() {
 
           <div className="text-xs space-y-1 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
             <p><strong className="text-gray-700">Cliente:</strong> {comprobante.cliente || 'Público General'}</p>
-            <p><strong className="text-gray-700">Método de Pago:</strong> {comprobante.metodoPago}</p>
+            <p><strong className="text-gray-700">Método de Pago:</strong> {comprobante.metodoPago?.nombre || 'No especificado'}</p>
             
-            {comprobante.metodoPago === 'Efectivo' ? (
+            {comprobante.metodoPago?.nombre === 'Efectivo' ? (
               <>
                 <p><strong className="text-gray-700">Monto Entregado:</strong> S/ {Number(comprobante.montoRecibido || 0).toFixed(2)}</p>
                 <p><strong className="text-gray-700">Vuelto:</strong> S/ {Number(comprobante.vuelto || 0).toFixed(2)}</p>

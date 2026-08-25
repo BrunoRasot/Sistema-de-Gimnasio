@@ -1,0 +1,11 @@
+node_modules
+.pnpm-store
+dist
+coverage
+logs
+.env
+.env.*
+!.env.example
+*.log
+.git
+.vscode

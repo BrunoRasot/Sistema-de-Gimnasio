@@ -83,9 +83,9 @@ describe('Pruebas de RolesPermisosPage', () => {
     expect(btnGuardar).not.toBeDisabled();
 
     await user.click(btnGuardar);
-    expect(permisosService.guardarPermisosBD).toHaveBeenCalledWith(
-      'Supervisor',
-      expect.any(Object),
-    );
+    expect(permisosService.guardarPermisosBD).toHaveBeenCalledWith({
+      cargo: 'Supervisor',
+      permisos: expect.any(Object),
+    });
   });
 });

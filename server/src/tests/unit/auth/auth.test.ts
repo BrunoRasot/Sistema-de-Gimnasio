@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import app from '../app.ts';
+import app from '../../../app.js';
 
 describe('Pruebas de Autenticación y Seguridad', () => {
   it('Debería rechazar un login con datos vacíos y devolver estado 400', async () => {
@@ -24,9 +24,8 @@ describe('Pruebas de Autenticación y Seguridad', () => {
     );
 
     const response = await request(app)
-      .put('/api/configuracion/info')
+      .get('/api/usuarios')
       .set('Authorization', `Bearer ${tokenIntruso}`)
-      .send({ nombre: 'Gym Hackeado' });
 
     expect(response.status).toBe(403);
   });

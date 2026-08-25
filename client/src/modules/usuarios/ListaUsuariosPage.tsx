@@ -3,7 +3,6 @@ import {
   Plus, Search, RefreshCw, Loader2, Users, ShieldCheck, UserCog,
   UserCheck, UserX, Sun, Sunset, Moon, CalendarClock, Edit2, Trash2, Eye, FileSpreadsheet
 } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { obtenerUsuarios, eliminarUsuario } from '../../services/usuarios.service';
@@ -167,7 +166,7 @@ export default function ListaUsuariosPage() {
     );
   }, [usuarios, buscar]);
 
-  const handleExportarExcel = () => {
+  const handleExportarExcel = async () => {
     const datosExcel = usuariosFiltrados.map(u => ({
       'Nombres': u.nombres || '',
       'Apellidos': u.apellidos || '',
@@ -183,11 +182,33 @@ export default function ListaUsuariosPage() {
       'Fecha de Ingreso': formatFecha(u.fechaIngreso)
     }));
 
-    const hoja = XLSX.utils.json_to_sheet(datosExcel);
-    const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, "Usuarios");
-    XLSX.writeFile(libro, "Reporte_Trabajadores.xlsx");
-    toast.success('Reporte exportado a Excel');
+    try {
+      const { default: ExcelJS } = await import('exceljs');
+      const libro = new ExcelJS.Workbook();
+      const hoja = libro.addWorksheet('Usuarios');
+      const columnas = Object.keys(datosExcel[0] ?? {
+        Nombres: '', Apellidos: '', DNI: '', Usuario: '', Email: '', Teléfono: '',
+        Cargo: '', Turno: '', 'Situación Laboral': '', Rol: '', 'Estado de Cuenta': '',
+        'Fecha de Ingreso': '',
+      });
+      hoja.columns = columnas.map((header) => ({ header, key: header, width: 22 }));
+      hoja.addRows(datosExcel);
+      hoja.getRow(1).font = { bold: true };
+
+      const contenido = await libro.xlsx.writeBuffer();
+      const blob = new Blob([contenido as BlobPart], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement('a');
+      enlace.href = url;
+      enlace.download = 'Reporte_Trabajadores.xlsx';
+      enlace.click();
+      URL.revokeObjectURL(url);
+      toast.success('Reporte exportado a Excel');
+    } catch {
+      toast.error('No se pudo exportar el reporte');
+    }
   };
 
   const metricas = useMemo(() => {

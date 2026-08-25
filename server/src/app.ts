@@ -4,29 +4,23 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 
-import usuarioRoutes from './routes/usuario.routes.js';
-import authRoutes from './routes/auth.routes.js';
-import permisosRoutes from './routes/permisos.routes.js';
-import planRoutes from './routes/plan.routes.js';
-import miembroRoutes from './routes/miembro.routes.js';
-import categoriaRoutes from './routes/categoria.routes.js';
-import productoRoutes from './routes/producto.routes.js';
-import proveedorRoutes from './routes/proveedor.routes.js';
-import ventasRoutes from './routes/ventas.routes.js';
-import pagosRoutes from './routes/pagos.routes.js';
-import asistenciasRoutes from './routes/asistencias.routes.js';
-import reportesRoutes from './routes/reportes.routes.js';
-import configuracionRoutes from './routes/configuracion.routes.js';
+import { env } from './config/env.js';
+import { apiRouter } from './modules/index.js';
+import { errorHandler, notFoundHandler } from './middlewares/error.middleware.js';
+import { requestContext } from './middlewares/request-context.middleware.js';
 
 const app = express();
 
+if (env.NODE_ENV === 'production') app.set('trust proxy', 1);
+
 app.use(helmet());
+app.use(requestContext);
 
 const dominiosPermitidos = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  process.env.FRONTEND_URL,
-].filter(Boolean);
+  env.FRONTEND_URL,
+].filter((origin): origin is string => Boolean(origin));
 
 app.use(
   cors({
@@ -54,18 +48,8 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-app.use('/api/usuarios', usuarioRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/permisos', permisosRoutes);
-app.use('/api/planes', planRoutes);
-app.use('/api/miembros', miembroRoutes);
-app.use('/api/categorias', categoriaRoutes);
-app.use('/api/productos', productoRoutes);
-app.use('/api/proveedores', proveedorRoutes);
-app.use('/api/ventas', ventasRoutes);
-app.use('/api/pagos', pagosRoutes);
-app.use('/api/asistencias', asistenciasRoutes);
-app.use('/api/reportes', reportesRoutes);
-app.use('/api/configuracion', configuracionRoutes);
+app.use('/api', apiRouter);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;

@@ -78,8 +78,14 @@ export const UsuarioModal = ({ isOpen, onClose, onSuccess, usuarioAEditar, isVie
         setError('Las contraseñas no coinciden.');
         setTab(3); return;
       }
-      if (formData.password.length < 8) {
-        setError('La contraseña debe tener al menos 8 caracteres.');
+      if (
+        formData.password.length < 12 ||
+        !/[a-z]/.test(formData.password) ||
+        !/[A-Z]/.test(formData.password) ||
+        !/\d/.test(formData.password) ||
+        !/[^A-Za-z0-9]/.test(formData.password)
+      ) {
+        setError('Usa al menos 12 caracteres con mayúscula, minúscula, número y símbolo.');
         setTab(3); return;
       }
     }
@@ -113,7 +119,12 @@ export const UsuarioModal = ({ isOpen, onClose, onSuccess, usuarioAEditar, isVie
   const inputClass = `w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-900 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-all placeholder-gray-400 shadow-sm ${isViewOnly ? 'opacity-70 cursor-not-allowed bg-gray-50' : ''}`;
   const labelClass = "block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1";
   
-  const passwordLenOk = formData.password.length >= 8;
+  const passwordLenOk =
+    formData.password.length >= 12 &&
+    /[a-z]/.test(formData.password) &&
+    /[A-Z]/.test(formData.password) &&
+    /\d/.test(formData.password) &&
+    /[^A-Za-z0-9]/.test(formData.password);
   const passwordsMatch = formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword;
 
   const estadoCuentaOpciones: { value: string; label: string; icon: ReactElement; activeClass: string }[] = [
@@ -231,7 +242,7 @@ export const UsuarioModal = ({ isOpen, onClose, onSuccess, usuarioAEditar, isVie
                       <input required type="password" name="password" value={formData.password} onChange={handleChange} className={inputClass} placeholder="••••••••" />
                       {formData.password.length > 0 && (
                         <p className={`text-[10px] mt-1 ml-1 ${passwordLenOk ? 'text-green-600' : 'text-gray-500'}`}>
-                          {passwordLenOk ? '✓ Longitud válida' : `Mínimo 8 caracteres (${formData.password.length}/8)`}
+                          {passwordLenOk ? '✓ Contraseña segura' : '12+ caracteres, mayúscula, minúscula, número y símbolo'}
                         </p>
                       )}
                     </div>

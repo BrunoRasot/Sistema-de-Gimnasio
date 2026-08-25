@@ -22,4 +22,8 @@ export interface Usuario {
   activo?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  permisos?: Record<
+    string,
+    { ver: boolean; crear: boolean; editar: boolean; eliminar: boolean }
+  >;
 }

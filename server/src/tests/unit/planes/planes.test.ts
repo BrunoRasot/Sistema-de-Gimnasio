@@ -2,8 +2,8 @@ import 'dotenv/config';
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import app from '../app.js';
-import { prisma } from '../database/prisma.js';
+import app from '../../../app.js';
+import { prisma } from '../../../database/prisma.js';
 
 describe('Pruebas del módulo de Planes', () => {
   let tokenAdmin: string;

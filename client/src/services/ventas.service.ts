@@ -8,8 +8,7 @@ export const ventasService = {
 
   crearVenta: async (ventaData: {
     cliente: string;
-    metodoPago?: string;
-    metodoId?: number;
+    metodoId: number;
     numeroOperacion?: string;
     montoRecibido?: number;
     vuelto?: number;

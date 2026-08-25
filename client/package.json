@@ -8,7 +8,14 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "test:unit": "vitest run src/test/unit",
+    "test:integration": "vitest run src/test/integration",
+    "test:security": "vitest run src/test/security",
+    "test:contracts": "vitest run src/test/contracts",
+    "test:e2e": "vitest run src/test/e2e",
+    "test:coverage": "vitest run --coverage",
+    "test:all": "vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -19,6 +26,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "exceljs": "^4.4.0",
     "html5-qrcode": "^2.3.8",
     "input-otp": "^1.4.2",
     "jspdf": "^4.2.1",
@@ -29,11 +37,10 @@
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.81.0",
     "react-hot-toast": "^2.6.0",
-    "react-router-dom": "^7.18.1",
+    "react-router-dom": "^7.18.2",
     "recharts": "^3.9.2",
     "sweetalert2": "^11.26.25",
     "tailwind-merge": "^3.6.0",
-    "xlsx": "^0.18.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -44,6 +51,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "@vitest/coverage-v8": "4.1.10",
     "autoprefixer": "^10.5.2",
     "jsdom": "^30.0.1",
     "oxlint": "^1.71.0",

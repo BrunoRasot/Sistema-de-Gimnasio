@@ -16,7 +16,7 @@ export const asignarMembresia = async (membresiaData: any) => {
 };
 
 export const crearMiembro = async (miembroData: any) => {
-  const { data } = await api.post('/miembros', miembroData);
+  const { data } = await api.post('/miembros/cliente', miembroData);
   return data;
 };
 

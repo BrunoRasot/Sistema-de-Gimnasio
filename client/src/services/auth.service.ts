@@ -50,5 +50,6 @@ export const logoutService = async () => {
     tokenService.clearAccessToken();
     localStorage.removeItem('usuarioRol');
     localStorage.removeItem('usuarioCargo');
+    localStorage.removeItem('usuario');
   }
 };
