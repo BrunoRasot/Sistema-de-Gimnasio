@@ -7,6 +7,7 @@ import {
   eliminarPlan,
 } from '../../services/planes.service';
 import toast from 'react-hot-toast';
+import { TablePagination, useTablePagination } from '../../components/common/TablePagination';
 
 interface Plan {
   id: number;
@@ -116,11 +117,12 @@ export default function PlanesPage() {
       );
     }
   };
+  const paginacion = useTablePagination(planes);
   return (
-    <div className="p-4 md:p-6 max-w-[1600px] mx-auto text-gray-900 space-y-4">
-      <div className="bg-white p-3 md:px-5 md:py-3.5 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3">
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto text-gray-900 space-y-5 min-h-[calc(100dvh-10rem)] flex flex-col">
+      <div className="bg-gradient-to-r from-white via-white to-yellow-50/60 p-4 md:px-5 rounded-xl border border-yellow-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="p-2 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
+          <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-200 text-[#c89500] shadow-sm">
             <Dumbbell className="w-5 h-5" />
           </div>
           <div>
@@ -132,13 +134,13 @@ export default function PlanesPage() {
         </div>
         <button
           onClick={() => abrirModal()}
-          className="w-full sm:w-auto px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+          className="w-full sm:w-auto px-4 py-2 bg-[#e6b010] hover:bg-[#d5a20a] text-gray-950 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
         >
           <Plus className="w-3.5 h-3.5" /> Nuevo Plan
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex min-h-[400px] flex-1 flex-col">
         {cargando ? (
           <div className="flex justify-center items-center py-10">
             <Loader2 className="w-5 h-5 animate-spin text-[#e6b010]" />
@@ -152,19 +154,27 @@ export default function PlanesPage() {
             <p className="text-xs text-gray-500">Crea tu primer plan de membresía para empezar.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
+          <>
+          <div className="overflow-x-auto flex-1">
+            <table className="membership-data-table w-full table-fixed text-left border-collapse">
+              <colgroup>
+                <col className="w-[34%]" />
+                <col className="w-[18%]" />
+                <col className="w-[16%]" />
+                <col className="w-[16%]" />
+                <col className="w-[16%]" />
+              </colgroup>
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                  <th className="py-2.5 px-4 w-1/3">Nombre del Plan</th>
+                  <th className="py-3 px-4">Nombre del Plan</th>
                   <th className="py-2.5 px-4 text-center">Duración</th>
-                  <th className="py-2.5 px-4 text-right">Precio</th>
+                  <th className="py-2.5 px-4 text-center">Precio</th>
                   <th className="py-2.5 px-4 text-center">Estado</th>
-                  <th className="py-2.5 px-4 text-right">Acciones</th>
+                  <th className="py-3 px-4 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-xs">
-                {planes.map((plan) => (
+                {paginacion.rows.map((plan) => (
                   <tr key={plan.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-2.5 px-4">
                       <p className="font-bold text-gray-900">{plan.nombre}</p>
@@ -177,7 +187,7 @@ export default function PlanesPage() {
                     <td className="py-2.5 px-4 text-center text-gray-600">
                       {plan.duracionDias} días
                     </td>
-                    <td className="py-2.5 px-4 text-right font-semibold text-gray-900">
+                    <td className="py-2.5 px-4 text-center font-semibold text-gray-900">
                       S/ {Number(plan.precio).toFixed(2)}
                     </td>
                     <td className="py-2.5 px-4 text-center">
@@ -191,8 +201,8 @@ export default function PlanesPage() {
                         {plan.estado}
                       </span>
                     </td>
-                    <td className="py-2.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => abrirModal(plan)}
                           className="p-1.5 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-md transition-colors"
@@ -214,6 +224,8 @@ export default function PlanesPage() {
               </tbody>
             </table>
           </div>
+          <TablePagination {...paginacion} />
+          </>
         )}
       </div>
 

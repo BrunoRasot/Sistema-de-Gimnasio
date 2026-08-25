@@ -48,7 +48,7 @@ export default function RegistroAsistenciaPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4">
-      <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+      <div className="module-header bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <div className="p-2.5 bg-yellow-50 border border-yellow-100 rounded-lg text-yellow-600">
             <UserCheck className="w-5 h-5" />

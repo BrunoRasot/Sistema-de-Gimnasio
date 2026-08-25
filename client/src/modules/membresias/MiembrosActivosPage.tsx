@@ -18,6 +18,7 @@ import {
   asignarMembresia,
 } from '../../services/miembros.service';
 import { obtenerPlanes } from '../../services/planes.service';
+import { TablePagination, useTablePagination } from '../../components/common/TablePagination';
 
 export default function MiembrosActivosPage() {
   const [miembros, setMiembros] = useState<any[]>([]);
@@ -116,12 +117,13 @@ export default function MiembrosActivosPage() {
       );
     });
   }, [miembros, buscar]);
+  const paginacion = useTablePagination(miembrosActivos);
 
   return (
-    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-5 text-gray-900 min-h-[calc(100dvh-10rem)] flex flex-col">
+      <div className="bg-gradient-to-r from-white via-white to-yellow-50/60 p-4 md:px-5 rounded-xl border border-yellow-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
+          <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-200 text-[#c89500] shadow-sm">
             <UserCheck className="w-5 h-5" />
           </div>
           <div>
@@ -133,7 +135,7 @@ export default function MiembrosActivosPage() {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="w-full sm:w-auto px-4 py-2 bg-[#141414] hover:bg-black text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+          className="w-full sm:w-auto px-4 py-2 bg-[#e6b010] hover:bg-[#d5a20a] text-gray-950 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
         >
           <Plus className="w-3.5 h-3.5" /> Inscribir Cliente
         </button>
@@ -161,10 +163,17 @@ export default function MiembrosActivosPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[400px] flex flex-col">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[400px] flex flex-1 flex-col">
         <div className="overflow-x-auto custom-scrollbar flex-1">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead>
+          <table className="membership-data-table w-full table-fixed text-left border-collapse min-w-[1000px]">
+            <colgroup>
+              <col className="w-[27%]" />
+              <col className="w-[23%]" />
+              <col className="w-[20%]" />
+              <col className="w-[17%]" />
+              <col className="w-[13%]" />
+            </colgroup>
+            <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
                 <th className="py-3 px-4 pl-5">Cliente</th>
                 <th className="py-3 px-4">Contacto</th>
@@ -188,7 +197,7 @@ export default function MiembrosActivosPage() {
                   </td>
                 </tr>
               ) : (
-                miembrosActivos.map((m) => {
+                paginacion.rows.map((m) => {
                   const membresia = m.membresias[0];
                   const diasRestantes = calcularDiasRestantes(membresia.fechaFin);
                   const fechaFinFormateada = new Date(membresia.fechaFin).toLocaleDateString(
@@ -242,6 +251,7 @@ export default function MiembrosActivosPage() {
             </tbody>
           </table>
         </div>
+        <TablePagination {...paginacion} />
       </div>
 
       {isModalOpen && (

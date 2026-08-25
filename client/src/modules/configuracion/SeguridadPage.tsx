@@ -52,14 +52,14 @@ export default function SeguridadPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-[850px] mx-auto space-y-6">
-      <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+      <div className="module-header flex items-center justify-between rounded-xl border border-yellow-200/80 p-4 shadow-sm">
         <div>
           <h1 className="text-xl font-bold text-gray-900 tracking-tight">Seguridad de la Cuenta</h1>
           <p className="text-xs text-gray-500 mt-0.5">
             Gestione sus credenciales de acceso y la protección de su perfil.
           </p>
         </div>
-        <div className="p-2.5 bg-red-50 border border-red-100 rounded-xl text-red-600 shadow-sm">
+        <div className="p-2.5 bg-yellow-50 border border-yellow-200 rounded-lg text-[#c89500] shadow-sm">
           <ShieldCheck className="w-5 h-5" />
         </div>
       </div>

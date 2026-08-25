@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Users, Activity, TrendingUp, ArrowUpRight, Clock, ShieldCheck, Package, AlertTriangle, PackageOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, Activity, TrendingUp, ArrowUpRight, Clock, ShieldCheck, Package, AlertTriangle, PackageOpen, ChevronRight, Dumbbell } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { obtenerUsuarios } from '../../services/usuarios.service';
 import { Usuario } from '../../types/usuario';
@@ -11,6 +12,7 @@ import { ventasService } from '../../services/ventas.service';
 const COLORES_PLANES = ['#e6b010', '#f59e0b', '#fbbf24', '#d97706', '#b45309'];
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [membresias, setMembresias] = useState<any[]>([]);
   const [productos, setProductos] = useState<any[]>([]);
@@ -120,27 +122,29 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-5 text-gray-900">
+      <div className="relative overflow-hidden bg-gradient-to-r from-white via-white to-yellow-50/60 p-5 md:px-6 rounded-xl border border-yellow-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-5">
+        <div className="absolute -right-12 -top-20 h-52 w-52 rounded-full bg-yellow-300/10 blur-2xl" />
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
-            <Activity className="w-5 h-5" />
+          <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-[#c89500] shadow-sm">
+            <Dumbbell className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-gray-900 tracking-wide">Resumen General</h1>
-            <p className="text-[11px] text-gray-500 mt-0.5">Métricas principales y rendimiento de TemploGym.</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#b68400]">Centro de control</p>
+            <h1 className="text-xl md:text-2xl font-extrabold text-gray-950 tracking-tight">Resumen de TemploGym</h1>
+            <p className="text-xs text-gray-500 mt-1">Rendimiento, membresías y operación en una sola vista.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 w-full sm:w-auto justify-end">
-          <Clock className="w-3.5 h-3.5 text-gray-500" />
-          <span className="text-xs font-medium text-gray-700">
+        <div className="relative flex items-center gap-2 bg-white px-3.5 py-2 rounded-lg border border-yellow-200 w-full sm:w-auto justify-center text-gray-600 shadow-sm">
+          <Clock className="w-3.5 h-3.5 text-[#c89500]" />
+          <span className="text-xs font-medium">
             {new Date().toLocaleDateString('es-PE', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-gray-900 transition-colors">
+        <button type="button" onClick={() => navigate('/reportes/ventas')} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:-translate-y-0.5 hover:border-green-300 hover:shadow-lg transition-all text-left focus:outline-none focus:ring-2 focus:ring-green-500">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Ingresos (Mes)</p>
@@ -162,10 +166,11 @@ export default function DashboardPage() {
             ) : (
               <span className="text-gray-400 text-[10px]">Sin ventas el mes anterior para comparar</span>
             )}
+            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-green-600 group-hover:translate-x-0.5 transition-all" />
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-gray-900 transition-colors">
+        <button type="button" onClick={() => navigate('/membresias/activos')} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-500">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Membresías Activas</p>
@@ -192,9 +197,9 @@ export default function DashboardPage() {
               </span>
             )}
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-gray-900 transition-colors">
+        <button type="button" onClick={() => navigate('/usuarios/lista')} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-lg transition-all text-left focus:outline-none focus:ring-2 focus:ring-amber-500">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Personal Registrado</p>
@@ -214,9 +219,9 @@ export default function DashboardPage() {
             </div>
             <span className="text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded text-[10px] border border-green-200">{totalUsuarios} Activos</span>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:border-gray-900 transition-colors">
+        <button type="button" onClick={() => navigate('/productos/alertas')} className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between group hover:-translate-y-0.5 hover:border-red-300 hover:shadow-lg transition-all text-left focus:outline-none focus:ring-2 focus:ring-red-500">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Alertas de Stock</p>
@@ -235,13 +240,13 @@ export default function DashboardPage() {
             </div>
             <span className="text-gray-400 text-[10px] font-medium">Inventario</span>
           </div>
-        </div>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm lg:col-span-2 xl:col-span-2 flex flex-col">
+        <button type="button" aria-label="Abrir reporte de ventas" onClick={() => navigate('/reportes/ventas')} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm lg:col-span-2 xl:col-span-2 flex flex-col text-left group hover:border-gray-400 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-gray-800">
           <div className="mb-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Ingresos de la Semana</h3>
+            <div className="flex items-center justify-between"><h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Ingresos de la Semana</h3><span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-900 flex items-center">Ver reporte <ChevronRight className="w-3.5 h-3.5" /></span></div>
             <p className="text-[10px] text-gray-500 mt-0.5">Volumen de ventas en soles (S/)</p>
           </div>
           <div className="h-[220px] w-full mt-auto">
@@ -255,11 +260,11 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col">
+        <button type="button" aria-label="Abrir resumen de asistencias" onClick={() => navigate('/asistencias/resumen')} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col text-left group hover:border-amber-300 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-amber-500">
           <div className="mb-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Asistencias Hoy</h3>
+            <div className="flex items-center justify-between"><h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Asistencias Hoy</h3><ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-amber-500" /></div>
             <p className="text-[10px] text-gray-500 mt-0.5">Flujo de clientes</p>
           </div>
           <div className="h-[220px] w-full mt-auto">
@@ -279,11 +284,11 @@ export default function DashboardPage() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+        <button type="button" aria-label="Abrir reporte de membresías" onClick={() => navigate('/reportes/membresias')} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between text-left group hover:border-amber-300 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-amber-500">
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Planes Activos</h3>
+            <div className="flex items-center justify-between"><h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Planes Activos</h3><ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-amber-500" /></div>
             <p className="text-[10px] text-gray-500 mt-0.5">Distribución de membresías</p>
           </div>
           <div className="h-[150px] w-full my-auto">
@@ -306,17 +311,18 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-        </div>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden lg:col-span-2 flex flex-col">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden lg:col-span-2 flex flex-col">
           <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-gray-500" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Personal Registrado</h3>
             </div>
+            <button type="button" onClick={() => navigate('/usuarios/lista')} className="text-[10px] font-bold text-gray-500 hover:text-gray-900 flex items-center">Ver todos <ChevronRight className="w-3.5 h-3.5" /></button>
           </div>
           <div className="overflow-x-auto custom-scrollbar flex-1">
             <table className="w-full text-left border-collapse">
@@ -334,7 +340,20 @@ export default function DashboardPage() {
                   recientes.map((u) => {
                     const iniciales = `${u.nombres?.charAt(0) ?? u.nombreUsuario?.charAt(0) ?? '?'}${u.apellidos?.charAt(0) ?? ''}`;
                     return (
-                      <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                      <tr
+                        key={u.id}
+                        role="link"
+                        tabIndex={0}
+                        aria-label={`Abrir usuario ${u.nombreUsuario}`}
+                        onClick={() => navigate('/usuarios/lista')}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            navigate('/usuarios/lista');
+                          }
+                        }}
+                        className="cursor-pointer hover:bg-amber-50/50 focus:bg-amber-50/70 focus:outline-none transition-colors"
+                      >
                         <td className="py-3 px-4 pl-5">
                           <div className="flex items-center gap-3">
                             <div className="w-7 h-7 rounded-full bg-yellow-50 text-[#e6b010] flex items-center justify-center font-bold text-[10px] border border-yellow-100 shrink-0">
@@ -359,15 +378,15 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4 text-gray-500" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Alertas de Stock</h3>
             </div>
-            <span className="text-[10px] font-bold bg-red-50 text-red-600 px-2 py-0.5 rounded-md border border-red-200">
+            <button type="button" onClick={() => navigate('/productos/alertas')} className="text-[10px] font-bold bg-red-50 text-red-600 px-2 py-0.5 rounded-md border border-red-200 hover:bg-red-100">
               {alertasStockReales.length}
-            </span>
+            </button>
           </div>
           <div className="p-3 flex-1 overflow-y-auto max-h-[250px] custom-scrollbar space-y-2">
             {alertasStockReales.length === 0 && !cargando ? (
@@ -379,7 +398,20 @@ export default function DashboardPage() {
               alertasStockReales.map((alerta) => {
                 const esCritico = alerta.stock === 0 || alerta.stock <= (alerta.stockMinimo / 2);
                 return (
-                  <div key={alerta.id} className="flex items-center justify-between p-2.5 bg-gray-50/50 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100">
+                  <div
+                    key={alerta.id}
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Abrir alerta de stock de ${alerta.nombre}`}
+                    onClick={() => navigate('/productos/alertas')}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        navigate('/productos/alertas');
+                      }
+                    }}
+                    className="flex cursor-pointer items-center justify-between p-2.5 bg-gray-50/50 hover:bg-red-50/60 focus:bg-red-50/60 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-300 rounded-lg transition-colors border border-gray-100"
+                  >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className={`p-1.5 rounded-md shrink-0 ${esCritico ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-orange-50 text-orange-500 border border-orange-100'}`}>
                         <AlertTriangle className="w-3.5 h-3.5" />

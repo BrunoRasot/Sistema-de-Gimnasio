@@ -12,6 +12,7 @@ export default function DevolucionesPage() {
   
   const [ventaEncontrada, setVentaEncontrada] = useState<any>(null);
   const [buscandoVenta, setBuscandoVenta] = useState(false);
+  const [cantidades, setCantidades] = useState<Record<number, number>>({});
 
   const cargarDatos = async () => {
     try {
@@ -42,6 +43,7 @@ export default function DevolucionesPage() {
         v.numeroOperacion?.toLowerCase() === codigoBuscado.toLowerCase().trim()
       );
       setVentaEncontrada(encontrada || null);
+      setCantidades(encontrada ? Object.fromEntries(encontrada.detalles.map((d: any) => [d.productoId, d.cantidad])) : {});
     } catch (error) {
       setVentaEncontrada(null);
     } finally {
@@ -59,7 +61,8 @@ export default function DevolucionesPage() {
       setProcesando(true);
       await ventasService.registrarDevolucion({
         identificador: identificador.trim(),
-        motivo: motivo.trim() || 'Devolución de productos'
+        motivo: motivo.trim() || 'Devolución de productos',
+        items: Object.entries(cantidades).filter(([, cantidad]) => cantidad > 0).map(([productoId, cantidad]) => ({ productoId: Number(productoId), cantidad }))
       });
       toast.success('Devolución procesada y stock restaurado');
       setIdentificador('');
@@ -76,7 +79,7 @@ export default function DevolucionesPage() {
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
       
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="module-header bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
             <RotateCcw className="w-5 h-5" />
@@ -127,7 +130,7 @@ export default function DevolucionesPage() {
                     <ShoppingBag className="w-3.5 h-3.5 text-[#e6b010]" /> {ventaEncontrada.codigo}
                   </span>
                   <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-white border border-yellow-200 rounded text-yellow-800">
-                    {ventaEncontrada.metodoPago}
+                    {ventaEncontrada.metodoPago?.nombre || 'Sin método'}
                   </span>
                 </div>
 
@@ -149,9 +152,9 @@ export default function DevolucionesPage() {
                     <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Productos en la venta:</p>
                     <ul className="space-y-0.5 text-[11px] text-gray-600">
                       {ventaEncontrada.detalles.map((det: any, idx: number) => (
-                        <li key={idx} className="flex justify-between">
+                        <li key={idx} className="flex justify-between items-center gap-2">
                           <span>• {det.producto?.nombre || 'Producto'} (x{det.cantidad})</span>
-                          <span className="font-semibold">S/ {Number(det.subtotal).toFixed(2)}</span>
+                          <input aria-label={`Cantidad a devolver de ${det.producto?.nombre || 'Producto'}`} type="number" min="0" max={det.cantidad} value={cantidades[det.productoId] ?? 0} onChange={(e) => setCantidades((prev) => ({ ...prev, [det.productoId]: Math.min(det.cantidad, Math.max(0, Number(e.target.value))) }))} className="w-16 rounded border border-yellow-200 bg-white px-2 py-1 text-center" />
                         </li>
                       ))}
                     </ul>
@@ -224,7 +227,7 @@ export default function DevolucionesPage() {
                         {dev.venta?.numeroOperacion ? dev.venta.numeroOperacion : dev.venta?.codigo}
                       </td>
                       <td className="py-3 px-4 text-gray-700">
-                        <span className="bg-gray-100 px-2 py-0.5 rounded-md text-[10px] font-medium border border-gray-200">{dev.venta?.metodoPago}</span>
+                        <span className="bg-gray-100 px-2 py-0.5 rounded-md text-[10px] font-medium border border-gray-200">{dev.venta?.metodoPago?.nombre || 'Sin método'}</span>
                       </td>
                       <td className="py-3 px-4 text-gray-600">{dev.motivo}</td>
                       <td className="py-3 px-4 pr-5 text-right text-gray-500">{new Date(dev.createdAt).toLocaleString()}</td>

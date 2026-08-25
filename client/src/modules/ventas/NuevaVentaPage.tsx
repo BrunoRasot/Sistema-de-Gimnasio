@@ -3,6 +3,7 @@ import { ShoppingCart, Search, Plus, Minus, Trash2, Loader2, CheckCircle, Store 
 import { obtenerProductos } from '../../services/productos.service';
 import { ventasService } from '../../services/ventas.service';
 import { pagosService } from '../../services/pagos.service';
+import { buscarClienteDni } from '../../services/miembros.service';
 import toast from 'react-hot-toast';
 
 export default function NuevaVentaPage() {
@@ -12,8 +13,13 @@ export default function NuevaVentaPage() {
   const [busqueda, setBusqueda] = useState('');
   const [carrito, setCarrito] = useState<any[]>([]);
   const [cliente, setCliente] = useState('');
+  const [dniCliente, setDniCliente] = useState('');
+  const [miembroId, setMiembroId] = useState<number | undefined>();
+  const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [metodoId, setMetodoId] = useState<number | null>(null);
   const [montoRecibido, setMontoRecibido] = useState<string>('');
+  const [numeroOperacion, setNumeroOperacion] = useState('');
+  const [descuento, setDescuento] = useState('0');
   const [procesando, setProcesando] = useState(false);
 
   useEffect(() => {
@@ -94,20 +100,48 @@ export default function NuevaVentaPage() {
     setCarrito(prev => prev.filter(item => item.productoId !== id));
   };
 
-  const total = carrito.reduce((acc, item) => acc + (item.precioUnit * item.cantidad), 0);
-  const vuelto = montoRecibido ? (Number(montoRecibido) - total) : 0;
+  const buscarCliente = async () => {
+    if (!dniCliente.trim()) {
+      toast.error('Ingrese el DNI del cliente');
+      return;
+    }
+    try {
+      setBuscandoCliente(true);
+      const miembro = await buscarClienteDni(dniCliente.trim());
+      setMiembroId(miembro.id);
+      setCliente(`${miembro.nombres} ${miembro.apellidos}`.trim());
+      toast.success('Cliente encontrado');
+    } catch {
+      setMiembroId(undefined);
+      setCliente('');
+      toast.error('No se encontró un miembro activo con ese DNI');
+    } finally {
+      setBuscandoCliente(false);
+    }
+  };
+
+  const subtotal = carrito.reduce((acc, item) => acc + (item.precioUnit * item.cantidad), 0);
+  const descuentoAplicado = Math.min(subtotal, Math.max(0, Number(descuento) || 0));
+  const total = subtotal - descuentoAplicado;
+  const metodoSeleccionado = metodosPago.find((m) => m.id === metodoId);
+  const esEfectivo = metodoSeleccionado?.nombre?.toLowerCase().includes('efectivo') ?? false;
+  const vuelto = esEfectivo && montoRecibido ? (Number(montoRecibido) - total) : 0;
 
   const handleProcesarVenta = async () => {
     if (carrito.length === 0) {
       toast.error('Agregue productos al carrito');
       return;
     }
-    if (montoRecibido && Number(montoRecibido) < total) {
+    if (esEfectivo && (!montoRecibido || Number(montoRecibido) < total)) {
       toast.error('El monto recibido es menor al total');
       return;
     }
     if (!metodoId) {
       toast.error('Seleccione un método de pago activo');
+      return;
+    }
+    if (!esEfectivo && !numeroOperacion.trim()) {
+      toast.error('Ingrese el número de operación');
       return;
     }
 
@@ -121,9 +155,11 @@ export default function NuevaVentaPage() {
 
       await ventasService.crearVenta({
         cliente: cliente.trim() || 'Público General',
+        miembroId,
         metodoId,
+        numeroOperacion: esEfectivo ? undefined : numeroOperacion.trim(),
         montoRecibido: montoRecibido ? Number(montoRecibido) : undefined,
-        vuelto: vuelto > 0 ? vuelto : 0,
+        descuento: descuentoAplicado,
         items
       });
 
@@ -131,7 +167,11 @@ export default function NuevaVentaPage() {
       
       setCarrito([]);
       setCliente('');
+      setDniCliente('');
+      setMiembroId(undefined);
       setMontoRecibido('');
+      setNumeroOperacion('');
+      setDescuento('0');
       
       const dataProductos = await obtenerProductos();
       setProductos(dataProductos.filter((p: any) => p.estado === 'Activo' && p.stock > 0));
@@ -146,7 +186,7 @@ export default function NuevaVentaPage() {
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
       
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
+      <div className="module-header bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
         <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
           <ShoppingCart className="w-5 h-5" />
         </div>
@@ -213,6 +253,36 @@ export default function NuevaVentaPage() {
 
           <div className="space-y-4 mb-4">
             <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">DNI de miembro</label>
+              <div className="flex gap-2">
+                <input
+                  value={dniCliente}
+                  onChange={(e) => {
+                    setDniCliente(e.target.value.replace(/\D/g, '').slice(0, 15));
+                    setMiembroId(undefined);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      buscarCliente();
+                    }
+                  }}
+                  placeholder="Ingrese el DNI"
+                  className="min-w-0 flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-gray-900"
+                />
+                <button
+                  type="button"
+                  onClick={buscarCliente}
+                  disabled={buscandoCliente || !dniCliente.trim()}
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#141414] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {buscandoCliente ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                  Buscar
+                </button>
+              </div>
+              {miembroId && <p className="mt-1 text-[10px] font-medium text-green-700">Miembro asociado correctamente</p>}
+            </div>
+            <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Cliente</label>
               <input 
                 type="text" 
@@ -243,13 +313,14 @@ export default function NuevaVentaPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Recibido (S/)</label>
-                <input 
+                <input
                   type="number" 
                   min="0" step="0.01"
                   placeholder="0.00" 
                   value={montoRecibido}
                   onChange={(e) => setMontoRecibido(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-gray-900" 
+                  disabled={!esEfectivo}
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-gray-900 disabled:bg-gray-100" 
                 />
               </div>
               <div>
@@ -258,6 +329,16 @@ export default function NuevaVentaPage() {
                   S/ {vuelto.toFixed(2)}
                 </div>
               </div>
+            </div>
+            {!esEfectivo && metodoId && (
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">N° de operación *</label>
+                <input value={numeroOperacion} onChange={(e) => setNumeroOperacion(e.target.value)} maxLength={80} placeholder="Código de la transacción" className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-gray-900" />
+              </div>
+            )}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Descuento (S/)</label>
+              <input type="number" min="0" max={subtotal} step="0.01" value={descuento} onChange={(e) => setDescuento(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-gray-900" />
             </div>
           </div>
 

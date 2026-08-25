@@ -62,7 +62,7 @@ export default function RegistroPagosPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="module-header bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
             <CreditCard className="w-5 h-5" />

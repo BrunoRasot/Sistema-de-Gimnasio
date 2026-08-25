@@ -3,6 +3,7 @@ import { Search, Loader2, AlertTriangle, Tag, Save, X, CalendarCheck } from 'luc
 import toast from 'react-hot-toast';
 import { obtenerMiembros, renovarMembresia } from '../../services/miembros.service';
 import { obtenerPlanes } from '../../services/planes.service';
+import { TablePagination, useTablePagination } from '../../components/common/TablePagination';
 
 export default function MembresiasVencidasPage() {
   const [miembros, setMiembros] = useState<any[]>([]);
@@ -56,6 +57,7 @@ export default function MembresiasVencidasPage() {
       );
     });
   }, [miembros, buscar]);
+  const paginacion = useTablePagination(miembrosVencidos);
 
   const handleAbrirRenovacion = (cliente: any) => {
     setClienteSeleccionado(cliente);
@@ -79,10 +81,10 @@ export default function MembresiasVencidasPage() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-5 text-gray-900 min-h-[calc(100dvh-10rem)] flex flex-col">
+      <div className="bg-gradient-to-r from-white via-white to-yellow-50/60 p-4 md:px-5 rounded-xl border border-yellow-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="p-2.5 bg-red-50 rounded-lg border border-red-100 text-red-500">
+          <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-200 text-[#c89500] shadow-sm">
             <AlertTriangle className="w-5 h-5" />
           </div>
           <div>
@@ -118,10 +120,17 @@ export default function MembresiasVencidasPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[400px] flex flex-col">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[400px] flex flex-1 flex-col">
         <div className="overflow-x-auto custom-scrollbar flex-1">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead>
+          <table className="membership-data-table w-full table-fixed text-left border-collapse min-w-[1000px]">
+            <colgroup>
+              <col className="w-[30%]" />
+              <col className="w-[22%]" />
+              <col className="w-[19%]" />
+              <col className="w-[16%]" />
+              <col className="w-[13%]" />
+            </colgroup>
+            <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
                 <th className="py-3 px-4 pl-5">Cliente</th>
                 <th className="py-3 px-4">Último Plan</th>
@@ -145,7 +154,7 @@ export default function MembresiasVencidasPage() {
                   </td>
                 </tr>
               ) : (
-                miembrosVencidos.map((m) => {
+                paginacion.rows.map((m) => {
                   const membresia = m.membresias[0];
                   const diasRestantes = calcularDiasRestantes(membresia.fechaFin);
                   const fechaFin = new Date(membresia.fechaFin).toLocaleDateString('es-PE');
@@ -194,6 +203,7 @@ export default function MembresiasVencidasPage() {
             </tbody>
           </table>
         </div>
+        <TablePagination {...paginacion} />
       </div>
 
       {isModalOpen && clienteSeleccionado && (

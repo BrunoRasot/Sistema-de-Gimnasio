@@ -12,6 +12,7 @@ describe('Integración: ventas, inventario y devoluciones', () => {
   let productoId: number;
   let metodoId: number;
   let ventaId: number;
+  let ventaParcialId: number;
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
   beforeAll(async () => {
@@ -47,6 +48,10 @@ describe('Integración: ventas, inventario y devoluciones', () => {
     if (ventaId) {
       await prisma.devolucion.deleteMany({ where: { ventaId } });
       await prisma.venta.deleteMany({ where: { id: ventaId } });
+    }
+    if (ventaParcialId) {
+      await prisma.devolucion.deleteMany({ where: { ventaId: ventaParcialId } });
+      await prisma.venta.deleteMany({ where: { id: ventaParcialId } });
     }
     if (productoId) await prisma.producto.deleteMany({ where: { id: productoId } });
     if (categoriaId) await prisma.categoria.deleteMany({ where: { id: categoriaId } });
@@ -86,7 +91,7 @@ describe('Integración: ventas, inventario y devoluciones', () => {
       prisma.venta.findUniqueOrThrow({ where: { id: ventaId } }),
     ]);
     expect(producto.stock).toBe(10);
-    expect(ventaAnulada.estado).toBe('Anulado');
+    expect(ventaAnulada.estado).toBe('Devuelto');
   });
 
   it('rechaza una segunda devolución de la misma venta', async () => {
@@ -97,5 +102,26 @@ describe('Integración: ventas, inventario y devoluciones', () => {
       .send({ identificador: venta.codigo, motivo: 'Duplicada' });
 
     expect(response.status).toBe(409);
+  });
+
+  it('procesa una devolución parcial y conserva la venta parcialmente devuelta', async () => {
+    const ventaResponse = await request(app).post('/api/ventas').set('Authorization', `Bearer ${token}`).send({
+      cliente: 'Cliente devolución parcial', metodoId, items: [{ productoId, cantidad: 4 }],
+    });
+    expect(ventaResponse.status).toBe(201);
+    ventaParcialId = ventaResponse.body.venta.id;
+    const response = await request(app).post('/api/ventas/devoluciones').set('Authorization', `Bearer ${token}`).send({
+      identificador: ventaResponse.body.venta.codigo,
+      motivo: 'Devolución parcial de prueba',
+      items: [{ productoId, cantidad: 1 }],
+    });
+    expect(response.status).toBe(201);
+    const venta = await prisma.venta.findUniqueOrThrow({ where: { id: ventaParcialId } });
+    expect(venta.estado).toBe('ParcialmenteDevuelto');
+  });
+
+  it('rechaza una devolución sin motivo válido', async () => {
+    const response = await request(app).post('/api/ventas/devoluciones').set('Authorization', `Bearer ${token}`).send({ identificador: 'VNT-X', motivo: '' });
+    expect(response.status).toBe(400);
   });
 });

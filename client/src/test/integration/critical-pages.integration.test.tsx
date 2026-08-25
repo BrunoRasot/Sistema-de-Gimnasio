@@ -74,11 +74,13 @@ describe('Integración de pantallas críticas', () => {
     await screen.findByText('Proteína');
     await user.click(screen.getByText('Proteína'));
     await user.type(screen.getByPlaceholderText('Público General'), 'Ana');
+    await user.type(screen.getByPlaceholderText('Código de la transacción'), 'YAPE-TEST-01');
     await user.click(screen.getByRole('button', { name: 'Completar Venta' }));
 
     await waitFor(() => expect(ventasService.crearVenta).toHaveBeenCalledWith(expect.objectContaining({
       cliente: 'Ana',
       metodoId: 4,
+      numeroOperacion: 'YAPE-TEST-01',
       items: [{ productoId: 11, cantidad: 1, precioUnit: 25 }],
     })));
     expect(toast.success).toHaveBeenCalledWith('Venta completada exitosamente');

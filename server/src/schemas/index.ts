@@ -23,11 +23,12 @@ export const productoSchema = z.object({
 });
 
 export const ventaSchema = z.object({
-  cliente: z.string().optional().nullable(),
+  cliente: z.string().trim().max(160).optional().nullable(),
+  miembroId: z.coerce.number().int().positive().optional().nullable(),
   metodoId: z.coerce.number().int().positive('El método de pago es obligatorio'),
-  numeroOperacion: z.string().optional().nullable(),
+  numeroOperacion: z.string().trim().max(80).optional().nullable(),
   montoRecibido: z.coerce.number().min(0).optional().nullable(),
-  vuelto: z.coerce.number().min(0).optional().nullable(),
+  descuento: z.coerce.number().min(0).default(0),
   items: z
     .array(
       z.object({
@@ -43,6 +44,15 @@ export const pagoSchema = z.object({
   concepto: z.string().min(1, 'El concepto es obligatorio'),
   monto: z.coerce.number().positive('El monto debe ser mayor a 0'),
   metodoId: z.coerce.number().int().positive('El método de pago es obligatorio'),
+});
+
+export const devolucionSchema = z.object({
+  identificador: z.string().trim().min(1, 'El código de venta es obligatorio').max(100),
+  motivo: z.string().trim().min(3, 'El motivo debe tener al menos 3 caracteres').max(500),
+  items: z.array(z.object({
+    productoId: z.coerce.number().int().positive(),
+    cantidad: z.coerce.number().int().positive(),
+  })).min(1).optional(),
 });
 
 export const metodoPagoSchema = z.object({

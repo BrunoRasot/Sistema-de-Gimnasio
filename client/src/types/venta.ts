@@ -1,0 +1,13 @@
+export interface MetodoPagoVenta { id: number; nombre: string; activo?: boolean }
+export interface ProductoDetalleVenta { id: number; nombre: string; sku?: string }
+export interface DetalleVenta { id?: number; productoId: number; cantidad: number; precioUnit: number | string; subtotal: number | string; producto?: ProductoDetalleVenta }
+export interface Venta {
+  id: number; codigo: string; cliente?: string | null; miembroId?: number | null;
+  subtotal?: number | string; descuento?: number | string; total: number | string;
+  numeroOperacion?: string | null; montoRecibido?: number | string | null; vuelto?: number | string | null;
+  estado: 'Pendiente' | 'Completado' | 'ParcialmenteDevuelto' | 'Devuelto' | 'Anulado';
+  createdAt: string; metodoId: number; metodoPago: MetodoPagoVenta; detalles: DetalleVenta[];
+  usuario?: { id: number; nombres: string; apellidos: string } | null;
+}
+export interface Devolucion { id: number; ventaId: number; monto: number | string; motivo: string; createdAt: string; venta: Venta; detalles?: DetalleVenta[] }
+export interface CrearVentaInput { cliente?: string; miembroId?: number; metodoId: number; numeroOperacion?: string; montoRecibido?: number; descuento?: number; items: Array<{ productoId: number; cantidad: number }> }

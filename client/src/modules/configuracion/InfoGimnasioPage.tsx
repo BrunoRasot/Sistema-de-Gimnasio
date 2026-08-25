@@ -94,7 +94,7 @@ export default function InfoGimnasioPage() {
   return (
     <div className="p-4 md:p-6 max-w-[800px] mx-auto">
       
-      <div className="mb-6">
+      <div className="module-header mb-6 rounded-xl border border-yellow-200/80 p-4 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Información del gimnasio</h1>
         <p className="text-sm text-gray-500 mt-1">Estos datos aparecen en recibos, la app de socios y comunicaciones oficiales.</p>
       </div>

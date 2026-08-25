@@ -1,16 +1,17 @@
 ﻿import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useCallback } from 'react';
-import { Search, Printer, Loader2, FileText } from 'lucide-react';
+import { Search, Printer, Loader2, FileText, Download } from 'lucide-react';
 import { ventasService } from '../../services/ventas.service';
 import toast from 'react-hot-toast';
+import type { Venta } from '../../types/venta';
 
 export default function ComprobantesVentasPage() {
   const [searchParams] = useSearchParams();
   const idParam = searchParams.get('id');
   
   const [comprobanteId, setComprobanteId] = useState(idParam || '');
-  const [comprobante, setComprobante] = useState<any>(null);
+  const [comprobante, setComprobante] = useState<Venta | null>(null);
   const [cargando, setCargando] = useState(false);
 
   const buscarComprobante = useCallback(async (idToSearch?: string) => {
@@ -28,6 +29,29 @@ export default function ComprobantesVentasPage() {
     }
   }, [comprobanteId]);
 
+  const descargarPdf = async () => {
+    if (!comprobante) return;
+    const [{ jsPDF }, autoTableModule, QRCode] = await Promise.all([import('jspdf'), import('jspdf-autotable'), import('qrcode')]);
+    const doc = new jsPDF();
+    doc.setFontSize(16); doc.text('TemploGym S.A.C.', 14, 18);
+    doc.setFontSize(9); doc.text(`Comprobante interno ${comprobante.codigo}`, 14, 26);
+    doc.text(`Fecha: ${new Date(comprobante.createdAt).toLocaleString()}`, 14, 32);
+    doc.text(`Cliente: ${comprobante.cliente || 'Público General'}`, 14, 38);
+    autoTableModule.default(doc, {
+      startY: 45,
+      head: [['Producto', 'Cantidad', 'P. unitario', 'Subtotal']],
+      body: comprobante.detalles.map((d) => [d.producto?.nombre || String(d.productoId), d.cantidad, `S/ ${Number(d.precioUnit).toFixed(2)}`, `S/ ${Number(d.subtotal).toFixed(2)}`]),
+      theme: 'grid', headStyles: { fillColor: [230, 176, 16] },
+    });
+    const finalY = (doc as any).lastAutoTable.finalY + 8;
+    doc.text(`Subtotal: S/ ${Number(comprobante.subtotal ?? comprobante.total).toFixed(2)}`, 140, finalY);
+    doc.text(`Descuento: S/ ${Number(comprobante.descuento ?? 0).toFixed(2)}`, 140, finalY + 6);
+    doc.setFontSize(12); doc.text(`Total: S/ ${Number(comprobante.total).toFixed(2)}`, 140, finalY + 13);
+    const qr = await QRCode.default.toDataURL(`${comprobante.codigo}|${comprobante.total}|${comprobante.createdAt}`);
+    doc.addImage(qr, 'PNG', 14, finalY, 28, 28);
+    doc.save(`${comprobante.codigo}.pdf`);
+  };
+
   useEffect(() => {
     if (idParam) {
       buscarComprobante(idParam);
@@ -37,7 +61,7 @@ export default function ComprobantesVentasPage() {
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
 
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="module-header bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
             <FileText className="w-5 h-5" />
@@ -124,11 +148,12 @@ export default function ComprobantesVentasPage() {
           </div>
 
           <div className="border-t border-gray-100 pt-3 flex justify-between items-center text-xs font-bold text-gray-900">
-            <span>Total Cancelado:</span>
-            <span className="text-sm font-extrabold text-[#e6b010]">S/ {Number(comprobante.total).toFixed(2)}</span>
+            <div className="space-y-1 font-medium text-gray-600"><p>Subtotal: S/ {Number(comprobante.subtotal ?? comprobante.total).toFixed(2)}</p><p>Descuento: S/ {Number(comprobante.descuento ?? 0).toFixed(2)}</p></div>
+            <div className="text-right"><p>Total Cancelado:</p><span className="text-sm font-extrabold text-[#e6b010]">S/ {Number(comprobante.total).toFixed(2)}</span></div>
           </div>
 
           <div className="pt-2 flex justify-end border-t border-gray-100">
+            <button onClick={descargarPdf} className="mr-2 px-3.5 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-800 border border-yellow-200 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"><Download className="w-3.5 h-3.5" /> Descargar PDF</button>
             <button
               onClick={() => window.print()}
               className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"

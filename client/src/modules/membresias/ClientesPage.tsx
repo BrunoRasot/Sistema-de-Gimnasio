@@ -10,6 +10,10 @@ import {
   Mail,
   Phone,
   ShieldAlert,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  ListFilter,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { obtenerMiembros, crearCliente, inactivarCliente } from '../../services/miembros.service';
@@ -18,6 +22,10 @@ export default function ClientesPage() {
   const [clientes, setClientes] = useState<any[]>([]);
   const [cargando, setCargando] = useState(true);
   const [buscar, setBuscar] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [orden, setOrden] = useState<'asc' | 'desc'>('asc');
+  const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [guardando, setGuardando] = useState(false);
 
@@ -73,19 +81,30 @@ export default function ClientesPage() {
   const clientesFiltrados = useMemo(() => {
     return clientes.filter((c) => {
       const term = buscar.toLowerCase();
-      return (
+      const coincideBusqueda = (
         c.nombres.toLowerCase().includes(term) ||
         c.apellidos.toLowerCase().includes(term) ||
         c.dni.includes(term)
       );
+      const tieneMembresia = Boolean(c.membresias?.length);
+      const coincideEstado = filtroEstado === 'todos' || (filtroEstado === 'con-plan' ? tieneMembresia : !tieneMembresia);
+      return coincideBusqueda && coincideEstado;
+    }).sort((a, b) => {
+      const nombreA = `${a.apellidos} ${a.nombres}`.toLocaleLowerCase('es');
+      const nombreB = `${b.apellidos} ${b.nombres}`.toLocaleLowerCase('es');
+      return orden === 'asc' ? nombreA.localeCompare(nombreB) : nombreB.localeCompare(nombreA);
     });
-  }, [clientes, buscar]);
+  }, [clientes, buscar, filtroEstado, orden]);
+
+  const totalPaginas = Math.max(1, Math.ceil(clientesFiltrados.length / porPagina));
+  const inicio = (pagina - 1) * porPagina;
+  const clientesPaginados = clientesFiltrados.slice(inicio, inicio + porPagina);
 
   return (
-    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-5 text-gray-900 min-h-[calc(100dvh-10rem)] flex flex-col">
+      <div className="bg-gradient-to-r from-white via-white to-yellow-50/60 p-4 md:px-5 rounded-xl border border-yellow-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="p-2.5 bg-blue-50 rounded-lg border border-blue-100 text-blue-600">
+          <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-200 text-[#c89500] shadow-sm">
             <Users className="w-5 h-5" />
           </div>
           <div>
@@ -99,7 +118,7 @@ export default function ClientesPage() {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="w-full sm:w-auto px-4 py-2 bg-[#141414] hover:bg-black text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+          className="w-full sm:w-auto px-4 py-2 bg-[#e6b010] hover:bg-[#d5a20a] text-gray-950 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
         >
           <UserPlus className="w-3.5 h-3.5" /> Registrar Cliente
         </button>
@@ -123,18 +142,56 @@ export default function ClientesPage() {
             type="text"
             placeholder="Buscar por nombre, apellidos o DNI..."
             value={buscar}
-            onChange={(e) => setBuscar(e.target.value)}
+            onChange={(e) => { setBuscar(e.target.value); setPagina(1); }}
             className="w-full h-full bg-white border border-gray-200 rounded-xl py-3 pl-10 pr-4 text-xs text-gray-900 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none transition-all placeholder-gray-400 shadow-sm"
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[400px] flex flex-col">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[400px] flex flex-1 flex-col">
+        <div className="flex flex-col gap-2 border-b border-gray-200 bg-gray-50/70 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <ListFilter className="h-3.5 w-3.5 text-gray-400" />
+            <select
+              aria-label="Filtrar por estado comercial"
+              value={filtroEstado}
+              onChange={(event) => { setFiltroEstado(event.target.value); setPagina(1); }}
+              className="rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] text-gray-700 outline-none focus:border-[#e6b010]"
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="con-plan">Con plan activo</option>
+              <option value="sin-plan">Solo registro</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] text-gray-500">
+            <span>Filas por página</span>
+            <select
+              aria-label="Filas por página"
+              value={porPagina}
+              onChange={(event) => { setPorPagina(Number(event.target.value)); setPagina(1); }}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1.5 text-[11px] text-gray-700 outline-none"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+        </div>
         <div className="overflow-x-auto custom-scrollbar flex-1">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead>
+          <table className="membership-data-table w-full table-fixed text-left border-collapse min-w-[1000px]">
+            <colgroup>
+              <col className="w-[34%]" />
+              <col className="w-[30%]" />
+              <col className="w-[22%]" />
+              <col className="w-[14%]" />
+            </colgroup>
+            <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200">
-                <th className="py-3 px-4 pl-5">Cliente</th>
+                <th className="py-3 px-4 pl-5">
+                  <button type="button" onClick={() => setOrden(orden === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-1.5 hover:text-gray-900">
+                    Cliente <ArrowUpDown className="h-3 w-3" />
+                  </button>
+                </th>
                 <th className="py-3 px-4">Contacto</th>
                 <th className="py-3 px-4 text-center">Estado Comercial</th>
                 <th className="py-3 px-4 text-center pr-5">Acciones</th>
@@ -148,14 +205,16 @@ export default function ClientesPage() {
                     Cargando directorio...
                   </td>
                 </tr>
-              ) : clientesFiltrados.length === 0 ? (
+              ) : clientesPaginados.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-14 text-center text-gray-500">
-                    No se encontraron clientes registrados.
+                    <Users className="mx-auto mb-2 h-6 w-6 text-gray-300" />
+                    <p className="font-medium text-gray-700">No se encontraron clientes</p>
+                    <p className="mt-1 text-[10px] text-gray-400">Prueba con otro término o cambia el filtro.</p>
                   </td>
                 </tr>
               ) : (
-                clientesFiltrados.map((c) => {
+                clientesPaginados.map((c) => {
                   const tieneMembresia = c.membresias && c.membresias.length > 0;
                   return (
                     <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
@@ -210,6 +269,34 @@ export default function ClientesPage() {
             </tbody>
           </table>
         </div>
+        {!cargando && clientesFiltrados.length > 0 && (
+          <div className="flex flex-col gap-2 border-t border-gray-200 bg-white px-4 py-2.5 text-[10px] text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              Mostrando {inicio + 1}–{Math.min(inicio + porPagina, clientesFiltrados.length)} de {clientesFiltrados.length} registros
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-label="Página anterior"
+                disabled={pagina === 1}
+                onClick={() => setPagina((actual) => Math.max(1, actual - 1))}
+                className="rounded-md border border-gray-200 p-1.5 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+              <span className="min-w-16 text-center font-medium text-gray-700">Página {pagina} de {totalPaginas}</span>
+              <button
+                type="button"
+                aria-label="Página siguiente"
+                disabled={pagina >= totalPaginas}
+                onClick={() => setPagina((actual) => Math.min(totalPaginas, actual + 1))}
+                className="rounded-md border border-gray-200 p-1.5 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {isModalOpen && (

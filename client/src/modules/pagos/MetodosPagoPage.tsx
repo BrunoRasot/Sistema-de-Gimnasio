@@ -56,7 +56,7 @@ export default function MetodosPagoPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4 text-gray-900">
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
+      <div className="module-header bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3">
         <div className="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100 text-[#e6b010]">
           <CreditCard className="w-5 h-5" />
         </div>

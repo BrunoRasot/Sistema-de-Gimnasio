@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .module-header {
+    background: linear-gradient(90deg, #fff 0%, #fff 68%, rgb(254 252 232 / 0.72) 100%);
+    border-color: rgb(254 240 138 / 0.9) !important;
+  }
+
+  .module-header > :first-child > :first-child {
+    background: rgb(254 252 232) !important;
+    border-color: rgb(254 240 138) !important;
+    color: rgb(180 131 0) !important;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  }
+
+  .module-header > button {
+    background: #e6b010 !important;
+    border-color: #d5a20a !important;
+    color: #111827 !important;
+    font-weight: 700;
+  }
+
+  .module-header > button:hover {
+    background: #d5a20a !important;
+  }
+}
+
+
 html,
 body,
 #root {

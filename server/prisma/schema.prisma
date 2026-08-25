@@ -30,6 +30,8 @@ enum EstadoMembresia {
 enum EstadoTransaccion {
   Completado
   Pendiente
+  ParcialmenteDevuelto
+  Devuelto
   Anulado
 }
 
@@ -203,6 +205,8 @@ model Venta {
   miembroId       Int?
   cliente         String?
   total           Decimal           @db.Decimal(10, 2)
+  subtotal        Decimal           @default(0) @db.Decimal(10, 2)
+  descuento       Decimal           @default(0) @db.Decimal(10, 2)
   metodoId        Int
   numeroOperacion String?
   montoRecibido   Decimal?          @db.Decimal(10, 2)
@@ -267,6 +271,7 @@ model DetalleDevolucion {
 
   @@index([devolucionId])
   @@index([productoId])
+  @@unique([devolucionId, productoId])
 }
 
 model MetodoPago {
