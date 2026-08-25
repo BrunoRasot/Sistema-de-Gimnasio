@@ -39,7 +39,7 @@ jobs:
       JWT_REFRESH_SECRET: ci-refresh-secret-different-and-32-characters
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.13.1
       - uses: actions/setup-node@v4
@@ -62,7 +62,7 @@ jobs:
         working-directory: client
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 11.13.1
       - uses: actions/setup-node@v4
