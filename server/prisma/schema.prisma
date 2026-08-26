@@ -220,6 +220,7 @@ model Venta {
 
   detalles     DetalleVenta[]
   devoluciones Devolucion[]
+  pagos         VentaPago[]
 
   @@index([createdAt])
   @@index([estado])
@@ -283,6 +284,23 @@ model MetodoPago {
 
   pagos  Pago[]
   ventas Venta[]
+  pagosVenta VentaPago[]
+}
+
+model VentaPago {
+  id              Int        @id @default(autoincrement())
+  ventaId         Int
+  metodoId        Int
+  monto           Decimal    @db.Decimal(10, 2)
+  numeroOperacion String?
+  createdAt       DateTime   @default(now())
+
+  venta  Venta      @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  metodo MetodoPago @relation(fields: [metodoId], references: [id])
+
+  @@index([ventaId])
+  @@index([metodoId])
+  @@unique([ventaId, metodoId])
 }
 
 model Pago {

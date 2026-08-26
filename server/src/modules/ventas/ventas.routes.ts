@@ -37,7 +37,7 @@ router.get('/devoluciones', verificarToken, verificarPermiso('ventas', 'ver'), o
 router.post(
   '/devoluciones',
   verificarToken,
-  verificarPermiso('ventas', 'crear'),
+  verificarPermiso('ventas', 'eliminar'),
   auditar('Ventas'),
   validarSchema(devolucionSchema),
   registrarDevolucion,

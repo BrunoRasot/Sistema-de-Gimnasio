@@ -113,7 +113,7 @@ export default function HistorialVentasPage() {
                     <td className="py-3 px-4 pl-5 font-bold text-gray-900">{venta.codigo}</td>
                     <td className="py-3 px-4 text-gray-700">{venta.cliente || 'Público General'}</td>
                     <td className="py-3 px-4 text-gray-600">
-                      <span className="bg-gray-100 px-2.5 py-0.5 rounded-md text-[10px] font-medium border border-gray-200">{venta.metodoPago?.nombre || 'Sin método'}</span>
+                      <span className="bg-gray-100 px-2.5 py-0.5 rounded-md text-[10px] font-medium border border-gray-200">{venta.pagos && venta.pagos.length > 1 ? `Mixto (${venta.pagos.length})` : venta.metodoPago?.nombre || 'Sin método'}</span>
                     </td>
                     <td className="py-3 px-4 font-semibold text-gray-900">S/ {Number(venta.total).toFixed(2)}</td>
                     <td className="py-3 px-4 text-center">

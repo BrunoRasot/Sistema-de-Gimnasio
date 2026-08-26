@@ -6,6 +6,17 @@ import { serializarUsuario } from '../../utils/serializer.js';
 import { logger } from '../../utils/logger.js';
 import { passwordSeguraSchema } from '../../schemas/index.js';
 
+const puedeAdministrarCuenta = async (solicitanteId: number, objetivoId?: number, nuevoRol?: string) => {
+  const solicitante = await prisma.usuario.findUnique({ where: { id: solicitanteId }, select: { rol: true } });
+  if (solicitante?.rol === 'ADMIN') return true;
+  if (nuevoRol === 'ADMIN') return false;
+  if (objetivoId) {
+    const objetivo = await prisma.usuario.findUnique({ where: { id: objetivoId }, select: { rol: true } });
+    if (objetivo?.rol === 'ADMIN') return false;
+  }
+  return true;
+};
+
 const usuarioSchema = z.object({
   foto: z.string().optional(),
   nombres: z.string().min(1, 'Nombres son obligatorios'),
@@ -116,6 +127,9 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
 
     const { nombres, apellidos, dni, email, password, telefono, rol, cargo, nombreUsuario } =
       parsed.data;
+    if (!(await puedeAdministrarCuenta(Number((req as any).usuario?.id), undefined, rol))) {
+      return res.status(403).json({ mensaje: 'Solo un administrador puede crear cuentas ADMIN.' });
+    }
 
     const existeComoTrabajador = await prisma.usuario.findUnique({ where: { dni } });
     if (existeComoTrabajador) {
@@ -187,6 +201,10 @@ export const actualizarUsuario = async (req: Request, res: Response): Promise<an
       activo,
     } = parsed.data;
 
+    if (!(await puedeAdministrarCuenta(Number(usuarioSesionId), Number(id), rol))) {
+      return res.status(403).json({ mensaje: 'No puedes modificar administradores ni asignar ese rol.' });
+    }
+
     if (Number(id) === Number(usuarioSesionId)) {
       if (rol === 'USER') {
         return res.status(400).json({
@@ -230,6 +248,10 @@ export const eliminarUsuario = async (req: Request, res: Response): Promise<any>
     const { id } = req.params;
     const usuarioSesionId = (req as any).usuario?.id;
 
+    if (!(await puedeAdministrarCuenta(Number(usuarioSesionId), Number(id)))) {
+      return res.status(403).json({ mensaje: 'No puedes desactivar una cuenta administradora.' });
+    }
+
     if (Number(id) === Number(usuarioSesionId)) {
       return res.status(400).json({
         mensaje: 'Acción bloqueada: No puedes eliminar tu propio usuario.',
@@ -254,6 +276,9 @@ export const cambiarEstadoCuenta = async (req: Request, res: Response): Promise<
   try {
     const { estado } = req.body;
     const usuarioSesionId = (req as any).usuario?.id;
+    if (!(await puedeAdministrarCuenta(Number(usuarioSesionId), Number(req.params.id)))) {
+      return res.status(403).json({ mensaje: 'No puedes cambiar el estado de una cuenta administradora.' });
+    }
     if (Number(req.params.id) === Number(usuarioSesionId) && estado === 'Bloqueada') {
       return res.status(400).json({ mensaje: 'No puedes bloquear tu propia cuenta.' });
     }
@@ -278,6 +303,9 @@ export const cambiarEstadoCuenta = async (req: Request, res: Response): Promise<
 
 export const restablecerPassword = async (req: Request, res: Response): Promise<any> => {
   try {
+    if (!(await puedeAdministrarCuenta(Number((req as any).usuario?.id), Number(req.params.id)))) {
+      return res.status(403).json({ mensaje: 'No puedes restablecer una cuenta administradora.' });
+    }
     const { nuevaPassword } = req.body;
     const passwordValida = passwordSeguraSchema.safeParse(nuevaPassword);
     if (!passwordValida.success) {

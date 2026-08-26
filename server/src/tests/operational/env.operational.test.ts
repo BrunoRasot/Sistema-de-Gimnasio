@@ -40,6 +40,8 @@ describe('Configuración operativa', () => {
       NODE_ENV: 'production',
       JWT_ACCESS_SECRET: 'access-secret-production-32-bytes-minimum',
       JWT_REFRESH_SECRET: 'refresh-secret-production-32-bytes-minimum',
+      EMAIL_USER: 'otp@test.local',
+      EMAIL_PASS: 'app-password-test',
     });
     expect(production.JWT_ACCESS_SECRET).not.toBe(production.JWT_REFRESH_SECRET);
   });

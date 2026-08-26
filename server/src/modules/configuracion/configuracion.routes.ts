@@ -18,7 +18,7 @@ import {
 
 const router = Router();
 
-router.get('/', verificarToken, obtenerConfiguracion);
+router.get('/', verificarToken, verificarPermiso('configuracion', 'ver'), obtenerConfiguracion);
 router.get('/alertas-tiempo-real', verificarToken, obtenerAlertasTiempoReal);
 
 router.put(

@@ -2,11 +2,13 @@
 import { Search, Plus, RefreshCw, Edit2, Trash2, Package, Loader2, X, Save, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
+import { usePermisos } from '../../hooks/usePermisos';
 import { obtenerProductos, crearProducto, actualizarProducto, eliminarProducto } from '../../services/productos.service';
 import { obtenerCategorias } from '../../services/categorias.service';
 import { obtenerProveedores } from '../../services/proveedores.service';
 
 export default function InventarioPage() {
+  const { permisos } = usePermisos('productos');
   const [productos, setProductos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [proveedores, setProveedores] = useState<any[]>([]);
@@ -134,9 +136,9 @@ export default function InventarioPage() {
           <button onClick={cargarDatos} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-500 transition-all border border-gray-200" title="Actualizar">
             <RefreshCw className={`w-4 h-4 ${cargando ? 'animate-spin' : ''}`} />
           </button>
-          <button onClick={() => handleOpenModal()} className="px-4 py-2 bg-[#141414] hover:bg-black text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+          {permisos.crear && <button onClick={() => handleOpenModal()} className="px-4 py-2 bg-[#141414] hover:bg-black text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm">
             <Plus className="w-3.5 h-3.5" /> Nuevo Producto
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -199,8 +201,8 @@ export default function InventarioPage() {
                     </td>
                     <td className="py-3 px-4 text-center pr-5">
                       <div className="flex items-center justify-center gap-1.5">
-                        <button onClick={() => handleOpenModal(p)} className="p-1.5 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-md transition-all"><Edit2 className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => handleEliminar(p)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
+                        {permisos.editar && <button onClick={() => handleOpenModal(p)} className="p-1.5 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-md transition-all"><Edit2 className="w-3.5 h-3.5" /></button>}
+                        {permisos.eliminar && <button onClick={() => handleEliminar(p)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"><Trash2 className="w-3.5 h-3.5" /></button>}
                       </div>
                     </td>
                   </tr>

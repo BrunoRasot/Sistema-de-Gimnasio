@@ -15,6 +15,10 @@ const envSchema = z
   FRONTEND_URL: optional(z.string().url()),
   EMAIL_USER: optional(z.string().email()),
   EMAIL_PASS: optional(z.string().min(1)),
+  EMAIL_FROM: optional(z.string().email()),
+  SMTP_HOST: optional(z.string().min(1)),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_SECURE: z.preprocess((value) => value === 'true' || value === true, z.boolean()).default(false),
   ADMIN_INITIAL_PASSWORD: optional(z.string().min(12)),
   })
   .superRefine((value, context) => {
@@ -28,6 +32,7 @@ const envSchema = z
     if (value.JWT_ACCESS_SECRET && value.JWT_ACCESS_SECRET === value.JWT_REFRESH_SECRET) {
       context.addIssue({ code: 'custom', path: ['JWT_REFRESH_SECRET'], message: 'Los secretos JWT deben ser diferentes' });
     }
+    if (!value.EMAIL_USER || !value.EMAIL_PASS) context.addIssue({ code: 'custom', path: ['EMAIL_USER'], message: 'El correo transaccional es obligatorio en producción para entregar OTP' });
   });
 
 export const parseEnv = (source: NodeJS.ProcessEnv) => {

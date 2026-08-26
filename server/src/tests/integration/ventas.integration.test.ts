@@ -11,8 +11,10 @@ describe('Integración: ventas, inventario y devoluciones', () => {
   let categoriaId: number;
   let productoId: number;
   let metodoId: number;
+  let metodoSecundarioId: number;
   let ventaId: number;
   let ventaParcialId: number;
+  let ventaMixtaId: number;
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
   beforeAll(async () => {
@@ -42,6 +44,8 @@ describe('Integración: ventas, inventario y devoluciones', () => {
       data: { nombre: `Método integración ${suffix}`, activo: true },
     });
     metodoId = metodo.id;
+    const metodoSecundario = await prisma.metodoPago.create({ data: { nombre: `Yape integración ${suffix}`, activo: true } });
+    metodoSecundarioId = metodoSecundario.id;
   });
 
   afterAll(async () => {
@@ -53,9 +57,11 @@ describe('Integración: ventas, inventario y devoluciones', () => {
       await prisma.devolucion.deleteMany({ where: { ventaId: ventaParcialId } });
       await prisma.venta.deleteMany({ where: { id: ventaParcialId } });
     }
+    if (ventaMixtaId) await prisma.venta.deleteMany({ where: { id: ventaMixtaId } });
     if (productoId) await prisma.producto.deleteMany({ where: { id: productoId } });
     if (categoriaId) await prisma.categoria.deleteMany({ where: { id: categoriaId } });
     if (metodoId) await prisma.metodoPago.deleteMany({ where: { id: metodoId } });
+    if (metodoSecundarioId) await prisma.metodoPago.deleteMany({ where: { id: metodoSecundarioId } });
     if (limpiarAdmin) await limpiarAdmin();
   });
 
@@ -123,5 +129,29 @@ describe('Integración: ventas, inventario y devoluciones', () => {
   it('rechaza una devolución sin motivo válido', async () => {
     const response = await request(app).post('/api/ventas/devoluciones').set('Authorization', `Bearer ${token}`).send({ identificador: 'VNT-X', motivo: '' });
     expect(response.status).toBe(400);
+  });
+
+  it('registra una venta con dos métodos y conserva el desglose', async () => {
+    const response = await request(app).post('/api/ventas').set('Authorization', `Bearer ${token}`).send({
+      cliente: 'Cliente pago mixto',
+      items: [{ productoId, cantidad: 2 }],
+      pagos: [
+        { metodoId, monto: 20 },
+        { metodoId: metodoSecundarioId, monto: 30, numeroOperacion: `YAPE-${suffix}` },
+      ],
+    });
+    expect(response.status).toBe(201);
+    ventaMixtaId = response.body.venta.id;
+    expect(response.body.venta.pagos).toHaveLength(2);
+    expect(response.body.venta.pagos.reduce((suma: number, pago: any) => suma + Number(pago.monto), 0)).toBe(50);
+  });
+
+  it('rechaza pagos mixtos cuya suma no coincide con el total', async () => {
+    const response = await request(app).post('/api/ventas').set('Authorization', `Bearer ${token}`).send({
+      items: [{ productoId, cantidad: 1 }],
+      pagos: [{ metodoId, monto: 10 }, { metodoId: metodoSecundarioId, monto: 10, numeroOperacion: `BAD-${suffix}` }],
+    });
+    expect(response.status).toBe(400);
+    expect(response.body.mensaje).toMatch(/suma de los pagos/i);
   });
 });

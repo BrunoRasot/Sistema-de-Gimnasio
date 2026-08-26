@@ -14,6 +14,8 @@ import {
 export interface SubItem {
   path: string;
   label: string;
+  adminOnly?: boolean;
+  requiredAction?: 'crear' | 'editar' | 'eliminar';
 }
 
 export interface MenuItem {
@@ -56,8 +58,8 @@ export const menuGroups: MenuGroup[] = [
         icon: User,
         subItems: [
           { path: '/usuarios/lista', label: 'Lista de Usuarios' },
-          { path: '/usuarios/roles', label: 'Roles y Permisos' },
-          { path: '/usuarios/administradores', label: 'Administradores' },
+          { path: '/usuarios/roles', label: 'Roles y Permisos', adminOnly: true },
+          { path: '/usuarios/administradores', label: 'Administradores', adminOnly: true },
         ]
       },
       { 
@@ -77,8 +79,8 @@ export const menuGroups: MenuGroup[] = [
         icon: ShoppingCart,
         subItems: [
           { path: '/ventas/historial', label: 'Historial de Ventas' },
-          { path: '/ventas/nueva', label: 'Nueva Venta' },
-          { path: '/ventas/devoluciones', label: 'Devoluciones' },
+          { path: '/ventas/nueva', label: 'Nueva Venta', requiredAction: 'crear' },
+          { path: '/ventas/devoluciones', label: 'Devoluciones', requiredAction: 'eliminar' },
           { path: '/ventas/comprobantes', label: 'Comprobantes' },
         ]
       },
@@ -88,7 +90,7 @@ export const menuGroups: MenuGroup[] = [
         icon: CreditCard,
         subItems: [
           { path: '/pagos/registro', label: 'Registro de Pagos' },
-          { path: '/pagos/metodos', label: 'Métodos de Pago' },
+          { path: '/pagos/metodos', label: 'Métodos de Pago', requiredAction: 'editar' },
         ]
       },
       { 

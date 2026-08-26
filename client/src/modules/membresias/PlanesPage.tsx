@@ -8,6 +8,7 @@ import {
 } from '../../services/planes.service';
 import toast from 'react-hot-toast';
 import { TablePagination, useTablePagination } from '../../components/common/TablePagination';
+import { usePermisos } from '../../hooks/usePermisos';
 
 interface Plan {
   id: number;
@@ -19,6 +20,7 @@ interface Plan {
 }
 
 export default function PlanesPage() {
+  const { permisos } = usePermisos('membresias');
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [cargando, setCargando] = useState(true);
 
@@ -132,12 +134,12 @@ export default function PlanesPage() {
             </p>
           </div>
         </div>
-        <button
+        {permisos.crear && <button
           onClick={() => abrirModal()}
           className="w-full sm:w-auto px-4 py-2 bg-[#e6b010] hover:bg-[#d5a20a] text-gray-950 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
         >
           <Plus className="w-3.5 h-3.5" /> Nuevo Plan
-        </button>
+        </button>}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex min-h-[400px] flex-1 flex-col">
@@ -203,20 +205,20 @@ export default function PlanesPage() {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button
+                        {permisos.editar && <button
                           onClick={() => abrirModal(plan)}
                           className="p-1.5 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-md transition-colors"
                           title="Editar"
                         >
                           <Edit className="w-3.5 h-3.5" />
-                        </button>
-                        <button
+                        </button>}
+                        {permisos.eliminar && <button
                           onClick={() => borrarPlan(plan.id)}
                           className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                           title="Eliminar"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        </button>}
                       </div>
                     </td>
                   </tr>

@@ -2,6 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../database/prisma.js';
 import { logger } from '../utils/logger.js';
 
+const camposSensibles = new Set(['password', 'nuevapassword', 'confirmpassword', 'actual', 'nueva', 'token', 'refreshtoken', 'codigootp']);
+const ocultarSecretos = (valor: unknown): unknown => {
+  if (Array.isArray(valor)) return valor.map(ocultarSecretos);
+  if (valor && typeof valor === 'object') return Object.fromEntries(Object.entries(valor).map(([clave, contenido]) => [clave, camposSensibles.has(clave.toLowerCase()) ? '***OCULTO***' : ocultarSecretos(contenido)]));
+  return valor;
+};
+
 export const auditar = (modulo: string) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const usuarioId = (req as any).usuario?.id;
@@ -12,12 +19,7 @@ export const auditar = (modulo: string) => {
     res.on('finish', async () => {
       if (res.statusCode >= 200 && res.statusCode < 400 && metodo !== 'GET') {
         try {
-          const sanitizedBody = { ...req.body };
-          if (sanitizedBody.password) sanitizedBody.password = '***OCULTO***';
-          if (sanitizedBody.nuevaPassword) sanitizedBody.nuevaPassword = '***OCULTO***';
-          if (sanitizedBody.confirmPassword) sanitizedBody.confirmPassword = '***OCULTO***';
-          if (sanitizedBody.actual) sanitizedBody.actual = '***OCULTO***';
-          if (sanitizedBody.nueva) sanitizedBody.nueva = '***OCULTO***';
+          const sanitizedBody = ocultarSecretos(req.body);
 
           await prisma.auditoria.create({
             data: {

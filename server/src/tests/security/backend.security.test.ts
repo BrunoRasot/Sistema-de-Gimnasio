@@ -35,7 +35,7 @@ describe('Seguridad HTTP del backend', () => {
     expect(response.status).toBe(403);
   });
 
-  it('deniega endpoints administrativos a un rol USER', async () => {
+  it('rechaza sesiones de usuarios que ya no existen', async () => {
     const token = jwt.sign(
       { sub: 999999, rol: 'USER', nombreUsuario: 'intruso', type: 'access' },
       env.JWT_SECRET,
@@ -44,7 +44,7 @@ describe('Seguridad HTTP del backend', () => {
     const response = await request(app)
       .get('/api/usuarios')
       .set('Authorization', `Bearer ${token}`);
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
   });
 
   it('no autoriza un origen CORS desconocido', async () => {

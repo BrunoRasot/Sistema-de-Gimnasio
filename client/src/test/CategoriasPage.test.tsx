@@ -9,6 +9,7 @@ vi.mock('../services/categorias.service');
 describe('Pruebas de CategoriasPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem('usuario', JSON.stringify({ rol: 'ADMIN' }));
   });
 
   it('Debería mostrar el mensaje de tabla vacía si el API no devuelve datos', async () => {

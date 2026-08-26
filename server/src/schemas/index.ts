@@ -22,13 +22,20 @@ export const productoSchema = z.object({
   estado: z.string().default('Activo'),
 });
 
+const pagoVentaSchema = z.object({
+  metodoId: z.coerce.number().int().positive('El método de pago es obligatorio'),
+  monto: z.coerce.number().positive('El monto del pago debe ser mayor a cero'),
+  numeroOperacion: z.string().trim().max(80).optional().nullable(),
+}).strict();
+
 export const ventaSchema = z.object({
   cliente: z.string().trim().max(160).optional().nullable(),
   miembroId: z.coerce.number().int().positive().optional().nullable(),
-  metodoId: z.coerce.number().int().positive('El método de pago es obligatorio'),
+  metodoId: z.coerce.number().int().positive('El método de pago es obligatorio').optional(),
   numeroOperacion: z.string().trim().max(80).optional().nullable(),
   montoRecibido: z.coerce.number().min(0).optional().nullable(),
   descuento: z.coerce.number().min(0).default(0),
+  pagos: z.array(pagoVentaSchema).min(1).max(5).optional(),
   items: z
     .array(
       z.object({
@@ -37,6 +44,11 @@ export const ventaSchema = z.object({
       }),
     )
     .min(1, 'La venta debe contener al menos un producto'),
+}).superRefine((data, context) => {
+  if (!data.metodoId && !data.pagos?.length) context.addIssue({ code: 'custom', path: ['metodoId'], message: 'Debe registrar al menos un método de pago' });
+  if (data.pagos && new Set(data.pagos.map((p) => p.metodoId)).size !== data.pagos.length) context.addIssue({ code: 'custom', path: ['pagos'], message: 'No puede repetir un método de pago' });
+  const operaciones = data.pagos?.map((p) => p.numeroOperacion).filter(Boolean) ?? [];
+  if (new Set(operaciones).size !== operaciones.length) context.addIssue({ code: 'custom', path: ['pagos'], message: 'No puede repetir el número de operación' });
 });
 
 export const pagoSchema = z.object({
@@ -117,17 +129,17 @@ export const configuracionInfoSchema = z.object({
 });
 
 export const permisoSchema = z.object({
-  cargo: z.string().min(1, 'El cargo es obligatorio'),
-  permisos: z.record(
-    z.string(),
+  cargo: z.string().trim().min(1, 'El cargo es obligatorio').max(80),
+  permisos: z.partialRecord(
+    z.enum(['dashboard', 'membresias', 'usuarios', 'productos', 'ventas', 'pagos', 'asistencias', 'reportes', 'configuracion']),
     z.object({
-      Ver: z.boolean().optional(),
-      Crear: z.boolean().optional(),
-      Editar: z.boolean().optional(),
-      Eliminar: z.boolean().optional(),
-    }),
+      Ver: z.boolean(),
+      Crear: z.boolean(),
+      Editar: z.boolean(),
+      Eliminar: z.boolean(),
+    }).strict(),
   ),
-});
+}).strict();
 
 export const asignarMembresiaSchema = z.object({
   miembroId: z.coerce.number().int().positive('El cliente es obligatorio'),

@@ -4,3 +4,5 @@ allowBuilds:
   bcrypt: false
   esbuild: false
   prisma: false
+overrides:
+  deepmerge-ts: ^8.0.0

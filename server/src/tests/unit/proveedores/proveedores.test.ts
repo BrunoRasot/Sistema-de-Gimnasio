@@ -1,20 +1,16 @@
 import 'dotenv/config';
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
 import app from '../../../app.js';
 import { prisma } from '../../../database/prisma.js';
+import { obtenerTokenAdminActivo } from '../../helpers/testAdmin.js';
 
 describe('Pruebas del módulo de Proveedores', () => {
   let tokenAdmin: string;
   let proveedorId: number;
 
-  beforeAll(() => {
-    tokenAdmin = jwt.sign(
-      { sub: 1, rol: 'ADMIN', nombreUsuario: 'admin', type: 'access' },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '15m' },
-    );
+  beforeAll(async () => {
+    tokenAdmin = await obtenerTokenAdminActivo();
   });
 
   it('Debería crear un proveedor', async () => {

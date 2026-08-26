@@ -13,12 +13,12 @@ import { productoSchema } from '../../schemas/index.js';
 
 const router = Router();
 
-router.get('/', verificarToken, verificarPermiso('inventario', 'ver'), obtenerProductos);
+router.get('/', verificarToken, verificarPermiso('productos', 'ver'), obtenerProductos);
 
 router.post(
   '/',
   verificarToken,
-  verificarPermiso('inventario', 'crear'),
+  verificarPermiso('productos', 'crear'),
   auditar('Inventario'),
   validarSchema(productoSchema),
   crearProducto,
@@ -27,7 +27,7 @@ router.post(
 router.put(
   '/:id',
   verificarToken,
-  verificarPermiso('inventario', 'editar'),
+  verificarPermiso('productos', 'editar'),
   auditar('Inventario'),
   validarSchema(productoSchema),
   actualizarProducto,
@@ -36,7 +36,7 @@ router.put(
 router.delete(
   '/:id',
   verificarToken,
-  verificarPermiso('inventario', 'eliminar'),
+  verificarPermiso('productos', 'eliminar'),
   auditar('Inventario'),
   eliminarProducto,
 );

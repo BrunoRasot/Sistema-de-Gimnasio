@@ -44,4 +44,15 @@ describe('Pruebas del Componente de Login', () => {
     expect(screen.getByPlaceholderText(/correo/i)).toBeRequired();
     expect(screen.getByPlaceholderText('••••••••')).toBeRequired();
   });
+
+  it('permite mostrar y volver a ocultar la contraseña', async () => {
+    const user = userEvent.setup();
+    renderLogin();
+    const password = screen.getByPlaceholderText('••••••••');
+    expect(password).toHaveAttribute('type', 'password');
+    await user.click(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    expect(password).toHaveAttribute('type', 'text');
+    await user.click(screen.getByRole('button', { name: 'Ocultar contraseña' }));
+    expect(password).toHaveAttribute('type', 'password');
+  });
 });

@@ -37,6 +37,20 @@ const InfoGimnasioPage = lazy(() => import('../modules/configuracion/InfoGimnasi
 const NotificacionesPage = lazy(() => import('../modules/configuracion/NotificacionesPage'));
 const SeguridadPage = lazy(() => import('../modules/configuracion/SeguridadPage'));
 
+const AdminOnly = ({ children }: { children: React.ReactNode }) => {
+  try {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+    return usuario?.rol === 'ADMIN' || usuario?.rol === 'SUPER_ADMIN' ? <>{children}</> : <Navigate to="/dashboard" replace />;
+  } catch { return <Navigate to="/dashboard" replace />; }
+};
+const RequireAction = ({ modulo, accion, children }: { modulo: string; accion: 'crear' | 'editar' | 'eliminar'; children: React.ReactNode }) => {
+  try {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+    const admin = usuario?.rol === 'ADMIN' || usuario?.rol === 'SUPER_ADMIN';
+    return admin || usuario?.permisos?.[modulo]?.[accion] ? <>{children}</> : <Navigate to="/dashboard" replace />;
+  } catch { return <Navigate to="/dashboard" replace />; }
+};
+
 const AppInitializer = ({ children }: { children: React.ReactNode }) => {
   const [cargandoSesion, setCargandoSesion] = useState(true);
 
@@ -110,8 +124,8 @@ const AppRoutes = () => {
             {/* Submódulos Usuarios */}
             <Route path="/usuarios" element={<Navigate to="/usuarios/lista" replace />} />
             <Route path="/usuarios/lista" element={<ListaUsuariosPage />} />
-            <Route path="/usuarios/roles" element={<RolesPermisosPage />} />
-            <Route path="/usuarios/administradores" element={<AdministradoresPage />} />
+            <Route path="/usuarios/roles" element={<AdminOnly><RolesPermisosPage /></AdminOnly>} />
+            <Route path="/usuarios/administradores" element={<AdminOnly><AdministradoresPage /></AdminOnly>} />
 
             {/* Submódulos Productos */}
             <Route path="/productos" element={<Navigate to="/productos/inventario" replace />} />
@@ -123,14 +137,14 @@ const AppRoutes = () => {
             {/* Submódulos Ventas */}
             <Route path="/ventas" element={<Navigate to="/ventas/historial" replace />} />
             <Route path="/ventas/historial" element={<HistorialVentasPage />} />
-            <Route path="/ventas/nueva" element={<NuevaVentaPage />} />
-            <Route path="/ventas/devoluciones" element={<DevolucionesPage />} />
+            <Route path="/ventas/nueva" element={<RequireAction modulo="ventas" accion="crear"><NuevaVentaPage /></RequireAction>} />
+            <Route path="/ventas/devoluciones" element={<RequireAction modulo="ventas" accion="eliminar"><DevolucionesPage /></RequireAction>} />
             <Route path="/ventas/comprobantes" element={<ComprobantesVentasPage />} />
 
             {/* Submódulos Pagos */}
             <Route path="/pagos" element={<Navigate to="/pagos/registro" replace />} />
             <Route path="/pagos/registro" element={<RegistroPagosPage />} />
-            <Route path="/pagos/metodos" element={<MetodosPagoPage />} />
+            <Route path="/pagos/metodos" element={<RequireAction modulo="pagos" accion="editar"><MetodosPagoPage /></RequireAction>} />
 
             {/* Submódulos Asistencias */}
             <Route path="/asistencias" element={<Navigate to="/asistencias/registro" replace />} />

@@ -110,16 +110,17 @@ export default function ComprobantesVentasPage() {
 
           <div className="text-xs space-y-1 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
             <p><strong className="text-gray-700">Cliente:</strong> {comprobante.cliente || 'Público General'}</p>
-            <p><strong className="text-gray-700">Método de Pago:</strong> {comprobante.metodoPago?.nombre || 'No especificado'}</p>
+            <p><strong className="text-gray-700">Método de Pago:</strong> {comprobante.pagos && comprobante.pagos.length > 1 ? 'Pago mixto' : comprobante.metodoPago?.nombre || 'No especificado'}</p>
+            {comprobante.pagos && comprobante.pagos.length > 1 && <div className="mt-2 space-y-1 border-t border-gray-200 pt-2">{comprobante.pagos.map((pago) => <p key={pago.id}><strong>{pago.metodo.nombre}:</strong> S/ {Number(pago.monto).toFixed(2)} {pago.numeroOperacion ? `· Op. ${pago.numeroOperacion}` : ''}</p>)}</div>}
             
-            {comprobante.metodoPago?.nombre === 'Efectivo' ? (
+            {(!comprobante.pagos || comprobante.pagos.length <= 1) && comprobante.metodoPago?.nombre === 'Efectivo' ? (
               <>
                 <p><strong className="text-gray-700">Monto Entregado:</strong> S/ {Number(comprobante.montoRecibido || 0).toFixed(2)}</p>
                 <p><strong className="text-gray-700">Vuelto:</strong> S/ {Number(comprobante.vuelto || 0).toFixed(2)}</p>
               </>
-            ) : (
+            ) : (!comprobante.pagos || comprobante.pagos.length <= 1) ? (
               <p><strong className="text-gray-700">N° Operación:</strong> {comprobante.numeroOperacion || 'N/A'}</p>
-            )}
+            ) : null}
 
             <p><strong className="text-gray-700">Estado:</strong> {comprobante.estado}</p>
           </div>

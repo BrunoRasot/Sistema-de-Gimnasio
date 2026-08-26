@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SidebarItem from './SidebarItem';
 import { menuGroups } from '../../routes/menu';
 import logoSidebar from '../../assets/logos/lg-sidebar.png';
+import { obtenerMisPermisos } from '../../services/permisos.service';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -15,13 +16,23 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
     setOpenItemPath((prev) => (prev === path ? null : path));
   };
 
-  const storedUser = localStorage.getItem('usuario');
-  let usuario = null;
-  try {
-    usuario = storedUser ? JSON.parse(storedUser) : null;
-  } catch {
-    usuario = null;
-  }
+  const [usuario, setUsuario] = useState<any>(() => {
+    try { const value = localStorage.getItem('usuario'); return value ? JSON.parse(value) : null; } catch { return null; }
+  });
+  useEffect(() => {
+    if (!usuario || usuario.rol === 'ADMIN' || usuario.rol === 'SUPER_ADMIN') return;
+    const actualizar = async () => {
+      try {
+        const sesion = await obtenerMisPermisos();
+        const actualizado = { ...usuario, cargo: sesion.cargo, permisos: sesion.permisos };
+        localStorage.setItem('usuario', JSON.stringify(actualizado));
+        setUsuario(actualizado);
+      } catch { /* El backend seguirá siendo la autoridad si falla la sincronización visual. */ }
+    };
+    const intervalo = window.setInterval(actualizar, 30000);
+    window.addEventListener('focus', actualizar);
+    return () => { window.clearInterval(intervalo); window.removeEventListener('focus', actualizar); };
+  }, [usuario?.id, usuario?.rol]);
   const esAdmin = usuario?.rol === 'ADMIN' || usuario?.rol === 'SUPER_ADMIN';
   const puedeVer = (path: string) => {
     const modulo = path.split('/')[1];

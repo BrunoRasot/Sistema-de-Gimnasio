@@ -20,6 +20,11 @@ export default function NuevaVentaPage() {
   const [montoRecibido, setMontoRecibido] = useState<string>('');
   const [numeroOperacion, setNumeroOperacion] = useState('');
   const [descuento, setDescuento] = useState('0');
+  const [pagoMixto, setPagoMixto] = useState(false);
+  const [montoPrincipal, setMontoPrincipal] = useState('');
+  const [metodoSecundarioId, setMetodoSecundarioId] = useState<number | null>(null);
+  const [montoSecundario, setMontoSecundario] = useState('');
+  const [operacionSecundaria, setOperacionSecundaria] = useState('');
   const [procesando, setProcesando] = useState(false);
 
   useEffect(() => {
@@ -132,7 +137,7 @@ export default function NuevaVentaPage() {
       toast.error('Agregue productos al carrito');
       return;
     }
-    if (esEfectivo && (!montoRecibido || Number(montoRecibido) < total)) {
+    if (!pagoMixto && esEfectivo && (!montoRecibido || Number(montoRecibido) < total)) {
       toast.error('El monto recibido es menor al total');
       return;
     }
@@ -140,9 +145,16 @@ export default function NuevaVentaPage() {
       toast.error('Seleccione un método de pago activo');
       return;
     }
-    if (!esEfectivo && !numeroOperacion.trim()) {
+    if (!pagoMixto && !esEfectivo && !numeroOperacion.trim()) {
       toast.error('Ingrese el número de operación');
       return;
+    }
+    if (pagoMixto) {
+      if (!metodoSecundarioId || metodoSecundarioId === metodoId) { toast.error('Seleccione un segundo método diferente'); return; }
+      if (Number(montoPrincipal) <= 0 || Number(montoSecundario) <= 0 || Math.abs(Number(montoPrincipal) + Number(montoSecundario) - total) > 0.009) { toast.error('La suma de ambos pagos debe coincidir con el total'); return; }
+      const metodoSecundario = metodosPago.find((m) => m.id === metodoSecundarioId);
+      if (!esEfectivo && !numeroOperacion.trim()) { toast.error('Ingrese la operación del primer pago'); return; }
+      if (!metodoSecundario?.nombre?.toLowerCase().includes('efectivo') && !operacionSecundaria.trim()) { toast.error('Ingrese la operación del segundo pago'); return; }
     }
 
     try {
@@ -160,6 +172,10 @@ export default function NuevaVentaPage() {
         numeroOperacion: esEfectivo ? undefined : numeroOperacion.trim(),
         montoRecibido: montoRecibido ? Number(montoRecibido) : undefined,
         descuento: descuentoAplicado,
+        pagos: pagoMixto ? [
+          { metodoId, monto: Number(montoPrincipal), numeroOperacion: esEfectivo ? undefined : numeroOperacion.trim() },
+          { metodoId: metodoSecundarioId!, monto: Number(montoSecundario), numeroOperacion: metodosPago.find((m) => m.id === metodoSecundarioId)?.nombre?.toLowerCase().includes('efectivo') ? undefined : operacionSecundaria.trim() },
+        ] : undefined,
         items
       });
 
@@ -172,6 +188,7 @@ export default function NuevaVentaPage() {
       setMontoRecibido('');
       setNumeroOperacion('');
       setDescuento('0');
+      setPagoMixto(false); setMontoPrincipal(''); setMetodoSecundarioId(null); setMontoSecundario(''); setOperacionSecundaria('');
       
       const dataProductos = await obtenerProductos();
       setProductos(dataProductos.filter((p: any) => p.estado === 'Activo' && p.stock > 0));
@@ -310,7 +327,24 @@ export default function NuevaVentaPage() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => { setPagoMixto((valor) => !valor); setMontoPrincipal(''); setMontoSecundario(''); }} className="w-full rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs font-semibold text-yellow-800 hover:bg-yellow-100">
+              {pagoMixto ? 'Usar un solo método de pago' : '+ Dividir en dos métodos de pago'}
+            </button>
+
+            {pagoMixto && (
+              <div className="space-y-3 rounded-xl border border-yellow-200 bg-yellow-50/40 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-yellow-800">Distribución del pago</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input aria-label="Monto primer método" type="number" min="0.01" step="0.01" value={montoPrincipal} onChange={(e) => { setMontoPrincipal(e.target.value); const restante = total - Number(e.target.value || 0); setMontoSecundario(restante > 0 ? restante.toFixed(2) : ''); }} placeholder="Monto 1" className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs" />
+                  <select aria-label="Segundo método de pago" value={metodoSecundarioId ?? ''} onChange={(e) => setMetodoSecundarioId(Number(e.target.value) || null)} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs"><option value="">Segundo método</option>{metodosPago.filter((m) => m.id !== metodoId).map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}</select>
+                  <input aria-label="Monto segundo método" type="number" min="0.01" step="0.01" value={montoSecundario} onChange={(e) => setMontoSecundario(e.target.value)} placeholder="Monto 2" className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs" />
+                  {metodoSecundarioId && !metodosPago.find((m) => m.id === metodoSecundarioId)?.nombre?.toLowerCase().includes('efectivo') && <input aria-label="Operación segundo método" value={operacionSecundaria} onChange={(e) => setOperacionSecundaria(e.target.value)} placeholder="N° operación 2" className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs" />}
+                </div>
+                <p className={`text-right text-[11px] font-bold ${Math.abs(Number(montoPrincipal || 0) + Number(montoSecundario || 0) - total) < .009 ? 'text-green-700' : 'text-red-600'}`}>Asignado: S/ {(Number(montoPrincipal || 0) + Number(montoSecundario || 0)).toFixed(2)} / S/ {total.toFixed(2)}</p>
+              </div>
+            )}
+
+            {!pagoMixto && <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Recibido (S/)</label>
                 <input
@@ -329,7 +363,7 @@ export default function NuevaVentaPage() {
                   S/ {vuelto.toFixed(2)}
                 </div>
               </div>
-            </div>
+            </div>}
             {!esEfectivo && metodoId && (
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">N° de operación *</label>

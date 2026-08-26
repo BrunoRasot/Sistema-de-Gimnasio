@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
 import app from '../../../app.js';
 import { prisma } from '../../../database/prisma.js';
+import { obtenerTokenAdminActivo } from '../../helpers/testAdmin.js';
 
 describe('Pruebas del módulo de Asistencias', () => {
   let tokenAdmin: string;
@@ -12,11 +12,7 @@ describe('Pruebas del módulo de Asistencias', () => {
   let planId: number;
 
   beforeAll(async () => {
-    tokenAdmin = jwt.sign(
-      { sub: 1, rol: 'ADMIN', nombreUsuario: 'admin', type: 'access' },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '15m' },
-    );
+    tokenAdmin = await obtenerTokenAdminActivo();
     await prisma.miembro.deleteMany({ where: { dni: '77665544' } });
     const plan = await prisma.plan.create({
       data: { nombre: `Plan asistencia ${Date.now()}`, precio: 10, duracionDias: 30 },

@@ -17,9 +17,9 @@ import {
   Lock,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { obtenerPermisosBD, guardarPermisosBD } from '../../services/permisos.service';
+import { obtenerCargosPermisos, obtenerPermisosBD, guardarPermisosBD } from '../../services/permisos.service';
 
-const cargos = ['Administrador', 'Supervisor', 'Recepcionista', 'Cajero', 'Entrenador', 'Almacén'];
+const cargosBase = ['Administrador', 'Supervisor', 'Recepcionista', 'Cajero', 'Entrenador', 'Almacén'];
 
 const modulosSistema = [
   { id: 'dashboard', nombre: 'Dashboard', icon: LayoutDashboard },
@@ -37,15 +37,16 @@ const acciones = ['Ver', 'Crear', 'Editar', 'Eliminar'] as const;
 type Accion = (typeof acciones)[number];
 
 const permisosIniciales: Record<string, Record<string, Record<Accion, boolean>>> = {};
-cargos.forEach((cargo) => {
+cargosBase.forEach((cargo) => {
   permisosIniciales[cargo] = {};
   modulosSistema.forEach((mod) => {
-    permisosIniciales[cargo][mod.id] = { Ver: false, Crear: false, Editar: false, Eliminar: false };
+    permisosIniciales[cargo][mod.id] = { Ver: mod.id === 'dashboard', Crear: false, Editar: false, Eliminar: false };
   });
 });
 
 export default function RolesPermisosPage() {
-  const [cargoSeleccionado, setCargoSeleccionado] = useState<string>(cargos[1]);
+  const [cargos, setCargos] = useState<string[]>(cargosBase);
+  const [cargoSeleccionado, setCargoSeleccionado] = useState<string>(cargosBase[1]);
   const [permisos, setPermisos] = useState(permisosIniciales);
   const [guardando, setGuardando] = useState(false);
   const [cargando, setCargando] = useState(true);
@@ -53,14 +54,19 @@ export default function RolesPermisosPage() {
   useEffect(() => {
     const fetchPermisos = async () => {
       try {
-        const datosBD = await obtenerPermisosBD();
+        const [datosBD, cargosBD] = await Promise.all([obtenerPermisosBD(), obtenerCargosPermisos()]);
+        const cargosCompletos = [...new Set([...cargosBase, ...(cargosBD || [])])];
+        setCargos(cargosCompletos);
         if (datosBD && datosBD.length > 0) {
           setPermisos((prev) => {
             const nuevoEstado = JSON.parse(JSON.stringify(prev));
+            cargosCompletos.forEach((cargo) => {
+              if (!nuevoEstado[cargo]) nuevoEstado[cargo] = Object.fromEntries(modulosSistema.map((mod) => [mod.id, { Ver: mod.id === 'dashboard', Crear: false, Editar: false, Eliminar: false }]));
+            });
             datosBD.forEach((p: any) => {
               if (nuevoEstado[p.cargo] && nuevoEstado[p.cargo][p.modulo]) {
                 nuevoEstado[p.cargo][p.modulo] = {
-                  Ver: p.ver,
+                  Ver: p.modulo === 'dashboard' ? true : p.ver,
                   Crear: p.crear,
                   Editar: p.editar,
                   Eliminar: p.eliminar,
@@ -80,18 +86,16 @@ export default function RolesPermisosPage() {
   }, []);
 
   const togglePermiso = (moduloId: string, accion: Accion) => {
-    if (cargoSeleccionado === 'Administrador') return;
+    if (cargoSeleccionado === 'Administrador' || moduloId === 'dashboard') return;
 
-    setPermisos((prev) => ({
-      ...prev,
-      [cargoSeleccionado]: {
-        ...prev[cargoSeleccionado],
-        [moduloId]: {
-          ...prev[cargoSeleccionado][moduloId],
-          [accion]: !prev[cargoSeleccionado][moduloId][accion],
-        },
-      },
-    }));
+    setPermisos((prev) => {
+      const actual = prev[cargoSeleccionado][moduloId];
+      const activar = !actual[accion];
+      const siguiente = { ...actual, [accion]: activar };
+      if (accion !== 'Ver' && activar) siguiente.Ver = true;
+      if (accion === 'Ver' && !activar) Object.assign(siguiente, { Ver: false, Crear: false, Editar: false, Eliminar: false });
+      return { ...prev, [cargoSeleccionado]: { ...prev[cargoSeleccionado], [moduloId]: siguiente } };
+    });
   };
 
   const handleGuardar = async () => {
@@ -277,7 +281,7 @@ export default function RolesPermisosPage() {
                             <div className="flex items-center justify-center">
                               <CustomToggle
                                 activo={tienePermiso}
-                                disabled={esAdmin}
+                                disabled={esAdmin || modulo.id === 'dashboard'}
                                 onClick={() => togglePermiso(modulo.id, accion)}
                               />
                             </div>

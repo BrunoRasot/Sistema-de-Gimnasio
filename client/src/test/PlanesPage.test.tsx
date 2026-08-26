@@ -9,6 +9,7 @@ vi.mock('../services/planes.service');
 describe('Pruebas de PlanesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem('usuario', JSON.stringify({ rol: 'ADMIN' }));
   });
 
   it('Debería mostrar el mensaje de tabla vacía si el API no devuelve datos', async () => {

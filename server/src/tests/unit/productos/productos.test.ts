@@ -1,9 +1,9 @@
 import 'dotenv/config';
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
-import jwt from 'jsonwebtoken';
 import app from '../../../app.js';
 import { prisma } from '../../../database/prisma.js';
+import { obtenerTokenAdminActivo } from '../../helpers/testAdmin.js';
 
 describe('Pruebas del módulo de Productos', () => {
   let tokenAdmin: string;
@@ -11,12 +11,8 @@ describe('Pruebas del módulo de Productos', () => {
   let categoriaId: number;
 
   beforeAll(async () => {
-    tokenAdmin = jwt.sign(
-      { sub: 1, rol: 'ADMIN', nombreUsuario: 'admin', type: 'access' },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '15m' },
-    );
-    const cat = await prisma.categoria.create({ data: { nombre: 'Cat Prod Test', estado: true } });
+    tokenAdmin = await obtenerTokenAdminActivo();
+    const cat = await prisma.categoria.create({ data: { nombre: `Cat Prod Test ${Date.now()}`, estado: true } });
     categoriaId = cat.id;
   });
 

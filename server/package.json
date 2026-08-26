@@ -19,7 +19,10 @@
     "test:performance": "vitest run src/tests/performance",
     "test:migrations": "prisma migrate status",
     "test:coverage": "vitest run --coverage",
-    "test:all": "vitest run"
+    "test:all": "vitest run",
+    "backup:create": "tsx src/scripts/backup.ts",
+    "backup:verify": "tsx src/scripts/verify-backup.ts",
+    "backup:restore": "tsx src/scripts/restore.ts"
   },
   "keywords": [],
   "author": "",

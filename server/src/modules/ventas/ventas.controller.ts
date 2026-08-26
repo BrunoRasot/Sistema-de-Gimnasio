@@ -32,6 +32,7 @@ export const obtenerVentas = async (req: Request, res: Response): Promise<any> =
       where,
       include: {
         metodoPago: true,
+        pagos: { include: { metodo: true } },
         miembro: true,
         usuario: { select: { id: true, nombres: true, apellidos: true } },
         detalles: {
@@ -58,18 +59,19 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
       let totalVenta = 0;
       const detallesData = [];
 
-      const metodo = await tx.metodoPago.findFirst({
-        where: { id: datos.metodoId, activo: true },
-      });
-      if (!metodo) throw new Error('METODO_PAGO_INVALIDO');
+      const metodosIds = datos.pagos?.map((p) => p.metodoId) ?? [Number(datos.metodoId)];
+      const metodos = await tx.metodoPago.findMany({ where: { id: { in: metodosIds }, activo: true } });
+      if (metodos.length !== metodosIds.length) throw new Error('METODO_PAGO_INVALIDO');
+      const metodo = metodos.find((m) => m.id === metodosIds[0])!;
 
       if (datos.miembroId) {
         const miembro = await tx.miembro.findFirst({ where: { id: datos.miembroId, estado: 'Activo' } });
         if (!miembro) throw new Error('MIEMBRO_INVALIDO');
       }
 
-      if (datos.numeroOperacion) {
-        const repetida = await tx.venta.findFirst({ where: { numeroOperacion: datos.numeroOperacion } });
+      const operaciones = (datos.pagos?.map((p) => p.numeroOperacion).filter(Boolean) ?? [datos.numeroOperacion].filter(Boolean)) as string[];
+      if (operaciones.length) {
+        const repetida = await tx.ventaPago.findFirst({ where: { numeroOperacion: { in: operaciones } } });
         if (repetida) throw new Error('OPERACION_DUPLICADA');
       }
 
@@ -102,10 +104,15 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
       const descuento = Number(datos.descuento || 0);
       if (descuento > totalVenta) throw new Error('DESCUENTO_INVALIDO');
       const totalFinal = totalVenta - descuento;
+      const pagosNormalizados = datos.pagos ?? [{ metodoId: metodo.id, monto: totalFinal, numeroOperacion: datos.numeroOperacion }];
+      const totalPagado = pagosNormalizados.reduce((sum, pago) => sum + Number(pago.monto), 0);
+      if (Math.abs(totalPagado - totalFinal) > 0.009) throw new Error('PAGOS_NO_COINCIDEN');
+      for (const pago of pagosNormalizados) {
+        const metodoPago = metodos.find((item) => item.id === pago.metodoId)!;
+        if (/(yape|plin|tarjeta|transferencia)/i.test(metodoPago.nombre) && !pago.numeroOperacion) throw new Error('OPERACION_REQUERIDA');
+      }
       const esEfectivo = metodo.nombre.toLowerCase().includes('efectivo');
-      const requiereOperacion = /(yape|plin|tarjeta|transferencia)/i.test(metodo.nombre);
       if (esEfectivo && datos.montoRecibido != null && Number(datos.montoRecibido) < totalFinal) throw new Error('MONTO_INSUFICIENTE');
-      if (requiereOperacion && !datos.numeroOperacion) throw new Error('OPERACION_REQUERIDA');
       const vueltoCalculado = esEfectivo && datos.montoRecibido != null ? Number(datos.montoRecibido) - totalFinal : 0;
 
       return await tx.venta.create({
@@ -117,15 +124,18 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
           subtotal: totalVenta,
           descuento,
           total: totalFinal,
-          metodoId: datos.metodoId,
+          metodoId: metodo.id,
           numeroOperacion: datos.numeroOperacion || null,
           montoRecibido: esEfectivo ? datos.montoRecibido : null,
           vuelto: vueltoCalculado,
           detalles: {
             create: detallesData,
           },
+          pagos: {
+            create: pagosNormalizados.map((pago) => ({ metodoId: pago.metodoId, monto: pago.monto, numeroOperacion: pago.numeroOperacion || null })),
+          },
         },
-        include: { detalles: true },
+        include: { detalles: true, pagos: { include: { metodo: true } } },
       });
     });
 
@@ -140,6 +150,7 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
     if (error instanceof Error && error.message === 'OPERACION_REQUERIDA') return res.status(400).json({ mensaje: 'El número de operación es obligatorio para pagos no efectivos.' });
     if (error instanceof Error && error.message === 'MONTO_INSUFICIENTE') return res.status(400).json({ mensaje: 'El monto recibido es menor al total.' });
     if (error instanceof Error && error.message === 'DESCUENTO_INVALIDO') return res.status(400).json({ mensaje: 'El descuento no puede superar el subtotal.' });
+    if (error instanceof Error && error.message === 'PAGOS_NO_COINCIDEN') return res.status(400).json({ mensaje: 'La suma de los pagos debe coincidir exactamente con el total de la venta.' });
     if (error instanceof Error && error.message.includes('no existe')) {
       return res.status(404).json({ mensaje: error.message });
     }
@@ -157,6 +168,7 @@ export const obtenerComprobantePorId = async (req: Request, res: Response): Prom
       where: { id: Number(id) },
       include: {
         metodoPago: true,
+        pagos: { include: { metodo: true } },
         detalles: {
           include: { producto: true },
         },

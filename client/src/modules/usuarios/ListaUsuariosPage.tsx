@@ -6,6 +6,7 @@ import {
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { obtenerUsuarios, eliminarUsuario } from '../../services/usuarios.service';
+import { usePermisos } from '../../hooks/usePermisos';
 import { UsuarioModal } from './UsuarioModal';
 import { Usuario } from '../../types/usuario';
 
@@ -49,6 +50,7 @@ const calcularAntiguedad = (fechaIngreso?: string | null) => {
 };
 
 export default function ListaUsuariosPage() {
+  const { permisos } = usePermisos('usuarios');
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [cargando, setCargando] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -260,12 +262,12 @@ export default function ListaUsuariosPage() {
           >
             <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
           </button>
-          <button
+          {permisos.crear && <button
             onClick={() => { setUsuarioEditando(null); setModoVista(false); setIsModalOpen(true); }}
             className="px-4 py-2 bg-[#141414] hover:bg-black text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" /> Nuevo Usuario
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -416,12 +418,12 @@ export default function ListaUsuariosPage() {
                           <button onClick={() => { setUsuarioEditando(u); setModoVista(true); setIsModalOpen(true); }} className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-all" title="Ver Detalles">
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button onClick={() => { setUsuarioEditando(u); setModoVista(false); setIsModalOpen(true); }} className="p-1.5 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-md transition-all" title="Editar">
+                          {permisos.editar && <button onClick={() => { setUsuarioEditando(u); setModoVista(false); setIsModalOpen(true); }} className="p-1.5 text-gray-500 hover:text-[#e6b010] hover:bg-yellow-50 rounded-md transition-all" title="Editar">
                             <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => handleEliminar(u)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all" title="Eliminar">
+                          </button>}
+                          {permisos.eliminar && <button onClick={() => handleEliminar(u)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all" title="Eliminar">
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </button>}
                         </div>
                       </td>
                     </tr>

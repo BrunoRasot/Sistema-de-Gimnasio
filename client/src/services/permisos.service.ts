@@ -10,6 +10,16 @@ export const obtenerPermisosBD = async () => {
   return data;
 };
 
+export const obtenerCargosPermisos = async (): Promise<string[]> => {
+  const { data } = await api.get('/permisos/cargos');
+  return data;
+};
+
+export const obtenerMisPermisos = async () => {
+  const { data } = await api.get('/permisos/mios');
+  return data;
+};
+
 export const guardarPermisoBD = async (permisosData: { cargo: string; permisos: any }) => {
   const { data } = await api.post('/permisos', permisosData);
   return data;

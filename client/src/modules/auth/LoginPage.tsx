@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, KeyRound, Loader2 } from 'lucide-react';
+import { User, Lock, KeyRound, Loader2, Eye, EyeOff } from 'lucide-react';
 import { loginService, verifyOtpService } from '../../services/auth.service';
 import bgImage from '../../assets/logos/fondo.png';
 import logoImage from '../../assets/logos/logo.png';
@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [paso, setPaso] = useState<1 | 2>(1);
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [codigoOtp, setCodigoOtp] = useState('');
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
@@ -106,13 +107,22 @@ const LoginPage = () => {
                   <Lock className="h-[18px] w-[18px] text-gray-500" strokeWidth={2} />
                 </div>
                 <input
-                  type="password"
+                  type={mostrarPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full rounded-md bg-transparent border border-gray-800 py-3.5 pl-11 pr-4 text-sm text-white placeholder-gray-600 focus:border-[#FFC107] focus:outline-none focus:ring-1 focus:ring-[#FFC107] transition-all"
+                  className="w-full rounded-md bg-transparent border border-gray-800 py-3.5 pl-11 pr-12 text-sm text-white placeholder-gray-600 focus:border-[#FFC107] focus:outline-none focus:ring-1 focus:ring-[#FFC107] transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setMostrarPassword((actual) => !actual)}
+                  aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-pressed={mostrarPassword}
+                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-500 transition-colors hover:text-[#FFC107] focus:outline-none focus:text-[#FFC107]"
+                >
+                  {mostrarPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                </button>
               </div>
             </div>
 

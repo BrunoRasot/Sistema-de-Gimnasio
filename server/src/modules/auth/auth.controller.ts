@@ -74,15 +74,17 @@ const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
     throw new Error('Servicio de correo no configurado.');
   }
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
+  const transporter = nodemailer.createTransport(env.SMTP_HOST ? {
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_SECURE,
     auth: { user: emailUser, pass: emailPass },
-  });
+  } : { service: 'gmail', auth: { user: emailUser, pass: emailPass } });
 
   await transporter.sendMail({
-    from: `"TemploGym" <${emailUser}>`,
+    from: `"TemploGym" <${env.EMAIL_FROM || emailUser}>`,
     to: destinatario,
-    subject: 'Tu código de seguridad',
+    subject: `${codigo} es tu código de acceso a TemploGym`,
     text: `Tu código de acceso es ${codigo}. Vence en ${otpMinutes} minutos.`,
     html: generarTemplateOTP(codigo),
   });

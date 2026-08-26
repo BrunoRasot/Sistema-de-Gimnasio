@@ -7,7 +7,8 @@ export interface Venta {
   numeroOperacion?: string | null; montoRecibido?: number | string | null; vuelto?: number | string | null;
   estado: 'Pendiente' | 'Completado' | 'ParcialmenteDevuelto' | 'Devuelto' | 'Anulado';
   createdAt: string; metodoId: number; metodoPago: MetodoPagoVenta; detalles: DetalleVenta[];
+  pagos?: Array<{ id: number; metodoId: number; monto: number | string; numeroOperacion?: string | null; metodo: MetodoPagoVenta }>;
   usuario?: { id: number; nombres: string; apellidos: string } | null;
 }
 export interface Devolucion { id: number; ventaId: number; monto: number | string; motivo: string; createdAt: string; venta: Venta; detalles?: DetalleVenta[] }
-export interface CrearVentaInput { cliente?: string; miembroId?: number; metodoId: number; numeroOperacion?: string; montoRecibido?: number; descuento?: number; items: Array<{ productoId: number; cantidad: number }> }
+export interface CrearVentaInput { cliente?: string; miembroId?: number; metodoId?: number; numeroOperacion?: string; montoRecibido?: number; descuento?: number; pagos?: Array<{ metodoId: number; monto: number; numeroOperacion?: string }>; items: Array<{ productoId: number; cantidad: number }> }

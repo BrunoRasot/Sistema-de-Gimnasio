@@ -16,7 +16,7 @@ describe('Pruebas de Autenticación y Seguridad', () => {
     expect(response.status).toBe(401);
   });
 
-  it('Debería bloquear a un usuario con rol USER en rutas de administrador (403)', async () => {
+  it('Debería rechazar la sesión de un usuario inexistente (401)', async () => {
     const tokenIntruso = jwt.sign(
       { sub: 999, rol: 'USER', nombreUsuario: 'intruso', type: 'access' },
       process.env.JWT_SECRET as string,
@@ -27,6 +27,6 @@ describe('Pruebas de Autenticación y Seguridad', () => {
       .get('/api/usuarios')
       .set('Authorization', `Bearer ${tokenIntruso}`)
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
   });
 });

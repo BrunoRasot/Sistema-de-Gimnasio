@@ -4,6 +4,8 @@ import { ChevronDown, LucideIcon } from 'lucide-react';
 interface SubItem {
   path: string;
   label: string;
+  adminOnly?: boolean;
+  requiredAction?: 'crear' | 'editar' | 'eliminar';
 }
 
 interface SidebarItemProps {
@@ -28,8 +30,12 @@ const SidebarItem = ({
   const location = useLocation();
   const hasSubItems = subItems && subItems.length > 0;
   const IconComponent = Icon;
+  let esAdmin = false;
+  let permisosModulo: any = {};
+  try { const usuario = JSON.parse(localStorage.getItem('usuario') || 'null'); esAdmin = usuario?.rol === 'ADMIN' || usuario?.rol === 'SUPER_ADMIN'; permisosModulo = usuario?.permisos?.[path.split('/')[1]] || {}; } catch { esAdmin = false; }
+  const subItemsVisibles = subItems?.filter((sub) => (!sub.adminOnly || esAdmin) && (!sub.requiredAction || esAdmin || permisosModulo[sub.requiredAction]));
 
-  const isActive = location.pathname === path || (hasSubItems && subItems.some(sub => location.pathname === sub.path));
+  const isActive = location.pathname === path || (!!subItemsVisibles?.length && subItemsVisibles.some(sub => location.pathname === sub.path));
 
   if (!hasSubItems) {
     return (
@@ -71,7 +77,7 @@ const SidebarItem = ({
 
       {isOpenDropdown && (
         <div className="ml-8 mt-1 space-y-1 border-l border-gray-800 pl-3">
-          {subItems.map((sub) => {
+          {subItemsVisibles?.map((sub) => {
             const isSubActive = location.pathname === sub.path;
             return (
               <Link

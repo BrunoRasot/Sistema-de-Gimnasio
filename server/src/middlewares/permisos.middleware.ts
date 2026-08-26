@@ -16,7 +16,7 @@ export const verificarPermiso = (
         select: { rol: true, cargo: true },
       });
 
-      if (!usuarioDB) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+      if (!usuarioDB) return res.status(403).json({ mensaje: 'Acceso denegado.' });
       if (usuarioDB.rol === 'ADMIN') {
         return next();
       }

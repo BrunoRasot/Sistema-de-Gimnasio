@@ -8,27 +8,28 @@ import {
   cambiarEstadoCuenta,
   restablecerPassword,
 } from './usuario.controller.js';
-import { verificarToken, verificarAdmin } from '../../middlewares/auth.middleware.js';
+import { verificarToken } from '../../middlewares/auth.middleware.js';
+import { verificarPermiso } from '../../middlewares/permisos.middleware.js';
 import { auditar } from '../../middlewares/auditoria.middleware.js';
 
 const router = Router();
 
-router.get('/', verificarToken, verificarAdmin, obtenerUsuarios);
-router.get('/:id', verificarToken, verificarAdmin, obtenerUsuarioPorId);
-router.post('/', verificarToken, verificarAdmin, auditar('Usuarios'), crearUsuario);
-router.put('/:id', verificarToken, verificarAdmin, auditar('Usuarios'), actualizarUsuario);
-router.delete('/:id', verificarToken, verificarAdmin, auditar('Usuarios'), eliminarUsuario);
+router.get('/', verificarToken, verificarPermiso('usuarios', 'ver'), obtenerUsuarios);
+router.get('/:id', verificarToken, verificarPermiso('usuarios', 'ver'), obtenerUsuarioPorId);
+router.post('/', verificarToken, verificarPermiso('usuarios', 'crear'), auditar('Usuarios'), crearUsuario);
+router.put('/:id', verificarToken, verificarPermiso('usuarios', 'editar'), auditar('Usuarios'), actualizarUsuario);
+router.delete('/:id', verificarToken, verificarPermiso('usuarios', 'eliminar'), auditar('Usuarios'), eliminarUsuario);
 router.patch(
   '/:id/estado',
   verificarToken,
-  verificarAdmin,
+  verificarPermiso('usuarios', 'editar'),
   auditar('Usuarios'),
   cambiarEstadoCuenta,
 );
 router.patch(
   '/:id/restablecer-password',
   verificarToken,
-  verificarAdmin,
+  verificarPermiso('usuarios', 'editar'),
   auditar('Usuarios'),
   restablecerPassword,
 );
