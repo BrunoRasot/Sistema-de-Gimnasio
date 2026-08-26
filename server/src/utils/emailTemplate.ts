@@ -69,3 +69,17 @@ export const generarTemplateOTP = (codigo: string) => {
 </body>
 </html>`;
 };
+
+export const generarTemplateRecuperacion = (codigo: string) => {
+  const codigoSeguro = escaparHtml(codigo);
+  return `<!doctype html><html lang="es"><body style="margin:0;background:#f4f5f7;font-family:Arial,sans-serif;color:#171717">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:36px 16px">
+  <table role="presentation" width="100%" style="max-width:540px;background:#fff;border:1px solid #e2e4e8;border-radius:16px;overflow:hidden">
+  <tr><td style="height:5px;background:#f4c430"></td></tr><tr><td align="center" style="padding:38px 32px">
+  <div style="font-size:22px;font-weight:800">Templo<span style="color:#d6a900">Gym</span></div>
+  <h1 style="margin:24px 0 10px;font-size:25px">Recupera tu contraseña</h1>
+  <p style="margin:0 0 24px;color:#62666e;font-size:14px;line-height:1.6">Ingresa este código en la pantalla de recuperación para establecer una nueva contraseña.</p>
+  <div style="display:inline-block;padding:18px 28px;background:#fff8db;border:1px solid #f1d56a;border-radius:12px;font-family:Consolas,monospace;font-size:29px;font-weight:800;letter-spacing:8px">${codigoSeguro}</div>
+  <p style="margin:22px 0 0;color:#777b83;font-size:12px;line-height:1.6">El código vence en 10 minutos y solo puede usarse una vez. Si no solicitaste el cambio, ignora este mensaje.</p>
+  </td></tr></table></td></tr></table></body></html>`;
+};

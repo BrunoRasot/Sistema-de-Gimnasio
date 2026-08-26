@@ -5,7 +5,8 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { prisma } from '../../database/prisma.js';
-import { generarTemplateOTP } from '../../utils/emailTemplate.js';
+import { generarTemplateOTP, generarTemplateRecuperacion } from '../../utils/emailTemplate.js';
+import { passwordSeguraSchema } from '../../schemas/index.js';
 import { logger } from '../../utils/logger.js';
 import { env } from '../../config/env.js';
 import {
@@ -15,6 +16,7 @@ import {
 } from './auth-cookie.js';
 
 const otpMinutes = 10;
+const recoveryMinutes = 10;
 
 const hashRefreshToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -57,6 +59,19 @@ const verifyOtpSchema = z.object({
   codigo: z.string().regex(/^\d{6}$/, 'El código debe tener 6 dígitos.'),
 });
 
+const recoveryRequestSchema = z.object({
+  identificador: z.string().trim().min(1).max(160),
+});
+
+const resetPasswordSchema = z.object({
+  identificador: z.string().trim().min(1).max(160),
+  codigo: z.string().regex(/^\d{6}$/, 'El código debe tener 6 dígitos.'),
+  nuevaPassword: passwordSeguraSchema,
+});
+
+const hashRecoveryCode = (usuarioId: number, codigo: string) =>
+  crypto.createHmac('sha256', env.JWT_ACCESS_SECRET).update(`${usuarioId}:${codigo}`).digest('hex');
+
 const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
   if (env.NODE_ENV === 'test') {
     logger.warn(`Fallback (Test): OTP generado para ${destinatario}`);
@@ -88,6 +103,110 @@ const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
     text: `Tu código de acceso es ${codigo}. Vence en ${otpMinutes} minutos.`,
     html: generarTemplateOTP(codigo),
   });
+};
+
+const enviarCodigoRecuperacion = async (destinatario: string, codigo: string) => {
+  if (env.NODE_ENV === 'test') return;
+  if (!env.EMAIL_USER || !env.EMAIL_PASS) {
+    if (env.NODE_ENV !== 'production') {
+      logger.warn(`Fallback (Desarrollo): código de recuperación para ${destinatario}: ${codigo}`);
+      return;
+    }
+    throw new Error('Servicio de correo no configurado.');
+  }
+  const transporter = nodemailer.createTransport(env.SMTP_HOST ? {
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_SECURE,
+    auth: { user: env.EMAIL_USER, pass: env.EMAIL_PASS },
+  } : { service: 'gmail', auth: { user: env.EMAIL_USER, pass: env.EMAIL_PASS } });
+  await transporter.sendMail({
+    from: `"TemploGym" <${env.EMAIL_FROM || env.EMAIL_USER}>`,
+    to: destinatario,
+    subject: 'Código para recuperar tu contraseña de TemploGym',
+    text: `Tu código de recuperación es ${codigo}. Vence en ${recoveryMinutes} minutos.`,
+    html: generarTemplateRecuperacion(codigo),
+  });
+};
+
+export const solicitarRecuperacionPassword = async (req: Request, res: Response): Promise<any> => {
+  const parsed = recoveryRequestSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ mensaje: 'Ingresa un usuario o correo válido.' });
+  const mensaje = 'Si la cuenta existe y está activa, recibirás un código de recuperación.';
+  try {
+    const identificador = parsed.data.identificador;
+    const usuario = await prisma.usuario.findFirst({
+      where: { OR: [{ nombreUsuario: identificador }, { email: identificador.toLowerCase() }] },
+    });
+    if (!usuario || !usuario.activo || usuario.estadoLaboral !== 'Activo') return res.json({ mensaje });
+
+    const codigo = crypto.randomInt(100000, 1000000).toString();
+    await prisma.$transaction(async (tx) => {
+      await tx.passwordResetToken.deleteMany({ where: { usuarioId: usuario.id } });
+      await tx.passwordResetToken.create({
+        data: {
+          usuarioId: usuario.id,
+          token: hashRecoveryCode(usuario.id, codigo),
+          expiresAt: new Date(Date.now() + recoveryMinutes * 60_000),
+        },
+      });
+    });
+    try {
+      await enviarCodigoRecuperacion(usuario.email, codigo);
+    } catch (error) {
+      await prisma.passwordResetToken.deleteMany({ where: { usuarioId: usuario.id } });
+      throw error;
+    }
+    return res.json({ mensaje });
+  } catch (error) {
+    logger.error(`Error al solicitar recuperación de contraseña: ${error}`);
+    return res.status(500).json({ mensaje: 'No pudimos procesar la solicitud en este momento.' });
+  }
+};
+
+export const restablecerPassword = async (req: Request, res: Response): Promise<any> => {
+  const parsed = resetPasswordSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ mensaje: parsed.error.issues[0]?.message || 'Datos inválidos.' });
+  try {
+    const { identificador, codigo, nuevaPassword } = parsed.data;
+    const usuario = await prisma.usuario.findFirst({
+      where: { OR: [{ nombreUsuario: identificador }, { email: identificador.toLowerCase() }] },
+    });
+    if (!usuario || !usuario.activo) return res.status(400).json({ mensaje: 'El código es inválido o ha vencido.' });
+
+    const token = await prisma.passwordResetToken.findFirst({
+      where: { usuarioId: usuario.id, usedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+    const tokenValido = token && token.expiresAt > new Date() && token.intentos < 5 &&
+      token.token === hashRecoveryCode(usuario.id, codigo);
+    if (!tokenValido || !token) {
+      if (token && token.usedAt === null) {
+        await prisma.passwordResetToken.update({
+          where: { id: token.id },
+          data: { intentos: { increment: 1 }, ...(token.intentos + 1 >= 5 ? { usedAt: new Date() } : {}) },
+        });
+      }
+      return res.status(400).json({ mensaje: 'El código es inválido o ha vencido.' });
+    }
+
+    const password = await bcrypt.hash(nuevaPassword, 12);
+    await prisma.$transaction(async (tx) => {
+      const consumido = await tx.passwordResetToken.updateMany({ where: { id: token.id, usedAt: null }, data: { usedAt: new Date() } });
+      if (consumido.count !== 1) throw new Error('RESET_TOKEN_REUSED');
+      await tx.usuario.update({
+        where: { id: usuario.id },
+        data: { password, intentosFallidos: 0, bloqueoHasta: null, estadoCuenta: 'Activa', codigoOtp: null, expiracionOtp: null },
+      });
+      await tx.refreshToken.deleteMany({ where: { usuarioId: usuario.id } });
+      await tx.passwordResetToken.updateMany({ where: { usuarioId: usuario.id, usedAt: null }, data: { usedAt: new Date() } });
+    });
+    return res.json({ mensaje: 'Contraseña actualizada. Ya puedes iniciar sesión.' });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'RESET_TOKEN_REUSED') return res.status(400).json({ mensaje: 'El código ya fue utilizado.' });
+    logger.error(`Error al restablecer contraseña: ${error}`);
+    return res.status(500).json({ mensaje: 'No pudimos restablecer la contraseña.' });
+  }
 };
 
 const generarTokensSesion = async (usuario: { id: number; rol: string; nombreUsuario: string }) => {

@@ -63,6 +63,7 @@ model Usuario {
   updatedAt        DateTime       @updatedAt
   auditorias       Auditoria[]
   refreshTokens    RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
   ventasRealizadas Venta[]
   pagosCobrados    Pago[]
   devoluciones     Devolucion[]
@@ -362,6 +363,21 @@ model RefreshToken {
   usuarioId Int
   createdAt DateTime @default(now())
   expiresAt DateTime
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  usuarioId Int
+  intentos  Int      @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
 
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 

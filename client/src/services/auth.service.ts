@@ -53,3 +53,28 @@ export const logoutService = async () => {
     localStorage.removeItem('usuario');
   }
 };
+
+const mensajeError = async (response: Response, fallback: string) => {
+  const data = await response.json().catch(() => ({}));
+  return typeof data.mensaje === 'string' ? data.mensaje : fallback;
+};
+
+export const solicitarRecuperacionService = async (identificador: string) => {
+  const response = await fetch(`${API_URL}/auth/solicitar-recuperacion`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identificador }),
+  });
+  if (!response.ok) throw new Error(await mensajeError(response, 'No se pudo solicitar la recuperación.'));
+  return response.json();
+};
+
+export const restablecerPasswordService = async (identificador: string, codigo: string, nuevaPassword: string) => {
+  const response = await fetch(`${API_URL}/auth/restablecer-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identificador, codigo, nuevaPassword }),
+  });
+  if (!response.ok) throw new Error(await mensajeError(response, 'No se pudo cambiar la contraseña.'));
+  return response.json();
+};
