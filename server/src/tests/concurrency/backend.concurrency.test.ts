@@ -57,7 +57,10 @@ describe('Concurrencia e idempotencia del backend', () => {
       await prisma.devolucion.deleteMany({ where: { ventaId } });
       await prisma.venta.deleteMany({ where: { id: ventaId } });
     }
-    if (productoId) await prisma.producto.deleteMany({ where: { id: productoId } });
+    if (productoId) {
+      await prisma.movimientoInventario.deleteMany({ where: { productoId } });
+      await prisma.producto.deleteMany({ where: { id: productoId } });
+    }
     if (categoriaId) await prisma.categoria.deleteMany({ where: { id: categoriaId } });
     if (metodoId) await prisma.metodoPago.deleteMany({ where: { id: metodoId } });
     if (planId) await prisma.plan.deleteMany({ where: { id: planId } });

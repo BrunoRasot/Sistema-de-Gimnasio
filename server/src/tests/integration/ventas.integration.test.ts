@@ -58,7 +58,10 @@ describe('Integración: ventas, inventario y devoluciones', () => {
       await prisma.venta.deleteMany({ where: { id: ventaParcialId } });
     }
     if (ventaMixtaId) await prisma.venta.deleteMany({ where: { id: ventaMixtaId } });
-    if (productoId) await prisma.producto.deleteMany({ where: { id: productoId } });
+    if (productoId) {
+      await prisma.movimientoInventario.deleteMany({ where: { productoId } });
+      await prisma.producto.deleteMany({ where: { id: productoId } });
+    }
     if (categoriaId) await prisma.categoria.deleteMany({ where: { id: categoriaId } });
     if (metodoId) await prisma.metodoPago.deleteMany({ where: { id: metodoId } });
     if (metodoSecundarioId) await prisma.metodoPago.deleteMany({ where: { id: metodoSecundarioId } });

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { tokenService } from './token.service';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
 });
 
@@ -33,6 +33,9 @@ const processQueue = (error: any, token: string | null = null) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (!error.response) {
+      error.message = 'No se pudo conectar con el servidor. Verifica tu conexión e inténtalo nuevamente.';
+    }
     if (error.response?.data?.mensaje) {
       error.message = error.response.data.mensaje;
     }

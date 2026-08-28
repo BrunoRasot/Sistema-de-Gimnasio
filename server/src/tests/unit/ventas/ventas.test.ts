@@ -14,6 +14,8 @@ describe('Pruebas del módulo de Ventas y Devoluciones', () => {
   let usuarioTestId: number;
 
   beforeAll(async () => {
+    const residuos = await prisma.producto.findMany({ where: { sku: 'SKU-VNT' }, select: { id: true } });
+    await prisma.movimientoInventario.deleteMany({ where: { productoId: { in: residuos.map((item) => item.id) } } });
     await prisma.producto.deleteMany({ where: { sku: 'SKU-VNT' } });
     await prisma.categoria.deleteMany({ where: { nombre: 'Cat Venta Test' } });
     await prisma.usuario.deleteMany({ where: { email: 'admin_ventas_test@gym.com' } });
@@ -97,7 +99,10 @@ describe('Pruebas del módulo de Ventas y Devoluciones', () => {
       await prisma.venta.deleteMany({ where: { codigo: ventaCodigo } });
     }
 
-    if (productoId) await prisma.producto.deleteMany({ where: { id: productoId } });
+    if (productoId) {
+      await prisma.movimientoInventario.deleteMany({ where: { productoId } });
+      await prisma.producto.deleteMany({ where: { id: productoId } });
+    }
     if (categoriaId) await prisma.categoria.deleteMany({ where: { id: categoriaId } });
     if (usuarioTestId) await prisma.usuario.deleteMany({ where: { id: usuarioTestId } });
   });

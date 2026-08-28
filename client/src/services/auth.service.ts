@@ -1,10 +1,17 @@
 import { api } from './api';
 import { tokenService } from './token.service';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+const solicitar = async (ruta: string, init: RequestInit) => {
+  try {
+    return await fetch(`${API_URL}${ruta}`, init);
+  } catch {
+    throw new Error('No se pudo conectar con el servidor. Verifica tu conexión e inténtalo nuevamente.');
+  }
+};
 
 export const loginService = async (usuario: string, password: string) => {
-  const response = await fetch(`${API_URL}/auth/login`, {
+  const response = await solicitar('/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ usuario, password }),
@@ -17,7 +24,7 @@ export const loginService = async (usuario: string, password: string) => {
 };
 
 export const verifyOtpService = async (usuario: string, codigo: string) => {
-  const response = await fetch(`${API_URL}/auth/verificar-otp`, {
+  const response = await solicitar('/auth/verificar-otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -60,7 +67,7 @@ const mensajeError = async (response: Response, fallback: string) => {
 };
 
 export const solicitarRecuperacionService = async (identificador: string) => {
-  const response = await fetch(`${API_URL}/auth/solicitar-recuperacion`, {
+  const response = await solicitar('/auth/solicitar-recuperacion', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identificador }),
@@ -70,7 +77,7 @@ export const solicitarRecuperacionService = async (identificador: string) => {
 };
 
 export const restablecerPasswordService = async (identificador: string, codigo: string, nuevaPassword: string) => {
-  const response = await fetch(`${API_URL}/auth/restablecer-password`, {
+  const response = await solicitar('/auth/restablecer-password', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identificador, codigo, nuevaPassword }),

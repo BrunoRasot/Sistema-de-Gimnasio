@@ -27,8 +27,9 @@ export const crearProducto = async (req: Request, res: Response): Promise<any> =
     const existeSku = await prisma.producto.findUnique({ where: { sku: datos.sku } });
     if (existeSku) return res.status(400).json({ mensaje: 'El SKU ya está en uso.' });
 
-    const nuevoProducto = await prisma.producto.create({
-      data: {
+    const usuarioId = Number((req as any).usuario?.id) || null;
+    const nuevoProducto = await prisma.$transaction(async (tx) => {
+      const producto = await tx.producto.create({ data: {
         nombre: datos.nombre,
         sku: datos.sku,
         descripcion: datos.descripcion,
@@ -39,7 +40,9 @@ export const crearProducto = async (req: Request, res: Response): Promise<any> =
         categoriaId: datos.categoriaId,
         proveedorId: datos.proveedorId ? datos.proveedorId : null,
         estado: datos.estado as any,
-      },
+      }});
+      if (datos.stock > 0) await tx.movimientoInventario.create({ data: { productoId: producto.id, usuarioId, tipo: 'STOCK_INICIAL', cantidad: datos.stock, stockAnterior: 0, stockPosterior: datos.stock, costoUnitario: datos.precioCompra, motivo: 'Alta de producto' } });
+      return producto;
     });
     return res.status(201).json(nuevoProducto);
   } catch (error) {
@@ -59,9 +62,10 @@ export const actualizarProducto = async (req: Request, res: Response): Promise<a
     if (existeSku)
       return res.status(400).json({ mensaje: 'El SKU ya está en uso por otro producto.' });
 
-    const productoActualizado = await prisma.producto.update({
-      where: { id: Number(id) },
-      data: {
+    const usuarioId = Number((req as any).usuario?.id) || null;
+    const productoActualizado = await prisma.$transaction(async (tx) => {
+      const anterior = await tx.producto.findUniqueOrThrow({ where: { id: Number(id) } });
+      const producto = await tx.producto.update({ where: { id: Number(id) }, data: {
         nombre: datos.nombre,
         sku: datos.sku,
         descripcion: datos.descripcion,
@@ -72,7 +76,10 @@ export const actualizarProducto = async (req: Request, res: Response): Promise<a
         categoriaId: datos.categoriaId,
         proveedorId: datos.proveedorId ? datos.proveedorId : null,
         estado: datos.estado as any,
-      },
+      }});
+      const diferencia = datos.stock - anterior.stock;
+      if (diferencia !== 0) await tx.movimientoInventario.create({ data: { productoId: producto.id, usuarioId, tipo: diferencia > 0 ? 'AJUSTE_ENTRADA' : 'AJUSTE_SALIDA', cantidad: diferencia, stockAnterior: anterior.stock, stockPosterior: datos.stock, costoUnitario: datos.precioCompra, motivo: 'Edición manual del producto' } });
+      return producto;
     });
     return res.json(productoActualizado);
   } catch (error) {
@@ -93,6 +100,11 @@ export const eliminarProducto = async (req: Request, res: Response): Promise<any
         mensaje:
           'No se puede eliminar este producto porque tiene ventas asociadas. Desactívalo en su lugar.',
       });
+    }
+    const tieneKardex = await prisma.movimientoInventario.count({ where: { productoId: Number(id) } });
+    if (tieneKardex) {
+      const archivado = await prisma.producto.update({ where: { id: Number(id) }, data: { estado: 'Inactivo' } });
+      return res.json({ mensaje: 'Producto archivado para conservar su kardex.', producto: archivado });
     }
     await prisma.producto.delete({ where: { id: Number(id) } });
     return res.json({ mensaje: 'Producto eliminado correctamente.' });

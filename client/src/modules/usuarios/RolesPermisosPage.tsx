@@ -15,6 +15,9 @@ import {
   Settings,
   Shield,
   Lock,
+  Warehouse,
+  ClipboardList,
+  Landmark,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { obtenerCargosPermisos, obtenerPermisosBD, guardarPermisosBD } from '../../services/permisos.service';
@@ -25,7 +28,10 @@ const modulosSistema = [
   { id: 'dashboard', nombre: 'Dashboard', icon: LayoutDashboard },
   { id: 'membresias', nombre: 'Membresías', icon: IdCard },
   { id: 'usuarios', nombre: 'Usuarios', icon: User },
-  { id: 'productos', nombre: 'Productos (Inventario)', icon: Package },
+  { id: 'productos', nombre: 'Catálogo de productos', icon: Package },
+  { id: 'inventario', nombre: 'Inventario y kardex', icon: Warehouse },
+  { id: 'compras', nombre: 'Compras y abastecimiento', icon: ClipboardList },
+  { id: 'caja', nombre: 'Caja y arqueo', icon: Landmark },
   { id: 'ventas', nombre: 'Ventas', icon: ShoppingCart },
   { id: 'pagos', nombre: 'Pagos', icon: CreditCard },
   { id: 'asistencias', nombre: 'Asistencias', icon: CalendarCheck },

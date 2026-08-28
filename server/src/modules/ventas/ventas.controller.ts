@@ -90,6 +90,8 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
           cantidad: item.cantidad,
           precioUnit: precioReal,
           subtotal: subtotal,
+          costoUnitario: Number(prod.precioCompra),
+          stockAnterior: prod.stock,
         });
 
         const actualizado = await tx.producto.updateMany({
@@ -115,7 +117,7 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
       if (esEfectivo && datos.montoRecibido != null && Number(datos.montoRecibido) < totalFinal) throw new Error('MONTO_INSUFICIENTE');
       const vueltoCalculado = esEfectivo && datos.montoRecibido != null ? Number(datos.montoRecibido) - totalFinal : 0;
 
-      return await tx.venta.create({
+      const venta = await tx.venta.create({
         data: {
           codigo: generarCodigoUnico('VNT'),
           usuarioId: usuarioId ? Number(usuarioId) : null,
@@ -129,7 +131,7 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
           montoRecibido: esEfectivo ? datos.montoRecibido : null,
           vuelto: vueltoCalculado,
           detalles: {
-            create: detallesData,
+            create: detallesData.map(({ stockAnterior: _stockAnterior, ...detalle }) => detalle),
           },
           pagos: {
             create: pagosNormalizados.map((pago) => ({ metodoId: pago.metodoId, monto: pago.monto, numeroOperacion: pago.numeroOperacion || null })),
@@ -137,6 +139,15 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
         },
         include: { detalles: true, pagos: { include: { metodo: true } } },
       });
+      await tx.movimientoInventario.createMany({ data: detallesData.map((detalle) => ({
+        productoId: detalle.productoId, usuarioId: usuarioId ? Number(usuarioId) : null,
+        tipo: 'VENTA', cantidad: -detalle.cantidad, stockAnterior: detalle.stockAnterior,
+        stockPosterior: detalle.stockAnterior - detalle.cantidad, costoUnitario: detalle.costoUnitario,
+        referenciaTipo: 'VENTA', referenciaId: venta.id,
+      })) });
+      const caja = usuarioId ? await tx.sesionCaja.findFirst({ where: { usuarioId: Number(usuarioId), estado: 'ABIERTA' } }) : null;
+      if (caja) await tx.movimientoCaja.create({ data: { sesionId: caja.id, usuarioId: Number(usuarioId), ventaId: venta.id, tipo: 'VENTA', monto: totalFinal, concepto: `Venta ${venta.codigo}` } });
+      return venta;
     });
 
     return res.status(201).json({ mensaje: 'Venta registrada con éxito', venta: nuevaVenta });
@@ -258,12 +269,14 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
       });
 
       for (const detalle of detallesDevueltos) {
+        const producto = await tx.producto.findUniqueOrThrow({ where: { id: detalle.productoId } });
         await tx.producto.update({
           where: { id: detalle.productoId },
           data: {
             stock: { increment: detalle.cantidad },
           },
         });
+        await tx.movimientoInventario.create({ data: { productoId: detalle.productoId, usuarioId: Number(usuarioId), tipo: 'DEVOLUCION_VENTA', cantidad: detalle.cantidad, stockAnterior: producto.stock, stockPosterior: producto.stock + detalle.cantidad, referenciaTipo: 'DEVOLUCION', referenciaId: devolucion.id, motivo } });
       }
 
       const cantidadVendida = venta.detalles.reduce((sum, d) => sum + d.cantidad, 0);

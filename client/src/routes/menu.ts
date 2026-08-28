@@ -8,6 +8,9 @@ import {
   CalendarCheck,
   BarChart3,
   Settings,
+  Warehouse,
+  ClipboardList,
+  Landmark,
   LucideIcon
 } from 'lucide-react';
 
@@ -38,7 +41,7 @@ export const menuGroups: MenuGroup[] = [
     ]
   },
   {
-    title: 'GESTIÓN',
+    title: 'SOCIOS Y OPERACIÓN',
     items: [
       { 
         path: '/membresias', 
@@ -62,46 +65,55 @@ export const menuGroups: MenuGroup[] = [
           { path: '/usuarios/administradores', label: 'Administradores', adminOnly: true },
         ]
       },
-      { 
-        path: '/productos', 
-        label: 'Productos', 
-        icon: Package,
-        subItems: [
-          { path: '/productos/inventario', label: 'Inventario' },
-          { path: '/productos/categorias', label: 'Categorías' },
-          { path: '/productos/proveedores', label: 'Proveedores' },
-          { path: '/productos/alertas', label: 'Stock y Alertas' },
-        ]
-      },
-      { 
-        path: '/ventas', 
-        label: 'Ventas', 
+    ]
+  },
+  {
+    title: 'COMERCIAL',
+    items: [
+      {
+        path: '/ventas',
+        label: 'Ventas',
         icon: ShoppingCart,
         subItems: [
-          { path: '/ventas/historial', label: 'Historial de Ventas' },
           { path: '/ventas/nueva', label: 'Nueva Venta', requiredAction: 'crear' },
+          { path: '/ventas/historial', label: 'Historial de Ventas' },
           { path: '/ventas/devoluciones', label: 'Devoluciones', requiredAction: 'eliminar' },
           { path: '/ventas/comprobantes', label: 'Comprobantes' },
         ]
       },
-      { 
-        path: '/pagos', 
-        label: 'Pagos', 
-        icon: CreditCard,
+      {
+        path: '/asistencias', label: 'Asistencias', icon: CalendarCheck,
         subItems: [
-          { path: '/pagos/registro', label: 'Registro de Pagos' },
+          { path: '/asistencias/registro', label: 'Registrar ingreso' },
+          { path: '/asistencias/resumen', label: 'Historial y resumen' },
+        ]
+      },
+      {
+        path: '/caja', label: 'Caja', icon: Landmark,
+        subItems: [{ path: '/caja/turno', label: 'Turno y arqueo' }, { path: '/caja/historial', label: 'Historial de cuadres' }]
+      },
+      { 
+        path: '/pagos', label: 'Pagos', icon: CreditCard,
+        subItems: [
+          { path: '/pagos/registro', label: 'Otros ingresos' },
           { path: '/pagos/metodos', label: 'Métodos de Pago', requiredAction: 'editar' },
         ]
       },
+    ]
+  },
+  {
+    title: 'ABASTECIMIENTO',
+    items: [
       { 
-        path: '/asistencias', 
-        label: 'Asistencias', 
-        icon: CalendarCheck,
+        path: '/productos', label: 'Productos', icon: Package,
         subItems: [
-          { path: '/asistencias/registro', label: 'Registro de Asistencia' },
-          { path: '/asistencias/resumen', label: 'Resumen de Asistencias' },
+          { path: '/productos/inventario', label: 'Productos' },
+          { path: '/productos/categorias', label: 'Categorías' },
+          { path: '/productos/alertas', label: 'Stock y Alertas' },
         ]
       },
+      { path: '/inventario', label: 'Inventario', icon: Warehouse, subItems: [{ path: '/inventario/kardex', label: 'Kardex y movimientos' }] },
+      { path: '/compras', label: 'Compras', icon: ClipboardList, subItems: [{ path: '/compras/ordenes', label: 'Órdenes de compra' }, { path: '/productos/proveedores', label: 'Proveedores' }] },
     ]
   },
   {

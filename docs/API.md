@@ -118,3 +118,13 @@ Todos requieren `reportes.ver`: `GET /reportes/ventas`, `/reportes/membresias`, 
 ## Auditoría
 
 Las operaciones mutables relevantes pasan por el middleware de auditoría y guardan usuario, módulo, acción, detalles, dirección IP y fecha. No se deben registrar contraseñas, OTP, tokens ni secretos.
+# Operaciones comerciales nuevas
+
+- `GET /api/inventario/kardex`: movimientos de inventario; acepta `productoId`.
+- `POST /api/inventario/ajustes`: ajuste justificado de existencias.
+- `GET /api/compras` y `POST /api/compras`: consulta y creación de órdenes.
+- `POST /api/compras/:id/recepciones`: recepción parcial o total con actualización de stock y costo.
+- `GET /api/caja/actual` y `GET /api/caja/historial`: sesión vigente e historial.
+- `POST /api/caja/abrir`, `/movimientos` y `/cerrar`: ciclo de caja y arqueo.
+
+Estas rutas requieren token y permisos de `inventario`, `compras` o `caja`.

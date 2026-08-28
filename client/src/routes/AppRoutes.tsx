@@ -36,6 +36,10 @@ const ReportesInventarioPage = lazy(() => import('../modules/reportes/ReportesIn
 const InfoGimnasioPage = lazy(() => import('../modules/configuracion/InfoGimnasioPage'));
 const NotificacionesPage = lazy(() => import('../modules/configuracion/NotificacionesPage'));
 const SeguridadPage = lazy(() => import('../modules/configuracion/SeguridadPage'));
+const KardexPage = lazy(() => import('../modules/inventario/KardexPage'));
+const OrdenesCompraPage = lazy(() => import('../modules/compras/OrdenesCompraPage'));
+const CajaPage = lazy(() => import('../modules/caja/CajaPage'));
+const HistorialCajaPage = lazy(() => import('../modules/caja/HistorialCajaPage'));
 
 const AdminOnly = ({ children }: { children: React.ReactNode }) => {
   try {
@@ -133,6 +137,10 @@ const AppRoutes = () => {
             <Route path="/productos/categorias" element={<CategoriasPage />} />
             <Route path="/productos/proveedores" element={<ProveedoresPage />} />
             <Route path="/productos/alertas" element={<StockAlertasPage />} />
+            <Route path="/inventario/kardex" element={<KardexPage />} />
+            <Route path="/compras/ordenes" element={<OrdenesCompraPage />} />
+            <Route path="/caja/turno" element={<CajaPage />} />
+            <Route path="/caja/historial" element={<HistorialCajaPage />} />
 
             {/* Submódulos Ventas */}
             <Route path="/ventas" element={<Navigate to="/ventas/historial" replace />} />

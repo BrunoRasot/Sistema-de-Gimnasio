@@ -13,6 +13,9 @@ import reportesRoutes from './reportes/reportes.routes.js';
 import usuarioRoutes from './usuarios/usuario.routes.js';
 import ventasRoutes from './ventas/ventas.routes.js';
 import healthRoutes from './health/health.routes.js';
+import inventarioRoutes from './inventario/inventario.routes.js';
+import comprasRoutes from './compras/compras.routes.js';
+import cajaRoutes from './caja/caja.routes.js';
 
 const apiRouter = Router();
 
@@ -30,5 +33,8 @@ apiRouter.use('/pagos', pagosRoutes);
 apiRouter.use('/asistencias', asistenciasRoutes);
 apiRouter.use('/reportes', reportesRoutes);
 apiRouter.use('/configuracion', configuracionRoutes);
+apiRouter.use('/inventario', inventarioRoutes);
+apiRouter.use('/compras', comprasRoutes);
+apiRouter.use('/caja', cajaRoutes);
 
 export { apiRouter };

@@ -12,6 +12,9 @@ describe('Pruebas del módulo de Productos', () => {
 
   beforeAll(async () => {
     tokenAdmin = await obtenerTokenAdminActivo();
+    const residuos = await prisma.producto.findMany({ where: { sku: 'SKU-001' }, select: { id: true } });
+    await prisma.movimientoInventario.deleteMany({ where: { productoId: { in: residuos.map((item) => item.id) } } });
+    await prisma.producto.deleteMany({ where: { id: { in: residuos.map((item) => item.id) } } });
     const cat = await prisma.categoria.create({ data: { nombre: `Cat Prod Test ${Date.now()}`, estado: true } });
     categoriaId = cat.id;
   });
@@ -67,6 +70,8 @@ describe('Pruebas del módulo de Productos', () => {
       .delete(`/api/productos/${productoId}`)
       .set('Authorization', `Bearer ${tokenAdmin}`);
     expect(resProd.status).toBe(200);
+    await prisma.movimientoInventario.deleteMany({ where: { productoId } });
+    await prisma.producto.delete({ where: { id: productoId } });
     await prisma.categoria.delete({ where: { id: categoriaId } });
   });
 });

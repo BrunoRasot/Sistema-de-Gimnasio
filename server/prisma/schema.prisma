@@ -35,38 +35,75 @@ enum EstadoTransaccion {
   Anulado
 }
 
+enum TipoMovimientoInventario {
+  STOCK_INICIAL
+  COMPRA
+  VENTA
+  DEVOLUCION_VENTA
+  DEVOLUCION_PROVEEDOR
+  AJUSTE_ENTRADA
+  AJUSTE_SALIDA
+  MERMA
+}
+
+enum EstadoOrdenCompra {
+  BORRADOR
+  ENVIADA
+  PARCIAL
+  RECIBIDA
+  CANCELADA
+}
+
+enum EstadoCaja {
+  ABIERTA
+  CERRADA
+}
+
+enum TipoMovimientoCaja {
+  INGRESO
+  EGRESO
+  VENTA
+  PAGO
+  DEVOLUCION
+  RETIRO
+}
+
 model Usuario {
-  id               Int            @id @default(autoincrement())
-  foto             String?
-  nombres          String         @default("")
-  apellidos        String         @default("")
-  dni              String         @unique
-  fechaNacimiento  DateTime?
-  sexo             String?
-  direccion        String?
-  telefono         String?
-  email            String         @unique
-  turno            String?
-  fechaIngreso     DateTime       @default(now())
-  nombreUsuario    String         @unique
-  password         String
-  rol              RolUsuario     @default(USER)
-  cargo            String         @default("Recepcionista")
-  estadoLaboral    EstadoGeneral  @default(Activo)
-  estadoCuenta     EstadoCuenta   @default(Activa)
-  activo           Boolean        @default(true)
-  codigoOtp        String?
-  expiracionOtp    DateTime?
-  intentosFallidos Int            @default(0)
-  bloqueoHasta     DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  auditorias       Auditoria[]
-  refreshTokens    RefreshToken[]
-  passwordResetTokens PasswordResetToken[]
-  ventasRealizadas Venta[]
-  pagosCobrados    Pago[]
-  devoluciones     Devolucion[]
+  id                    Int                    @id @default(autoincrement())
+  foto                  String?
+  nombres               String                 @default("")
+  apellidos             String                 @default("")
+  dni                   String                 @unique
+  fechaNacimiento       DateTime?
+  sexo                  String?
+  direccion             String?
+  telefono              String?
+  email                 String                 @unique
+  turno                 String?
+  fechaIngreso          DateTime               @default(now())
+  nombreUsuario         String                 @unique
+  password              String
+  rol                   RolUsuario             @default(USER)
+  cargo                 String                 @default("Recepcionista")
+  estadoLaboral         EstadoGeneral          @default(Activo)
+  estadoCuenta          EstadoCuenta           @default(Activa)
+  activo                Boolean                @default(true)
+  codigoOtp             String?
+  expiracionOtp         DateTime?
+  intentosFallidos      Int                    @default(0)
+  bloqueoHasta          DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  auditorias            Auditoria[]
+  refreshTokens         RefreshToken[]
+  passwordResetTokens   PasswordResetToken[]
+  ventasRealizadas      Venta[]
+  pagosCobrados         Pago[]
+  devoluciones          Devolucion[]
+  movimientosInventario MovimientoInventario[]
+  ordenesCompra         OrdenCompra[]
+  sesionesCaja          SesionCaja[]
+  movimientosCaja       MovimientoCaja[]
 }
 
 model Permiso {
@@ -172,7 +209,8 @@ model Proveedor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  productos Producto[]
+  productos     Producto[]
+  ordenesCompra OrdenCompra[]
 }
 
 model Producto {
@@ -192,8 +230,10 @@ model Producto {
 
   detalles          DetalleVenta[]
   detallesDevueltos DetalleDevolucion[]
-  categoria         Categoria           @relation(fields: [categoriaId], references: [id])
-  proveedor         Proveedor?          @relation(fields: [proveedorId], references: [id])
+  categoria         Categoria              @relation(fields: [categoriaId], references: [id])
+  proveedor         Proveedor?             @relation(fields: [proveedorId], references: [id])
+  movimientos       MovimientoInventario[]
+  detallesCompra    DetalleOrdenCompra[]
 
   @@index([categoriaId])
   @@index([proveedorId])
@@ -219,9 +259,10 @@ model Venta {
   miembro    Miembro?   @relation(fields: [miembroId], references: [id])
   metodoPago MetodoPago @relation(fields: [metodoId], references: [id])
 
-  detalles     DetalleVenta[]
-  devoluciones Devolucion[]
-  pagos         VentaPago[]
+  detalles        DetalleVenta[]
+  devoluciones    Devolucion[]
+  pagos           VentaPago[]
+  movimientosCaja MovimientoCaja[]
 
   @@index([createdAt])
   @@index([estado])
@@ -231,12 +272,13 @@ model Venta {
 }
 
 model DetalleVenta {
-  id         Int     @id @default(autoincrement())
-  ventaId    Int
-  productoId Int
-  cantidad   Int
-  precioUnit Decimal @db.Decimal(10, 2)
-  subtotal   Decimal @db.Decimal(10, 2)
+  id            Int     @id @default(autoincrement())
+  ventaId       Int
+  productoId    Int
+  cantidad      Int
+  precioUnit    Decimal @db.Decimal(10, 2)
+  subtotal      Decimal @db.Decimal(10, 2)
+  costoUnitario Decimal @default(0) @db.Decimal(10, 2)
 
   venta    Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
   producto Producto @relation(fields: [productoId], references: [id])
@@ -271,9 +313,9 @@ model DetalleDevolucion {
   devolucion Devolucion @relation(fields: [devolucionId], references: [id], onDelete: Cascade)
   producto   Producto   @relation(fields: [productoId], references: [id])
 
+  @@unique([devolucionId, productoId])
   @@index([devolucionId])
   @@index([productoId])
-  @@unique([devolucionId, productoId])
 }
 
 model MetodoPago {
@@ -283,25 +325,25 @@ model MetodoPago {
   activo      Boolean  @default(true)
   createdAt   DateTime @default(now())
 
-  pagos  Pago[]
-  ventas Venta[]
+  pagos      Pago[]
+  ventas     Venta[]
   pagosVenta VentaPago[]
 }
 
 model VentaPago {
-  id              Int        @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   ventaId         Int
   metodoId        Int
-  monto           Decimal    @db.Decimal(10, 2)
+  monto           Decimal  @db.Decimal(10, 2)
   numeroOperacion String?
-  createdAt       DateTime   @default(now())
+  createdAt       DateTime @default(now())
 
   venta  Venta      @relation(fields: [ventaId], references: [id], onDelete: Cascade)
   metodo MetodoPago @relation(fields: [metodoId], references: [id])
 
+  @@unique([ventaId, metodoId])
   @@index([ventaId])
   @@index([metodoId])
-  @@unique([ventaId, metodoId])
 }
 
 model Pago {
@@ -340,21 +382,143 @@ model Asistencia {
 }
 
 model Configuracion {
-  id                  Int      @id @default(1)
-  logo                String?
-  nombre              String   @default("Fitness Group")
-  ruc                 String   @default("")
-  telefono            String   @default("")
-  email               String   @default("")
-  direccion           String   @default("")
-  emailNotificaciones String?  @default("")
-  moneda              String   @default("Sol peruano (PEN)")
-  nuevasVentas        Boolean  @default(true)
-  membresiasVencidas  Boolean  @default(true)
-  stockBajo           Boolean  @default(true)
-  alertasSistema      Boolean  @default(false)
-  reportesSemanales   Boolean  @default(true)
-  updatedAt           DateTime @updatedAt
+  id                     Int      @id @default(1)
+  logo                   String?
+  nombre                 String   @default("Fitness Group")
+  ruc                    String   @default("")
+  telefono               String   @default("")
+  email                  String   @default("")
+  direccion              String   @default("")
+  emailNotificaciones    String?  @default("")
+  moneda                 String   @default("Sol peruano (PEN)")
+  nuevasVentas           Boolean  @default(true)
+  membresiasVencidas     Boolean  @default(true)
+  stockBajo              Boolean  @default(true)
+  alertasSistema         Boolean  @default(false)
+  reportesSemanales      Boolean  @default(true)
+  serieBoleta            String   @default("B001")
+  serieFactura           String   @default("F001")
+  igvPorcentaje          Decimal  @default(18) @db.Decimal(5, 2)
+  facturacionElectronica Boolean  @default(false)
+  proveedorFacturacion   String?
+  updatedAt              DateTime @updatedAt
+}
+
+model MovimientoInventario {
+  id             Int                      @id @default(autoincrement())
+  productoId     Int
+  usuarioId      Int?
+  tipo           TipoMovimientoInventario
+  cantidad       Int
+  stockAnterior  Int
+  stockPosterior Int
+  costoUnitario  Decimal?                 @db.Decimal(10, 2)
+  referenciaTipo String?
+  referenciaId   Int?
+  motivo         String?
+  createdAt      DateTime                 @default(now())
+  producto       Producto                 @relation(fields: [productoId], references: [id])
+  usuario        Usuario?                 @relation(fields: [usuarioId], references: [id])
+
+  @@index([productoId, createdAt])
+  @@index([tipo])
+}
+
+model OrdenCompra {
+  id            Int                  @id @default(autoincrement())
+  codigo        String               @unique
+  proveedorId   Int
+  usuarioId     Int?
+  estado        EstadoOrdenCompra    @default(BORRADOR)
+  subtotal      Decimal              @default(0) @db.Decimal(12, 2)
+  impuesto      Decimal              @default(0) @db.Decimal(12, 2)
+  total         Decimal              @default(0) @db.Decimal(12, 2)
+  observaciones String?
+  fechaEsperada DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  proveedor     Proveedor            @relation(fields: [proveedorId], references: [id])
+  usuario       Usuario?             @relation(fields: [usuarioId], references: [id])
+  detalles      DetalleOrdenCompra[]
+
+  @@index([proveedorId, createdAt])
+  @@index([estado])
+}
+
+model DetalleOrdenCompra {
+  id               Int         @id @default(autoincrement())
+  ordenId          Int
+  productoId       Int
+  cantidad         Int
+  cantidadRecibida Int         @default(0)
+  costoUnitario    Decimal     @db.Decimal(10, 2)
+  subtotal         Decimal     @db.Decimal(12, 2)
+  orden            OrdenCompra @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  producto         Producto    @relation(fields: [productoId], references: [id])
+
+  @@unique([ordenId, productoId])
+  @@index([productoId])
+}
+
+model SesionCaja {
+  id             Int                    @id @default(autoincrement())
+  usuarioId      Int
+  estado         EstadoCaja             @default(ABIERTA)
+  montoInicial   Decimal                @db.Decimal(12, 2)
+  montoEsperado  Decimal?               @db.Decimal(12, 2)
+  montoContado   Decimal?               @db.Decimal(12, 2)
+  diferencia     Decimal?               @db.Decimal(12, 2)
+  observaciones  String?
+  abiertaAt      DateTime               @default(now())
+  cerradaAt      DateTime?
+  usuario        Usuario                @relation(fields: [usuarioId], references: [id])
+  movimientos    MovimientoCaja[]
+  conteos        ConteoCaja[]
+  conciliaciones ConciliacionPagoCaja[]
+
+  @@index([estado, abiertaAt])
+  @@index([usuarioId])
+}
+
+model ConteoCaja {
+  id           Int        @id @default(autoincrement())
+  sesionId     Int
+  denominacion Decimal    @db.Decimal(10, 2)
+  cantidad     Int
+  subtotal     Decimal    @db.Decimal(12, 2)
+  tipo         String
+  sesion       SesionCaja @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+
+  @@unique([sesionId, denominacion, tipo])
+}
+
+model ConciliacionPagoCaja {
+  id           Int        @id @default(autoincrement())
+  sesionId     Int
+  metodoId     Int?
+  metodoNombre String
+  esperado     Decimal    @db.Decimal(12, 2)
+  contado      Decimal    @db.Decimal(12, 2)
+  diferencia   Decimal    @db.Decimal(12, 2)
+  sesion       SesionCaja @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+
+  @@index([sesionId])
+}
+
+model MovimientoCaja {
+  id        Int                @id @default(autoincrement())
+  sesionId  Int
+  usuarioId Int?
+  ventaId   Int?
+  tipo      TipoMovimientoCaja
+  monto     Decimal            @db.Decimal(12, 2)
+  concepto  String
+  createdAt DateTime           @default(now())
+  sesion    SesionCaja         @relation(fields: [sesionId], references: [id])
+  usuario   Usuario?           @relation(fields: [usuarioId], references: [id])
+  venta     Venta?             @relation(fields: [ventaId], references: [id])
+
+  @@index([sesionId, createdAt])
 }
 
 model RefreshToken {
@@ -371,11 +535,11 @@ model RefreshToken {
 }
 
 model PasswordResetToken {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
   usuarioId Int
-  intentos  Int      @default(0)
-  createdAt DateTime @default(now())
+  intentos  Int       @default(0)
+  createdAt DateTime  @default(now())
   expiresAt DateTime
   usedAt    DateTime?
 

@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import { verificarToken } from '../../middlewares/auth.middleware.js';
+import { verificarPermiso } from '../../middlewares/permisos.middleware.js';
+import { validarSchema } from '../../middlewares/validacion.middleware.js';
+import { aperturaCajaSchema, cierreCajaSchema, movimientoCajaSchema } from '../../schemas/index.js';
+import { abrirCaja, cerrarCaja, obtenerCajaActual, obtenerHistorialCajas, registrarMovimiento } from './caja.controller.js';
+const router = Router();
+router.get('/actual', verificarToken, verificarPermiso('caja', 'ver'), obtenerCajaActual);
+router.get('/historial', verificarToken, verificarPermiso('caja', 'ver'), obtenerHistorialCajas);
+router.post('/abrir', verificarToken, verificarPermiso('caja', 'crear'), validarSchema(aperturaCajaSchema), abrirCaja);
+router.post('/movimientos', verificarToken, verificarPermiso('caja', 'crear'), validarSchema(movimientoCajaSchema), registrarMovimiento);
+router.post('/cerrar', verificarToken, verificarPermiso('caja', 'editar'), validarSchema(cierreCajaSchema), cerrarCaja);
+export default router;

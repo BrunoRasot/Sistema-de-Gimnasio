@@ -131,7 +131,7 @@ export const configuracionInfoSchema = z.object({
 export const permisoSchema = z.object({
   cargo: z.string().trim().min(1, 'El cargo es obligatorio').max(80),
   permisos: z.partialRecord(
-    z.enum(['dashboard', 'membresias', 'usuarios', 'productos', 'ventas', 'pagos', 'asistencias', 'reportes', 'configuracion']),
+    z.enum(['dashboard', 'membresias', 'usuarios', 'productos', 'inventario', 'compras', 'caja', 'ventas', 'pagos', 'asistencias', 'reportes', 'configuracion']),
     z.object({
       Ver: z.boolean(),
       Crear: z.boolean(),
@@ -150,4 +150,40 @@ export const asignarMembresiaSchema = z.object({
 export const renovarMembresiaSchema = z.object({
   planId: z.coerce.number().int().positive('El plan es obligatorio'),
   fechaInicio: z.string().date('La fecha de inicio es inválida').optional().nullable(),
+});
+
+export const ajusteInventarioSchema = z.object({
+  productoId: z.coerce.number().int().positive(),
+  cantidad: z.coerce.number().int().refine((value) => value !== 0, 'La cantidad no puede ser cero'),
+  motivo: z.string().trim().min(3).max(300),
+});
+
+export const ordenCompraSchema = z.object({
+  proveedorId: z.coerce.number().int().positive(),
+  fechaEsperada: z.string().datetime().optional().nullable(),
+  observaciones: z.string().trim().max(500).optional().nullable(),
+  items: z.array(z.object({
+    productoId: z.coerce.number().int().positive(),
+    cantidad: z.coerce.number().int().positive(),
+    costoUnitario: z.coerce.number().positive(),
+  })).min(1),
+});
+
+export const recepcionCompraSchema = z.object({
+  items: z.array(z.object({
+    detalleId: z.coerce.number().int().positive(),
+    cantidad: z.coerce.number().int().positive(),
+  })).min(1),
+});
+
+export const aperturaCajaSchema = z.object({ montoInicial: z.coerce.number().min(0) });
+export const movimientoCajaSchema = z.object({
+  tipo: z.enum(['INGRESO', 'EGRESO', 'RETIRO']),
+  monto: z.coerce.number().positive(),
+  concepto: z.string().trim().min(3).max(200),
+});
+export const cierreCajaSchema = z.object({
+  conteo: z.array(z.object({ denominacion: z.coerce.number().positive(), cantidad: z.coerce.number().int().min(0), tipo: z.enum(['BILLETE', 'MONEDA']) })).min(1),
+  conciliaciones: z.array(z.object({ metodoId: z.coerce.number().int().positive().optional().nullable(), metodoNombre: z.string().trim().min(1).max(100), contado: z.coerce.number().min(0) })).min(1),
+  observaciones: z.string().trim().max(500).optional().nullable(),
 });

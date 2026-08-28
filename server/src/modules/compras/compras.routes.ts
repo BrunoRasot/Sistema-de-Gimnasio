@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { verificarToken } from '../../middlewares/auth.middleware.js';
+import { verificarPermiso } from '../../middlewares/permisos.middleware.js';
+import { validarSchema } from '../../middlewares/validacion.middleware.js';
+import { ordenCompraSchema, recepcionCompraSchema } from '../../schemas/index.js';
+import { crearOrden, obtenerOrdenes, recibirOrden } from './compras.controller.js';
+const router = Router();
+router.get('/', verificarToken, verificarPermiso('compras', 'ver'), obtenerOrdenes);
+router.post('/', verificarToken, verificarPermiso('compras', 'crear'), validarSchema(ordenCompraSchema), crearOrden);
+router.post('/:id/recepciones', verificarToken, verificarPermiso('compras', 'editar'), validarSchema(recepcionCompraSchema), recibirOrden);
+export default router;

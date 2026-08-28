@@ -10,7 +10,11 @@ El repositorio contiene una SPA React y una API REST Express conectada a Postgre
 - Administración de usuarios, cargos y permisos por módulo y acción.
 - Clientes, planes, asignación, renovación y vencimiento automático de membresías.
 - Productos, categorías, proveedores, existencias y alertas de stock.
+- Kardex auditable con stock anterior/posterior, ajustes y referencias a cada operación.
+- Órdenes de compra, recepciones parciales y actualización de costo promedio ponderado.
+- Apertura, movimientos, cierre y arqueo de caja por usuario.
 - Punto de venta, descuentos, pagos mixtos, comprobantes internos y devoluciones.
+- Costo histórico por detalle de venta y base de configuración fiscal.
 - Registro y resumen de asistencias.
 - Reportes de ventas, membresías, asistencias e inventario.
 - Configuración del gimnasio, preferencias de notificación y cambio de contraseña.
@@ -107,7 +111,7 @@ pnpm run test:coverage
 
 ## Estado y alcance
 
-El sistema cubre una sola sede por instancia. Los comprobantes son internos y no constituyen documentos tributarios SUNAT. Los E2E del frontend usan jsdom; para una liberación definitiva se recomienda añadir Playwright contra un entorno completo y efectuar pruebas reales de carga, restauración y caída de infraestructura.
+El sistema cubre una sola sede por instancia. Los comprobantes son internos y no constituyen documentos tributarios SUNAT. El modelo incluye series, IGV y configuración de proveedor como base para una integración fiscal posterior; emitir documentos electrónicos exige integrar un PSE/OSE o el protocolo oficial y completar la homologación correspondiente. Los E2E del frontend usan jsdom; para una liberación definitiva se recomienda añadir Playwright contra un entorno completo y efectuar pruebas reales de carga, restauración y caída de infraestructura.
 
 ## Licencia
 
