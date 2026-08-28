@@ -1,0 +1,16 @@
+{
+	local_certs
+}
+
+https://localhost {
+	encode zstd gzip
+	reverse_proxy frontend:8080
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	log {
+		output stdout
+		format json
+	}
+}

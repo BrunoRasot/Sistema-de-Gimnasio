@@ -6,7 +6,7 @@ const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 export const refreshCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: 'lax',
+  sameSite: 'strict',
   path: '/api/auth',
   maxAge: sevenDaysMs,
 };

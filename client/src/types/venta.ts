@@ -9,6 +9,7 @@ export interface Venta {
   createdAt: string; metodoId: number; metodoPago: MetodoPagoVenta; detalles: DetalleVenta[];
   pagos?: Array<{ id: number; metodoId: number; monto: number | string; numeroOperacion?: string | null; metodo: MetodoPagoVenta }>;
   usuario?: { id: number; nombres: string; apellidos: string } | null;
+  comprobanteFiscal?: { id: number; tipo: string; estado: string; proveedor: string; clienteTipoDoc?: string | null; clienteNumeroDoc?: string | null; clienteRazonSocial?: string | null; clienteDireccion?: string | null; serie?: string | null; correlativo?: string | null; fechaEmision?: string | null; enlaceConsulta?: string | null; observaciones?: string | null } | null;
 }
 export interface Devolucion { id: number; ventaId: number; monto: number | string; motivo: string; createdAt: string; venta: Venta; detalles?: DetalleVenta[] }
 export interface CrearVentaInput { cliente?: string; miembroId?: number; metodoId?: number; numeroOperacion?: string; montoRecibido?: number; descuento?: number; pagos?: Array<{ metodoId: number; monto: number; numeroOperacion?: string }>; items: Array<{ productoId: number; cantidad: number }> }

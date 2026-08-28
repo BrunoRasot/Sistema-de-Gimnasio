@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import { verificarToken } from '../../middlewares/auth.middleware.js';
+import { verificarPermiso } from '../../middlewares/permisos.middleware.js';
+import { auditar } from '../../middlewares/auditoria.middleware.js';
+import { validarSchema } from '../../middlewares/validacion.middleware.js';
+import { cuentaCobrarSchema, abonoCuentaSchema } from '../../schemas/index.js';
+import { listarCartera, crearCuenta, registrarAbono, anularCuenta } from './cartera.controller.js';
+const router = Router();
+router.get('/', verificarToken, verificarPermiso('cartera', 'ver'), listarCartera);
+router.post('/', verificarToken, verificarPermiso('cartera', 'crear'), auditar('Cartera'), validarSchema(cuentaCobrarSchema), crearCuenta);
+router.post('/:id/abonos', verificarToken, verificarPermiso('cartera', 'editar'), auditar('Cartera'), validarSchema(abonoCuentaSchema), registrarAbono);
+router.patch('/:id/anular', verificarToken, verificarPermiso('cartera', 'eliminar'), auditar('Cartera'), anularCuenta);
+export default router;

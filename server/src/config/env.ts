@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import 'dotenv/config.js';
 import { z } from 'zod';
 
 const optional = <T extends z.ZodTypeAny>(schema: T) =>
@@ -20,6 +20,7 @@ const envSchema = z
   SMTP_PORT: z.coerce.number().int().positive().default(587),
   SMTP_SECURE: z.preprocess((value) => value === 'true' || value === true, z.boolean()).default(false),
   ADMIN_INITIAL_PASSWORD: optional(z.string().min(12)),
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'debug']).default('info'),
   })
   .superRefine((value, context) => {
     if (value.NODE_ENV !== 'production') return;
@@ -33,6 +34,11 @@ const envSchema = z
       context.addIssue({ code: 'custom', path: ['JWT_REFRESH_SECRET'], message: 'Los secretos JWT deben ser diferentes' });
     }
     if (!value.EMAIL_USER || !value.EMAIL_PASS) context.addIssue({ code: 'custom', path: ['EMAIL_USER'], message: 'El correo transaccional es obligatorio en producción para entregar OTP' });
+    if (!value.FRONTEND_URL) context.addIssue({ code: 'custom', path: ['FRONTEND_URL'], message: 'FRONTEND_URL es obligatorio en producción' });
+    if (value.FRONTEND_URL && new URL(value.FRONTEND_URL).protocol !== 'https:') context.addIssue({ code: 'custom', path: ['FRONTEND_URL'], message: 'FRONTEND_URL debe usar HTTPS en producción' });
+    for (const [key, secret] of [['JWT_ACCESS_SECRET', value.JWT_ACCESS_SECRET], ['JWT_REFRESH_SECRET', value.JWT_REFRESH_SECRET]] as const) {
+      if (secret && /(reemplazar|changeme|example|placeholder)/i.test(secret)) context.addIssue({ code: 'custom', path: [key], message: `${key} conserva un valor de ejemplo` });
+    }
   });
 
 export const parseEnv = (source: NodeJS.ProcessEnv) => {

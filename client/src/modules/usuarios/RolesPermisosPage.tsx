@@ -18,6 +18,9 @@ import {
   Warehouse,
   ClipboardList,
   Landmark,
+  CircleDollarSign,
+  ReceiptText,
+  History,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { obtenerCargosPermisos, obtenerPermisosBD, guardarPermisosBD } from '../../services/permisos.service';
@@ -34,6 +37,9 @@ const modulosSistema = [
   { id: 'caja', nombre: 'Caja y arqueo', icon: Landmark },
   { id: 'ventas', nombre: 'Ventas', icon: ShoppingCart },
   { id: 'pagos', nombre: 'Pagos', icon: CreditCard },
+  { id: 'cartera', nombre: 'Cuentas por cobrar', icon: CircleDollarSign },
+  { id: 'fiscal', nombre: 'Control fiscal SUNAT', icon: ReceiptText },
+  { id: 'auditoria', nombre: 'Auditoría', icon: History },
   { id: 'asistencias', nombre: 'Asistencias', icon: CalendarCheck },
   { id: 'reportes', nombre: 'Reportes', icon: BarChart3 },
   { id: 'configuracion', nombre: 'Configuración', icon: Settings },

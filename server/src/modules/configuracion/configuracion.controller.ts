@@ -37,6 +37,11 @@ export const actualizarInfo = async (req: Request, res: Response): Promise<any> 
         direccion: datos.direccion ?? '',
         moneda: datos.moneda,
         logo,
+        tipoEmpresa: datos.tipoEmpresa,
+        fechaInscripcion: datos.fechaInscripcion,
+        fechaInicioActividades: datos.fechaInicioActividades,
+        estadoRuc: datos.estadoRuc,
+        condicionRuc: datos.condicionRuc,
       },
     });
     return res.json({ mensaje: 'Información actualizada', config: configActualizada });
@@ -105,8 +110,13 @@ export const obtenerAlertasTiempoReal = async (req: Request, res: Response): Pro
   try {
     const config = await obtenerConfig();
     const alertas: any[] = [];
+    const usuarioId = Number((req as any).usuario?.id);
+    const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId }, select: { rol: true, cargo: true } });
+    if (!usuario) return res.status(401).json({ mensaje: 'Usuario no encontrado.' });
+    const permisos = usuario.rol === 'ADMIN' ? [] : await prisma.permiso.findMany({ where: { cargo: usuario.cargo, ver: true }, select: { modulo: true } });
+    const puede = (modulo: string) => usuario.rol === 'ADMIN' || permisos.some((p) => p.modulo === modulo);
 
-    if (config.nuevasVentas) {
+    if (config.nuevasVentas && puede('ventas')) {
       const ayer = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const ultimasVentas = await prisma.venta.findMany({
         where: { createdAt: { gte: ayer } },
@@ -124,7 +134,7 @@ export const obtenerAlertasTiempoReal = async (req: Request, res: Response): Pro
       });
     }
 
-    if (config.membresiasVencidas) {
+    if (config.membresiasVencidas && puede('membresias')) {
       const fechaLimite = new Date();
       fechaLimite.setDate(fechaLimite.getDate() + 3);
 
@@ -148,7 +158,7 @@ export const obtenerAlertasTiempoReal = async (req: Request, res: Response): Pro
       });
     }
 
-    if (config.stockBajo) {
+    if (config.stockBajo && (puede('productos') || puede('inventario'))) {
       const productos = await prisma.producto.findMany({
         where: { estado: 'Activo' },
       });
@@ -165,7 +175,7 @@ export const obtenerAlertasTiempoReal = async (req: Request, res: Response): Pro
       });
     }
 
-    if (config.reportesSemanales) {
+    if (config.reportesSemanales && puede('reportes')) {
       const inicioSemana = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
       const ventasSemana = await prisma.venta.findMany({
         where: { createdAt: { gte: inicioSemana }, estado: 'Completado' },
@@ -181,7 +191,7 @@ export const obtenerAlertasTiempoReal = async (req: Request, res: Response): Pro
       });
     }
 
-    if (config.alertasSistema) {
+    if (config.alertasSistema && puede('configuracion')) {
       const usuariosActivos = await prisma.usuario.count({ where: { activo: true } });
       const productosActivos = await prisma.producto.count({ where: { estado: 'Activo' } });
 

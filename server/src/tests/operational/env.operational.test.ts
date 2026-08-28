@@ -42,7 +42,12 @@ describe('Configuración operativa', () => {
       JWT_REFRESH_SECRET: 'refresh-secret-production-32-bytes-minimum',
       EMAIL_USER: 'otp@test.local',
       EMAIL_PASS: 'app-password-test',
+      FRONTEND_URL: 'https://gym.test.local',
     });
     expect(production.JWT_ACCESS_SECRET).not.toBe(production.JWT_REFRESH_SECRET);
+  });
+
+  it('rechaza HTTP y secretos de ejemplo en producción', () => {
+    expect(() => parseEnv({ ...base, NODE_ENV: 'production', FRONTEND_URL: 'http://gym.example.com', JWT_ACCESS_SECRET: 'reemplazar-access-secret-32-caracteres', JWT_REFRESH_SECRET: 'reemplazar-refresh-secret-32-caracteres', EMAIL_USER: 'otp@test.local', EMAIL_PASS: 'password' })).toThrow('Configuración de entorno inválida');
   });
 });

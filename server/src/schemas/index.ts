@@ -118,6 +118,11 @@ export const proveedorSchema = z.object({
   estado: z.boolean().default(true),
 });
 
+const logoSeguroSchema = z.string().max(2_800_000, 'El logo supera el tamaño permitido').refine(
+  (value) => value === '' || /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(value),
+  'El logo debe ser PNG, JPEG o WebP válido',
+);
+
 export const configuracionInfoSchema = z.object({
   nombre: z.string().min(1, 'El nombre del gimnasio es obligatorio'),
   ruc: z.string().optional().nullable(),
@@ -125,13 +130,18 @@ export const configuracionInfoSchema = z.object({
   email: z.string().email('Email inválido').optional().nullable(),
   direccion: z.string().optional().nullable(),
   moneda: z.string().min(1, 'La moneda es obligatoria'),
-  logo: z.string().optional().nullable(),
+  logo: logoSeguroSchema.optional().nullable(),
+  tipoEmpresa: z.string().trim().min(1).max(100).optional(),
+  fechaInscripcion: z.string().trim().min(1).max(20).optional(),
+  fechaInicioActividades: z.string().trim().min(1).max(20).optional(),
+  estadoRuc: z.string().trim().min(1).max(30).optional(),
+  condicionRuc: z.string().trim().min(1).max(30).optional(),
 });
 
 export const permisoSchema = z.object({
   cargo: z.string().trim().min(1, 'El cargo es obligatorio').max(80),
   permisos: z.partialRecord(
-    z.enum(['dashboard', 'membresias', 'usuarios', 'productos', 'inventario', 'compras', 'caja', 'ventas', 'pagos', 'asistencias', 'reportes', 'configuracion']),
+    z.enum(['dashboard', 'membresias', 'usuarios', 'productos', 'inventario', 'compras', 'caja', 'ventas', 'pagos', 'cartera', 'fiscal', 'auditoria', 'asistencias', 'reportes', 'configuracion']),
     z.object({
       Ver: z.boolean(),
       Crear: z.boolean(),
@@ -140,6 +150,45 @@ export const permisoSchema = z.object({
     }).strict(),
   ),
 }).strict();
+
+export const cuentaCobrarSchema = z.object({
+  miembroId: z.coerce.number().int().positive(),
+  membresiaId: z.coerce.number().int().positive().optional().nullable(),
+  concepto: z.string().trim().min(3).max(200),
+  montoTotal: z.coerce.number().positive(),
+  saldoInicial: z.coerce.number().min(0).optional(),
+  fechaVencimiento: z.string().datetime(),
+  observaciones: z.string().trim().max(500).optional().nullable(),
+}).refine((data) => (data.saldoInicial ?? data.montoTotal) <= data.montoTotal, { path: ['saldoInicial'], message: 'El saldo no puede superar el monto total' });
+
+export const abonoCuentaSchema = z.object({
+  metodoId: z.coerce.number().int().positive(),
+  monto: z.coerce.number().positive(),
+  numeroOperacion: z.string().trim().max(80).optional().nullable(),
+  observaciones: z.string().trim().max(300).optional().nullable(),
+});
+
+export const comprobanteFiscalSchema = z.object({
+  tipo: z.enum(['TICKET_INTERNO', 'BOLETA', 'FACTURA', 'NOTA_CREDITO', 'NOTA_DEBITO']),
+  estado: z.enum(['NO_APLICA', 'PENDIENTE', 'EMITIDO', 'ACEPTADO', 'RECHAZADO', 'ANULADO']),
+  proveedor: z.enum(['NINGUNO', 'SEE_SOL', 'PSE', 'OSE']),
+  clienteTipoDoc: z.string().trim().max(20).optional().nullable(),
+  clienteNumeroDoc: z.string().trim().max(20).optional().nullable(),
+  clienteRazonSocial: z.string().trim().max(200).optional().nullable(),
+  clienteDireccion: z.string().trim().max(300).optional().nullable(),
+  serie: z.string().trim().max(20).optional().nullable(),
+  correlativo: z.string().trim().max(30).optional().nullable(),
+  fechaEmision: z.string().datetime().optional().nullable(),
+  enlaceConsulta: z.string().url().max(1000).optional().nullable(),
+  observaciones: z.string().trim().max(500).optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (['EMITIDO', 'ACEPTADO'].includes(data.estado) && (!data.serie || !data.correlativo || !data.fechaEmision)) {
+    ctx.addIssue({ code: 'custom', message: 'Serie, correlativo y fecha son obligatorios al marcar como emitido', path: ['serie'] });
+  }
+  if (data.tipo === 'FACTURA' && (data.clienteTipoDoc !== 'RUC' || !/^\d{11}$/.test(data.clienteNumeroDoc || ''))) {
+    ctx.addIssue({ code: 'custom', message: 'Una factura requiere RUC de 11 dígitos', path: ['clienteNumeroDoc'] });
+  }
+});
 
 export const asignarMembresiaSchema = z.object({
   miembroId: z.coerce.number().int().positive('El cliente es obligatorio'),

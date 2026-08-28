@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { verificarToken } from '../../middlewares/auth.middleware.js';
+import { verificarPermiso } from '../../middlewares/permisos.middleware.js';
+import { validarSchema } from '../../middlewares/validacion.middleware.js';
+import { auditar } from '../../middlewares/auditoria.middleware.js';
+import { comprobanteFiscalSchema } from '../../schemas/index.js';
+import { listarPendientesFiscales, actualizarComprobanteFiscal } from './fiscal.controller.js';
+const router = Router();
+router.get('/', verificarToken, verificarPermiso('fiscal', 'ver'), listarPendientesFiscales);
+router.put('/:ventaId', verificarToken, verificarPermiso('fiscal', 'editar'), auditar('Fiscal'), validarSchema(comprobanteFiscalSchema), actualizarComprobanteFiscal);
+export default router;

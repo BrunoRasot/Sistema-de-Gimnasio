@@ -42,7 +42,7 @@ const SidebarItem = ({
       <Link
         to={path}
         onClick={closeSidebar}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
           isActive
             ? 'bg-[#e6b010] text-black font-bold shadow-md'
             : 'text-gray-400 hover:bg-gray-800 hover:text-white'
@@ -58,7 +58,7 @@ const SidebarItem = ({
     <div>
       <button
         onClick={onToggle}
-        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
           isActive || isOpenDropdown
             ? 'bg-gray-800 text-white font-semibold'
             : 'text-gray-400 hover:bg-gray-800/60 hover:text-white'
@@ -84,7 +84,7 @@ const SidebarItem = ({
                 key={sub.path}
                 to={sub.path}
                 onClick={closeSidebar}
-                className={`block py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
+                className={`block py-2 px-3 rounded-lg text-[11px] font-medium transition-colors ${
                   isSubActive
                     ? 'text-[#e6b010] bg-yellow-500/10 font-bold'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800/40'

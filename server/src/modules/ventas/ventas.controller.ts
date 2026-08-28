@@ -38,6 +38,7 @@ export const obtenerVentas = async (req: Request, res: Response): Promise<any> =
         detalles: {
           include: { producto: true },
         },
+        comprobanteFiscal: true,
       },
       orderBy: { createdAt: 'desc' },
       ...(req.query.page ? { skip: (page - 1) * pageSize, take: pageSize } : {}),
@@ -63,6 +64,9 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
       const metodos = await tx.metodoPago.findMany({ where: { id: { in: metodosIds }, activo: true } });
       if (metodos.length !== metodosIds.length) throw new Error('METODO_PAGO_INVALIDO');
       const metodo = metodos.find((m) => m.id === metodosIds[0])!;
+      const incluyeEfectivo = metodos.some((m) => /efectivo/i.test(m.nombre));
+      const cajaAbierta = usuarioId ? await tx.sesionCaja.findFirst({ where: { usuarioId: Number(usuarioId), estado: 'ABIERTA' } }) : null;
+      if (incluyeEfectivo && !cajaAbierta) throw new Error('CAJA_REQUERIDA');
 
       if (datos.miembroId) {
         const miembro = await tx.miembro.findFirst({ where: { id: datos.miembroId, estado: 'Activo' } });
@@ -136,6 +140,7 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
           pagos: {
             create: pagosNormalizados.map((pago) => ({ metodoId: pago.metodoId, monto: pago.monto, numeroOperacion: pago.numeroOperacion || null })),
           },
+          comprobanteFiscal: { create: { tipo: 'TICKET_INTERNO', estado: 'NO_APLICA', proveedor: 'NINGUNO' } },
         },
         include: { detalles: true, pagos: { include: { metodo: true } } },
       });
@@ -145,8 +150,7 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
         stockPosterior: detalle.stockAnterior - detalle.cantidad, costoUnitario: detalle.costoUnitario,
         referenciaTipo: 'VENTA', referenciaId: venta.id,
       })) });
-      const caja = usuarioId ? await tx.sesionCaja.findFirst({ where: { usuarioId: Number(usuarioId), estado: 'ABIERTA' } }) : null;
-      if (caja) await tx.movimientoCaja.create({ data: { sesionId: caja.id, usuarioId: Number(usuarioId), ventaId: venta.id, tipo: 'VENTA', monto: totalFinal, concepto: `Venta ${venta.codigo}` } });
+      if (cajaAbierta) await tx.movimientoCaja.create({ data: { sesionId: cajaAbierta.id, usuarioId: Number(usuarioId), ventaId: venta.id, tipo: 'VENTA', monto: totalFinal, concepto: `Venta ${venta.codigo}` } });
       return venta;
     });
 
@@ -156,6 +160,7 @@ export const crearVenta = async (req: Request, res: Response): Promise<any> => {
     if (error instanceof Error && error.message === 'METODO_PAGO_INVALIDO') {
       return res.status(400).json({ mensaje: 'El método de pago no existe o está inactivo.' });
     }
+    if (error instanceof Error && error.message === 'CAJA_REQUERIDA') return res.status(409).json({ mensaje: 'Debe abrir una caja antes de registrar una venta en efectivo.' });
     if (error instanceof Error && error.message === 'MIEMBRO_INVALIDO') return res.status(400).json({ mensaje: 'El miembro no existe o está inactivo.' });
     if (error instanceof Error && error.message === 'OPERACION_DUPLICADA') return res.status(409).json({ mensaje: 'El número de operación ya fue registrado.' });
     if (error instanceof Error && error.message === 'OPERACION_REQUERIDA') return res.status(400).json({ mensaje: 'El número de operación es obligatorio para pagos no efectivos.' });
@@ -183,6 +188,7 @@ export const obtenerComprobantePorId = async (req: Request, res: Response): Prom
         detalles: {
           include: { producto: true },
         },
+        comprobanteFiscal: true,
       },
     });
 

@@ -16,7 +16,7 @@ export const verificarToken = async (req: AuthRequest, res: Response, next: Next
 
   const token = authHeader.split(' ')[1];
   try {
-    const payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as any;
+    const payload = jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] }) as any;
     if (payload.type !== 'access') {
       return res
         .status(401)

@@ -1,2 +1,3 @@
 .env.production
+.secrets/
 backups/

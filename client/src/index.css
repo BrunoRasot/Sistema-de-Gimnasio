@@ -70,3 +70,6 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+@layer components {
+  .input { @apply w-full border border-gray-200 rounded-lg p-2 text-xs outline-none focus:border-gray-900; }
+}

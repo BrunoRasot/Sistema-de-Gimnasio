@@ -16,7 +16,12 @@ export default function InfoGimnasioPage() {
     direccion: '',
     zonaHoraria: 'América/Lima (GMT-5)',
     moneda: 'Sol peruano (PEN)',
-    logo: ''
+    logo: '',
+    tipoEmpresa: 'PERSONA NATURAL CON NEGOCIO',
+    fechaInscripcion: '07/04/2015',
+    fechaInicioActividades: '07/04/2015',
+    estadoRuc: 'ACTIVO',
+    condicionRuc: 'HABIDO'
   });
 
   const cargarDatos = async () => {
@@ -31,7 +36,12 @@ export default function InfoGimnasioPage() {
           direccion: data.direccion || '',
           zonaHoraria: data.zonaHoraria || 'América/Lima (GMT-5)',
           moneda: data.moneda || 'Sol peruano (PEN)',
-          logo: data.logo || ''
+          logo: data.logo || '',
+          tipoEmpresa: data.tipoEmpresa || 'PERSONA NATURAL CON NEGOCIO',
+          fechaInscripcion: data.fechaInscripcion || '07/04/2015',
+          fechaInicioActividades: data.fechaInicioActividades || '07/04/2015',
+          estadoRuc: data.estadoRuc || 'ACTIVO',
+          condicionRuc: data.condicionRuc || 'HABIDO'
         });
       }
     } catch (error) {
@@ -54,6 +64,9 @@ export default function InfoGimnasioPage() {
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
         return toast.error('La imagen es muy grande. Máximo 2MB.');
+      }
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+        return toast.error('Formato no permitido. Usa PNG, JPEG o WebP.');
       }
 
       const reader = new FileReader();
@@ -125,7 +138,7 @@ export default function InfoGimnasioPage() {
             type="file" 
             ref={fileInputRef}
             onChange={handleLogoUpload}
-            accept="image/png, image/jpeg, image/svg+xml"
+            accept="image/png, image/jpeg, image/webp"
             className="hidden"
           />
           <button 
@@ -180,6 +193,19 @@ export default function InfoGimnasioPage() {
                 onChange={handleChange}
                 className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
               />
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-5">
+            <div className="flex items-center justify-between mb-4">
+              <div><h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide">Información registral</h3><p className="text-[11px] text-gray-500 mt-0.5">Datos oficiales de la persona natural con negocio.</p></div>
+              <div className="flex gap-2"><span className="px-2 py-1 text-[10px] font-bold rounded-md bg-green-50 text-green-700 border border-green-200">{formData.estadoRuc}</span><span className="px-2 py-1 text-[10px] font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200">{formData.condicionRuc}</span></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-3 space-y-1.5"><label className="text-xs font-bold text-gray-700">Tipo de empresa</label><input className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700" name="tipoEmpresa" value={formData.tipoEmpresa} onChange={handleChange}/></div>
+              <div className="space-y-1.5"><label className="text-xs font-bold text-gray-700">Fecha de inscripción</label><input className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700" name="fechaInscripcion" value={formData.fechaInscripcion} onChange={handleChange}/></div>
+              <div className="space-y-1.5"><label className="text-xs font-bold text-gray-700">Inicio de actividades</label><input className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700" name="fechaInicioActividades" value={formData.fechaInicioActividades} onChange={handleChange}/></div>
+              <div className="grid grid-cols-2 gap-2"><div className="space-y-1.5"><label className="text-xs font-bold text-gray-700">Estado</label><input className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700" name="estadoRuc" value={formData.estadoRuc} onChange={handleChange}/></div><div className="space-y-1.5"><label className="text-xs font-bold text-gray-700">Condición</label><input className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700" name="condicionRuc" value={formData.condicionRuc} onChange={handleChange}/></div></div>
             </div>
           </div>
 

@@ -53,6 +53,7 @@ jobs:
       - run: pnpm run typecheck
       - run: pnpm run test:coverage
       - run: pnpm run build
+      - run: node -e "import('./dist/config/env.js').then(() => console.log('compiled runtime ok'))"
 
   frontend:
     runs-on: ubuntu-latest
@@ -82,4 +83,3 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker compose --env-file .env.production.example config --quiet
       - run: docker compose --env-file .env.production.example build backend migrate frontend
-

@@ -5,7 +5,8 @@ import { logger } from '../utils/logger.js';
 const camposSensibles = new Set(['password', 'nuevapassword', 'confirmpassword', 'actual', 'nueva', 'token', 'refreshtoken', 'codigootp']);
 const ocultarSecretos = (valor: unknown): unknown => {
   if (Array.isArray(valor)) return valor.map(ocultarSecretos);
-  if (valor && typeof valor === 'object') return Object.fromEntries(Object.entries(valor).map(([clave, contenido]) => [clave, camposSensibles.has(clave.toLowerCase()) ? '***OCULTO***' : ocultarSecretos(contenido)]));
+  if (typeof valor === 'string' && valor.length > 2000) return `[CONTENIDO OMITIDO: ${valor.length} caracteres]`;
+  if (valor && typeof valor === 'object') return Object.fromEntries(Object.entries(valor).map(([clave, contenido]) => [clave, camposSensibles.has(clave.toLowerCase()) ? '***OCULTO***' : clave.toLowerCase() === 'logo' ? '[IMAGEN OMITIDA]' : ocultarSecretos(contenido)]));
   return valor;
 };
 

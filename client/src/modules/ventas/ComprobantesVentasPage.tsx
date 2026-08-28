@@ -5,6 +5,7 @@ import { Search, Printer, Loader2, FileText, Download } from 'lucide-react';
 import { ventasService } from '../../services/ventas.service';
 import toast from 'react-hot-toast';
 import type { Venta } from '../../types/venta';
+import { configuracionService } from '../../services/configuracion.service';
 
 export default function ComprobantesVentasPage() {
   const [searchParams] = useSearchParams();
@@ -13,6 +14,7 @@ export default function ComprobantesVentasPage() {
   const [comprobanteId, setComprobanteId] = useState(idParam || '');
   const [comprobante, setComprobante] = useState<Venta | null>(null);
   const [cargando, setCargando] = useState(false);
+  const [gimnasio, setGimnasio] = useState<any>({ nombre: 'TEMPLO GYM TU GIMNASIO', ruc: '10218015412', direccion: '' });
 
   const buscarComprobante = useCallback(async (idToSearch?: string) => {
     const targetId = idToSearch || comprobanteId;
@@ -33,8 +35,9 @@ export default function ComprobantesVentasPage() {
     if (!comprobante) return;
     const [{ jsPDF }, autoTableModule, QRCode] = await Promise.all([import('jspdf'), import('jspdf-autotable'), import('qrcode')]);
     const doc = new jsPDF();
-    doc.setFontSize(16); doc.text('TemploGym S.A.C.', 14, 18);
-    doc.setFontSize(9); doc.text(`Comprobante interno ${comprobante.codigo}`, 14, 26);
+    doc.setFontSize(16); doc.text(gimnasio.nombre, 14, 18);
+    doc.setFontSize(9); doc.text(`Documento interno de operación ${comprobante.codigo}`, 14, 26);
+    doc.text(`RUC: ${gimnasio.ruc}`, 140, 18);
     doc.text(`Fecha: ${new Date(comprobante.createdAt).toLocaleString()}`, 14, 32);
     doc.text(`Cliente: ${comprobante.cliente || 'Público General'}`, 14, 38);
     autoTableModule.default(doc, {
@@ -49,10 +52,12 @@ export default function ComprobantesVentasPage() {
     doc.setFontSize(12); doc.text(`Total: S/ ${Number(comprobante.total).toFixed(2)}`, 140, finalY + 13);
     const qr = await QRCode.default.toDataURL(`${comprobante.codigo}|${comprobante.total}|${comprobante.createdAt}`);
     doc.addImage(qr, 'PNG', 14, finalY, 28, 28);
+    doc.setFontSize(8); doc.setTextColor(180, 80, 0); doc.text('DOCUMENTO INTERNO — NO CONSTITUYE COMPROBANTE DE PAGO ELECTRÓNICO SUNAT', 14, finalY + 38);
     doc.save(`${comprobante.codigo}.pdf`);
   };
 
   useEffect(() => {
+    configuracionService.obtenerDatos().then(setGimnasio).catch(() => undefined);
     if (idParam) {
       buscarComprobante(idParam);
     }
@@ -68,7 +73,7 @@ export default function ComprobantesVentasPage() {
           </div>
           <div>
             <h1 className="text-base font-bold text-gray-900 tracking-wide">Comprobante de Venta</h1>
-            <p className="text-[11px] text-gray-500 mt-0.5">Visualiza el detalle de boletas y tickets electrónicos.</p>
+            <p className="text-[11px] text-gray-500 mt-0.5">Visualiza documentos internos y su referencia fiscal registrada.</p>
           </div>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -96,9 +101,10 @@ export default function ComprobantesVentasPage() {
         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4 w-full">
           <div className="flex justify-between items-start border-b border-gray-100 pb-4">
             <div>
-              <h2 className="text-sm font-bold text-gray-900">TemploGym S.A.C.</h2>
-              <p className="text-[10px] text-gray-500">RUC: 20600000001</p>
-              <p className="text-[10px] text-gray-500">Av. Principal 123 - Ica, Perú</p>
+              <h2 className="text-sm font-bold text-gray-900">{gimnasio.nombre}</h2>
+              <p className="text-[10px] text-gray-500">RUC: {gimnasio.ruc}</p>
+              <p className="text-[10px] text-gray-500">{gimnasio.tipoEmpresa}</p>
+              {gimnasio.direccion && <p className="text-[10px] text-gray-500">{gimnasio.direccion}</p>}
             </div>
             <div className="text-right">
               <span className="px-2.5 py-0.5 bg-yellow-50 text-[#e6b010] border border-yellow-200 rounded-md font-mono font-bold text-xs">
@@ -109,6 +115,7 @@ export default function ComprobantesVentasPage() {
           </div>
 
           <div className="text-xs space-y-1 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
+            <div className="mb-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-[10px] font-bold text-amber-900 uppercase tracking-wide">Documento interno de operación — no constituye comprobante de pago electrónico SUNAT.</div>
             <p><strong className="text-gray-700">Cliente:</strong> {comprobante.cliente || 'Público General'}</p>
             <p><strong className="text-gray-700">Método de Pago:</strong> {comprobante.pagos && comprobante.pagos.length > 1 ? 'Pago mixto' : comprobante.metodoPago?.nombre || 'No especificado'}</p>
             {comprobante.pagos && comprobante.pagos.length > 1 && <div className="mt-2 space-y-1 border-t border-gray-200 pt-2">{comprobante.pagos.map((pago) => <p key={pago.id}><strong>{pago.metodo.nombre}:</strong> S/ {Number(pago.monto).toFixed(2)} {pago.numeroOperacion ? `· Op. ${pago.numeroOperacion}` : ''}</p>)}</div>}
@@ -123,6 +130,7 @@ export default function ComprobantesVentasPage() {
             ) : null}
 
             <p><strong className="text-gray-700">Estado:</strong> {comprobante.estado}</p>
+            {comprobante.comprobanteFiscal?.serie && <p><strong className="text-gray-700">Referencia SUNAT registrada:</strong> {comprobante.comprobanteFiscal.serie}-{comprobante.comprobanteFiscal.correlativo} · {comprobante.comprobanteFiscal.estado}</p>}
           </div>
 
           <div className="overflow-x-auto">
@@ -165,7 +173,7 @@ export default function ComprobantesVentasPage() {
         </div>
       ) : (
         <div className="bg-white p-14 text-center rounded-xl border border-gray-200 shadow-sm text-gray-400 text-xs w-full">
-          Selecciona o busca un comprobante válido para visualizar su contenido fiscal.
+          Selecciona o busca una venta para visualizar su documento interno.
         </div>
       )}
     </div>

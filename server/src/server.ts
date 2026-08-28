@@ -15,6 +15,10 @@ export const startServer = () => {
   const server = app.listen(env.PORT, () => {
     logger.info(`Servidor escuchando en el puerto ${env.PORT}`);
   });
+  server.requestTimeout = 30_000;
+  server.headersTimeout = 15_000;
+  server.keepAliveTimeout = 5_000;
+  server.maxRequestsPerSocket = 1_000;
 
   let shuttingDown = false;
   const shutdown = async (signal: NodeJS.Signals) => {
@@ -22,7 +26,10 @@ export const startServer = () => {
     shuttingDown = true;
     logger.info(`Señal ${signal} recibida; iniciando apagado controlado`);
     scheduledTask.stop();
+    const forceClose = setTimeout(() => server.closeAllConnections(), 10_000);
+    forceClose.unref();
     await closeHttpServer(server);
+    clearTimeout(forceClose);
     await prisma.$disconnect();
     logger.info('Servidor detenido correctamente');
   };

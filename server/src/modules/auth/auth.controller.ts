@@ -285,7 +285,7 @@ export const login = async (req: Request, res: Response): Promise<any> => {
     }
 
     const codigo = crypto.randomInt(100000, 1000000).toString();
-    logger.info(`Código OTP generado para el usuario ID ${usuario.id} (${usuario.email})`);
+    logger.info(`Código OTP generado para el usuario ID ${usuario.id}`);
 
     const expiracionOtp = new Date(Date.now() + otpMinutes * 60 * 1000);
 
@@ -417,13 +417,13 @@ export const renovarToken = async (req: Request, res: Response): Promise<any> =>
       return res.status(401).json({ mensaje: 'No se encontró la sesión activa.' });
     }
 
-    const payload = jwt.verify(tokenCookie, env.JWT_REFRESH_SECRET) as jwt.JwtPayload;
+    const payload = jwt.verify(tokenCookie, env.JWT_REFRESH_SECRET, { algorithms: ['HS256'] }) as jwt.JwtPayload;
     if (payload.type !== 'refresh') {
       return res.status(403).json({ mensaje: 'Token de sesión inválido.' });
     }
 
     const tokenRecord = await prisma.refreshToken.findFirst({
-      where: { token: { in: [hashRefreshToken(tokenCookie), tokenCookie] } },
+      where: { token: hashRefreshToken(tokenCookie) },
       include: { usuario: true },
     });
 
@@ -502,7 +502,7 @@ export const logout = async (req: Request, res: Response): Promise<any> => {
     const tokenCookie = req.cookies?.refreshToken;
     if (tokenCookie) {
       await prisma.refreshToken.deleteMany({
-        where: { token: { in: [hashRefreshToken(tokenCookie), tokenCookie] } },
+        where: { token: hashRefreshToken(tokenCookie) },
       });
     }
     res.clearCookie('refreshToken', clearRefreshCookieOptions);

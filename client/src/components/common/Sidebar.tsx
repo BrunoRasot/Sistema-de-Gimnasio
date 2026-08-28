@@ -62,7 +62,7 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
       <nav className="flex-1 overflow-y-auto px-3 pb-6 space-y-5 custom-scrollbar">
         {menuGroups.map((group, index) => (
           <div key={index}>
-            <h3 className="mb-2 px-3 text-[10px] font-bold tracking-widest text-gray-500 uppercase">
+            <h3 className="mb-2 px-3 text-[9px] font-bold tracking-widest text-gray-500 uppercase">
               {group.title}
             </h3>
             <div className="space-y-1">

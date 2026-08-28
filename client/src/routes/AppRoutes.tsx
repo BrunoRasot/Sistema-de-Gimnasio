@@ -40,6 +40,11 @@ const KardexPage = lazy(() => import('../modules/inventario/KardexPage'));
 const OrdenesCompraPage = lazy(() => import('../modules/compras/OrdenesCompraPage'));
 const CajaPage = lazy(() => import('../modules/caja/CajaPage'));
 const HistorialCajaPage = lazy(() => import('../modules/caja/HistorialCajaPage'));
+const CuentasCobrarPage = lazy(() => import('../modules/cartera/CuentasCobrarPage'));
+const ControlFiscalPage = lazy(() => import('../modules/fiscal/ControlFiscalPage'));
+const AlertasPage = lazy(() => import('../modules/control/AlertasPage'));
+const AuditoriaPage = lazy(() => import('../modules/control/AuditoriaPage'));
+const ExportacionesPage = lazy(() => import('../modules/reportes/ExportacionesPage'));
 
 const AdminOnly = ({ children }: { children: React.ReactNode }) => {
   try {
@@ -116,6 +121,7 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard/alertas" element={<AlertasPage />} />
 
             {/* Submódulos Membresías */}
             <Route path="/membresias" element={<Navigate to="/membresias/planes" replace />} />
@@ -153,6 +159,8 @@ const AppRoutes = () => {
             <Route path="/pagos" element={<Navigate to="/pagos/registro" replace />} />
             <Route path="/pagos/registro" element={<RegistroPagosPage />} />
             <Route path="/pagos/metodos" element={<RequireAction modulo="pagos" accion="editar"><MetodosPagoPage /></RequireAction>} />
+            <Route path="/cartera" element={<CuentasCobrarPage />} />
+            <Route path="/fiscal" element={<ControlFiscalPage />} />
 
             {/* Submódulos Asistencias */}
             <Route path="/asistencias" element={<Navigate to="/asistencias/registro" replace />} />
@@ -165,12 +173,14 @@ const AppRoutes = () => {
             <Route path="/reportes/membresias" element={<ReportesMembresiasPage />} />
             <Route path="/reportes/asistencias" element={<ReportesAsistenciasPage />} />
             <Route path="/reportes/inventario" element={<ReportesInventarioPage />} />
+            <Route path="/reportes/exportaciones" element={<ExportacionesPage />} />
 
             {/* Submódulos Configuración */}
             <Route path="/configuracion" element={<Navigate to="/configuracion/info" replace />} />
             <Route path="/configuracion/info" element={<InfoGimnasioPage />} />
             <Route path="/configuracion/notificaciones" element={<NotificacionesPage />} />
             <Route path="/configuracion/seguridad" element={<SeguridadPage />} />
+            <Route path="/auditoria" element={<AuditoriaPage />} />
           </Route>
         </Route>
       </Routes>

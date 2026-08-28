@@ -16,6 +16,9 @@ import healthRoutes from './health/health.routes.js';
 import inventarioRoutes from './inventario/inventario.routes.js';
 import comprasRoutes from './compras/compras.routes.js';
 import cajaRoutes from './caja/caja.routes.js';
+import carteraRoutes from './cartera/cartera.routes.js';
+import fiscalRoutes from './fiscal/fiscal.routes.js';
+import controlRoutes from './control/control.routes.js';
 
 const apiRouter = Router();
 
@@ -36,5 +39,8 @@ apiRouter.use('/configuracion', configuracionRoutes);
 apiRouter.use('/inventario', inventarioRoutes);
 apiRouter.use('/compras', comprasRoutes);
 apiRouter.use('/caja', cajaRoutes);
+apiRouter.use('/cartera', carteraRoutes);
+apiRouter.use('/fiscal', fiscalRoutes);
+apiRouter.use('/control', controlRoutes);
 
 export { apiRouter };

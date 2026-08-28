@@ -11,6 +11,10 @@ import {
   Warehouse,
   ClipboardList,
   Landmark,
+  BellRing,
+  CircleDollarSign,
+  ReceiptText,
+  History,
   LucideIcon
 } from 'lucide-react';
 
@@ -38,6 +42,7 @@ export const menuGroups: MenuGroup[] = [
     title: 'GENERAL',
     items: [
       { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }
+      ,{ path: '/dashboard/alertas', label: 'Centro de Alertas', icon: BellRing }
     ]
   },
   {
@@ -68,7 +73,7 @@ export const menuGroups: MenuGroup[] = [
     ]
   },
   {
-    title: 'COMERCIAL',
+    title: 'VENTAS Y ATENCIÓN',
     items: [
       {
         path: '/ventas',
@@ -89,16 +94,16 @@ export const menuGroups: MenuGroup[] = [
         ]
       },
       {
-        path: '/caja', label: 'Caja', icon: Landmark,
-        subItems: [{ path: '/caja/turno', label: 'Turno y arqueo' }, { path: '/caja/historial', label: 'Historial de cuadres' }]
-      },
-      { 
-        path: '/pagos', label: 'Pagos', icon: CreditCard,
-        subItems: [
-          { path: '/pagos/registro', label: 'Otros ingresos' },
-          { path: '/pagos/metodos', label: 'Métodos de Pago', requiredAction: 'editar' },
-        ]
-      },
+        path: '/fiscal', label: 'Control SUNAT', icon: ReceiptText
+      }
+    ]
+  },
+  {
+    title: 'FINANZAS Y CAJA',
+    items: [
+      { path: '/caja', label: 'Caja', icon: Landmark, subItems: [{ path: '/caja/turno', label: 'Turno y arqueo' }, { path: '/caja/historial', label: 'Historial de cuadres' }] },
+      { path: '/cartera', label: 'Cuentas por Cobrar', icon: CircleDollarSign },
+      { path: '/pagos', label: 'Pagos', icon: CreditCard, subItems: [{ path: '/pagos/registro', label: 'Otros ingresos' }, { path: '/pagos/metodos', label: 'Métodos de Pago', requiredAction: 'editar' }] },
     ]
   },
   {
@@ -128,12 +133,13 @@ export const menuGroups: MenuGroup[] = [
           { path: '/reportes/membresias', label: 'Membresías' },
           { path: '/reportes/asistencias', label: 'Asistencias' },
           { path: '/reportes/inventario', label: 'Inventario' },
+          { path: '/reportes/exportaciones', label: 'Exportaciones' },
         ]
       },
     ]
   },
   {
-    title: 'CONFIGURACIÓN',
+    title: 'ADMINISTRACIÓN',
     items: [
       { 
         path: '/configuracion', 
@@ -145,6 +151,7 @@ export const menuGroups: MenuGroup[] = [
           { path: '/configuracion/seguridad', label: 'Seguridad' },
         ]
       },
+      { path: '/auditoria', label: 'Auditoría', icon: History, subItems: [{ path: '/auditoria', label: 'Registro de actividad', adminOnly: true }] },
     ]
   }
 ];

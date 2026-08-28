@@ -17,6 +17,14 @@ COPY prisma ./prisma
 COPY src ./src
 RUN pnpm exec prisma generate && pnpm run build
 
+FROM builder AS production-dependencies
+RUN pnpm prune --prod
+
+FROM builder AS migrator
+ENV NODE_ENV=production
+USER node
+CMD ["./node_modules/.bin/prisma", "migrate", "deploy"]
+
 FROM node:24-bookworm-slim AS runner
 ENV NODE_ENV=production
 WORKDIR /app
@@ -26,10 +34,8 @@ RUN apt-get update \
     && mkdir -p /app/logs \
     && chown node:node /app/logs
 COPY --chown=node:node --from=builder /app/package.json ./package.json
-COPY --chown=node:node --from=builder /app/node_modules ./node_modules
-COPY --chown=node:node --from=builder /app/prisma.config.ts ./prisma.config.ts
-COPY --chown=node:node --from=builder /app/prisma ./prisma
+COPY --chown=node:node --from=production-dependencies /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/dist ./dist
 USER node
 EXPOSE 3000
-CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && if [ \"$RUN_SEED\" = \"true\" ]; then node dist/prisma/seed.js; fi && node dist/index.js"]
+CMD ["node", "dist/index.js"]

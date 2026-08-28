@@ -68,6 +68,38 @@ enum TipoMovimientoCaja {
   RETIRO
 }
 
+enum TipoComprobanteFiscal {
+  TICKET_INTERNO
+  BOLETA
+  FACTURA
+  NOTA_CREDITO
+  NOTA_DEBITO
+}
+
+enum EstadoComprobanteFiscal {
+  NO_APLICA
+  PENDIENTE
+  EMITIDO
+  ACEPTADO
+  RECHAZADO
+  ANULADO
+}
+
+enum ProveedorEmisionFiscal {
+  NINGUNO
+  SEE_SOL
+  PSE
+  OSE
+}
+
+enum EstadoCuentaCobrar {
+  PENDIENTE
+  PARCIAL
+  PAGADA
+  VENCIDA
+  ANULADA
+}
+
 model Usuario {
   id                    Int                    @id @default(autoincrement())
   foto                  String?
@@ -104,6 +136,7 @@ model Usuario {
   ordenesCompra         OrdenCompra[]
   sesionesCaja          SesionCaja[]
   movimientosCaja       MovimientoCaja[]
+  abonosCartera         AbonoCuentaCobrar[]
 }
 
 model Permiso {
@@ -148,6 +181,7 @@ model Miembro {
   asistencias Asistencia[]
   compras     Venta[]
   pagos       Pago[]
+  cuentasCobrar CuentaCobrar[]
 
   @@index([estado])
 }
@@ -165,6 +199,7 @@ model Membresia {
 
   miembro Miembro @relation(fields: [miembroId], references: [id])
   plan    Plan    @relation(fields: [planId], references: [id])
+  cuentaCobrar CuentaCobrar?
 
   @@index([fechaFin])
   @@index([estado])
@@ -263,11 +298,77 @@ model Venta {
   devoluciones    Devolucion[]
   pagos           VentaPago[]
   movimientosCaja MovimientoCaja[]
+  comprobanteFiscal ComprobanteFiscal?
 
   @@index([createdAt])
   @@index([estado])
   @@index([usuarioId])
   @@index([miembroId])
+  @@index([metodoId])
+}
+
+model ComprobanteFiscal {
+  id                Int                      @id @default(autoincrement())
+  ventaId           Int                      @unique
+  tipo              TipoComprobanteFiscal    @default(TICKET_INTERNO)
+  estado            EstadoComprobanteFiscal  @default(NO_APLICA)
+  proveedor         ProveedorEmisionFiscal    @default(NINGUNO)
+  clienteTipoDoc    String?
+  clienteNumeroDoc  String?
+  clienteRazonSocial String?
+  clienteDireccion  String?
+  serie             String?
+  correlativo       String?
+  fechaEmision      DateTime?
+  enlaceConsulta    String?
+  archivoPdf        String?
+  archivoXml        String?
+  archivoCdr        String?
+  observaciones     String?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  venta             Venta                    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+
+  @@unique([serie, correlativo])
+  @@index([estado, createdAt])
+}
+
+model CuentaCobrar {
+  id             Int                 @id @default(autoincrement())
+  codigo         String              @unique
+  miembroId      Int
+  membresiaId    Int?                @unique
+  concepto       String
+  montoTotal     Decimal             @db.Decimal(12, 2)
+  saldo          Decimal             @db.Decimal(12, 2)
+  fechaEmision   DateTime            @default(now())
+  fechaVencimiento DateTime
+  estado         EstadoCuentaCobrar  @default(PENDIENTE)
+  observaciones  String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  miembro        Miembro             @relation(fields: [miembroId], references: [id])
+  membresia      Membresia?          @relation(fields: [membresiaId], references: [id])
+  abonos         AbonoCuentaCobrar[]
+
+  @@index([estado, fechaVencimiento])
+  @@index([miembroId])
+}
+
+model AbonoCuentaCobrar {
+  id          Int           @id @default(autoincrement())
+  cuentaId    Int
+  metodoId    Int
+  usuarioId   Int?
+  monto       Decimal       @db.Decimal(12, 2)
+  numeroOperacion String?
+  observaciones String?
+  createdAt   DateTime      @default(now())
+  cuenta      CuentaCobrar  @relation(fields: [cuentaId], references: [id])
+  metodo      MetodoPago    @relation(fields: [metodoId], references: [id])
+  usuario     Usuario?      @relation(fields: [usuarioId], references: [id])
+
+  @@index([cuentaId, createdAt])
   @@index([metodoId])
 }
 
@@ -328,6 +429,7 @@ model MetodoPago {
   pagos      Pago[]
   ventas     Venta[]
   pagosVenta VentaPago[]
+  abonosCartera AbonoCuentaCobrar[]
 }
 
 model VentaPago {
@@ -384,8 +486,13 @@ model Asistencia {
 model Configuracion {
   id                     Int      @id @default(1)
   logo                   String?
-  nombre                 String   @default("Fitness Group")
-  ruc                    String   @default("")
+  nombre                 String   @default("TEMPLO GYM TU GIMNASIO")
+  ruc                    String   @default("10218015412")
+  tipoEmpresa            String   @default("PERSONA NATURAL CON NEGOCIO")
+  fechaInscripcion       String   @default("07/04/2015")
+  fechaInicioActividades String   @default("07/04/2015")
+  estadoRuc              String   @default("ACTIVO")
+  condicionRuc           String   @default("HABIDO")
   telefono               String   @default("")
   email                  String   @default("")
   direccion              String   @default("")

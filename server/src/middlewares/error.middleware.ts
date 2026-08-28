@@ -2,7 +2,7 @@ import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { logger } from '../utils/logger.js';
 
 export const notFoundHandler: RequestHandler = (req, res) => {
-  res.status(404).json({ mensaje: 'Ruta no encontrada', ruta: req.originalUrl });
+  res.status(404).json({ mensaje: 'Ruta no encontrada', ...(process.env.NODE_ENV === 'production' ? {} : { ruta: req.originalUrl }) });
 };
 
 export const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {

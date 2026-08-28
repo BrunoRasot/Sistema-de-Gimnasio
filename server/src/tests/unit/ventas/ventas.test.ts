@@ -12,6 +12,7 @@ describe('Pruebas del módulo de Ventas y Devoluciones', () => {
   let ventaCodigo: string;
   let metodoId: number;
   let usuarioTestId: number;
+  let sesionCajaId: number;
 
   beforeAll(async () => {
     const residuos = await prisma.producto.findMany({ where: { sku: 'SKU-VNT' }, select: { id: true } });
@@ -59,6 +60,8 @@ describe('Pruebas del módulo de Ventas y Devoluciones', () => {
       create: { nombre: 'Efectivo', activo: true },
     });
     metodoId = metodo.id;
+    const caja = await prisma.sesionCaja.create({ data: { usuarioId: usuarioTestId, montoInicial: 100 } });
+    sesionCajaId = caja.id;
   });
 
   it('Debería registrar una venta y descontar stock', async () => {
@@ -91,6 +94,7 @@ describe('Pruebas del módulo de Ventas y Devoluciones', () => {
   });
 
   afterAll(async () => {
+    if (sesionCajaId) await prisma.movimientoCaja.deleteMany({ where: { sesionId: sesionCajaId } });
     if (ventaCodigo) {
       const devolucion = await prisma.devolucion.findFirst({
         where: { venta: { codigo: ventaCodigo } },
@@ -104,6 +108,9 @@ describe('Pruebas del módulo de Ventas y Devoluciones', () => {
       await prisma.producto.deleteMany({ where: { id: productoId } });
     }
     if (categoriaId) await prisma.categoria.deleteMany({ where: { id: categoriaId } });
+    if (sesionCajaId) {
+      await prisma.sesionCaja.deleteMany({ where: { id: sesionCajaId } });
+    }
     if (usuarioTestId) await prisma.usuario.deleteMany({ where: { id: usuarioTestId } });
   });
 });

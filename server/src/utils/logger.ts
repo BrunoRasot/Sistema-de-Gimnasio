@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { env } from '../config/env.js';
 
 const levels = {
   error: 0,
@@ -42,8 +43,8 @@ const transports = [
 ];
 
 export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL ?? 'info',
+  level: env.LOG_LEVEL,
   levels,
-  format: process.env.NODE_ENV === 'production' ? productionFormat : humanFormat,
+  format: env.NODE_ENV === 'production' ? productionFormat : humanFormat,
   transports,
 });

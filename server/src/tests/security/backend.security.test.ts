@@ -10,6 +10,8 @@ describe('Seguridad HTTP del backend', () => {
     expect(response.headers['x-content-type-options']).toBe('nosniff');
     expect(response.headers['x-frame-options']).toBe('SAMEORIGIN');
     expect(response.headers['content-security-policy']).toBeDefined();
+    expect(response.headers['x-powered-by']).toBeUndefined();
+    expect(response.headers['cache-control']).toBe('no-store');
   });
 
   it('rechaza tokens manipulados', async () => {
@@ -54,6 +56,16 @@ describe('Seguridad HTTP del backend', () => {
       .set('Access-Control-Request-Method', 'POST');
     expect(response.headers['access-control-allow-origin']).toBeUndefined();
     expect(response.status).toBeGreaterThanOrEqual(400);
+  });
+
+  it('bloquea mutaciones declaradas como cross-site', async () => {
+    const response = await request(app).post('/api/auth/logout').set('Sec-Fetch-Site', 'cross-site');
+    expect(response.status).toBe(403);
+  });
+
+  it('rechaza cuerpos con un tipo de contenido no permitido', async () => {
+    const response = await request(app).post('/api/auth/login').set('Content-Type', 'text/plain').send('usuario=x');
+    expect(response.status).toBe(415);
   });
 
   it('limita intentos excesivos de login', async () => {

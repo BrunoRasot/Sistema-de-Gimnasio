@@ -23,8 +23,11 @@ services:
       - app
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,noexec,nosuid,nodev
+    pids_limit: 100
 
 volumes:
   caddy_data:
   caddy_config:
-

@@ -14,11 +14,14 @@ El repositorio contiene una SPA React y una API REST Express conectada a Postgre
 - Órdenes de compra, recepciones parciales y actualización de costo promedio ponderado.
 - Apertura, movimientos, cierre y arqueo de caja por usuario.
 - Punto de venta, descuentos, pagos mixtos, comprobantes internos y devoluciones.
+- Control fiscal provisional para vincular ventas con comprobantes emitidos mediante SEE-SOL, PSE u OSE.
+- Cuentas por cobrar, vencimientos, abonos parciales y morosidad.
 - Costo histórico por detalle de venta y base de configuración fiscal.
 - Registro y resumen de asistencias.
 - Reportes de ventas, membresías, asistencias e inventario.
 - Configuración del gimnasio, preferencias de notificación y cambio de contraseña.
 - Auditoría, validación de datos, controles de concurrencia y copias de seguridad.
+- Centro operativo de alertas y exportaciones CSV.
 
 ## Tecnologías
 
@@ -112,6 +115,8 @@ pnpm run test:coverage
 ## Estado y alcance
 
 El sistema cubre una sola sede por instancia. Los comprobantes son internos y no constituyen documentos tributarios SUNAT. El modelo incluye series, IGV y configuración de proveedor como base para una integración fiscal posterior; emitir documentos electrónicos exige integrar un PSE/OSE o el protocolo oficial y completar la homologación correspondiente. Los E2E del frontend usan jsdom; para una liberación definitiva se recomienda añadir Playwright contra un entorno completo y efectuar pruebas reales de carga, restauración y caída de infraestructura.
+
+Hasta implementar la emisión automática, el flujo previsto es registrar la venta, emitir el comprobante mediante SEE-SOL o un proveedor autorizado y vincular en **Control SUNAT** la serie, correlativo, fecha y estado. El PDF de TemploGym se identifica expresamente como documento interno.
 
 ## Licencia
 

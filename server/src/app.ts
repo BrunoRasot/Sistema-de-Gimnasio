@@ -8,24 +8,21 @@ import { env } from './config/env.js';
 import { apiRouter } from './modules/index.js';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware.js';
 import { requestContext } from './middlewares/request-context.middleware.js';
+import { allowedOrigins, blockCrossSiteMutations, noStoreApiResponses, requireJsonForBody } from './middlewares/security.middleware.js';
 
 const app = express();
+app.disable('x-powered-by');
 
 if (env.NODE_ENV === 'production') app.set('trust proxy', 1);
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' }, referrerPolicy: { policy: 'no-referrer' } }));
 app.use(requestContext);
-
-const dominiosPermitidos = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  env.FRONTEND_URL,
-].filter((origin): origin is string => Boolean(origin));
+app.use(blockCrossSiteMutations);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || dominiosPermitidos.includes(origin)) {
+      if (!origin || allowedOrigins.has(origin.replace(/\/$/, ''))) {
         callback(null, true);
       } else {
         callback(new Error(`Acceso denegado por políticas de CORS. Origen: ${origin}`));
@@ -45,10 +42,10 @@ const generalLimiter = rateLimit({
 
 app.use(generalLimiter);
 app.use(cookieParser());
-app.use(express.json({ limit: '2mb' }));
-app.use(express.urlencoded({ limit: '2mb', extended: true }));
+app.use(express.json({ limit: '3mb', strict: true }));
+app.use(express.urlencoded({ limit: '64kb', extended: false }));
 
-app.use('/api', apiRouter);
+app.use('/api', noStoreApiResponses, requireJsonForBody, apiRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
