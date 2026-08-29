@@ -38,6 +38,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "@prisma/config": "^7.9.1",
     "@prisma/instrumentation": "^7.9.1",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
@@ -51,11 +52,11 @@
     "node-cron": "^4.6.0",
     "nodemailer": "^9.0.3",
     "pg": "^8.23.0",
+    "prisma": "^7.9.1",
     "winston": "^3.19.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@prisma/config": "^7.9.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -67,7 +68,6 @@
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "4.1.10",
-    "prisma": "^7.9.1",
     "supertest": "^7.2.2",
     "tsx": "^4.23.0",
     "typescript": "^7.0.2",

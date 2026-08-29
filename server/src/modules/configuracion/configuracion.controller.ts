@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../../database/prisma.js';
 import { configuracionInfoSchema } from '../../schemas/index.js';
+import { logger } from '../../utils/logger.js';
 
 const obtenerConfig = async () => {
   let config = await prisma.configuracion.findUnique({ where: { id: 1 } });
@@ -206,6 +207,7 @@ export const obtenerAlertasTiempoReal = async (req: Request, res: Response): Pro
 
     return res.json(alertas);
   } catch (error) {
+    logger.error('Error al obtener alertas en tiempo real', { error });
     return res.status(500).json({ mensaje: 'Error al obtener alertas en tiempo real' });
   }
 };

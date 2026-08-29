@@ -216,6 +216,9 @@ importers:
       '@prisma/client':
         specifier: ^7.9.1
         version: 7.9.1(prisma@7.9.1(@types/react@19.2.18)(magicast@0.5.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2))(typescript@7.0.2)
+      '@prisma/config':
+        specifier: ^7.9.1
+        version: 7.9.1(magicast@0.5.4)
       '@prisma/instrumentation':
         specifier: ^7.9.1
         version: 7.9.1(@opentelemetry/api@1.9.1)
@@ -255,6 +258,9 @@ importers:
       pg:
         specifier: ^8.23.0
         version: 8.23.0
+      prisma:
+        specifier: ^7.9.1
+        version: 7.9.1(@types/react@19.2.18)(magicast@0.5.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2)
       winston:
         specifier: ^3.19.0
         version: 3.19.0
@@ -262,9 +268,6 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@prisma/config':
-        specifier: ^7.9.1
-        version: 7.9.1(magicast@0.5.4)
       '@types/cookie-parser':
         specifier: ^1.4.10
         version: 1.4.10(@types/express@5.0.6)
@@ -298,9 +301,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: 4.1.10
         version: 4.1.10(vitest@4.1.10)
-      prisma:
-        specifier: ^7.9.1
-        version: 7.9.1(@types/react@19.2.18)(magicast@0.5.4)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2)
       supertest:
         specifier: ^7.2.2
         version: 7.2.2
