@@ -1,0 +1,72 @@
+services:
+  - type: web
+    name: templogym-api
+    runtime: docker
+    plan: free
+    region: virginia
+    repo: https://github.com/BrunoRasot/Sistema-de-Gimnasio
+    branch: main
+    dockerContext: ./server
+    dockerfilePath: ./server/Dockerfile
+    dockerCommand: sh -c "./node_modules/.bin/prisma migrate deploy && node dist/prisma/seed.js && exec node dist/index.js"
+    healthCheckPath: /api/health/ready
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://templogym-bruno-web.onrender.com
+      - key: LOG_LEVEL
+        value: info
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: ADMIN_INITIAL_PASSWORD
+        sync: false
+
+  - type: web
+    name: templogym-bruno-web
+    runtime: static
+    repo: https://github.com/BrunoRasot/Sistema-de-Gimnasio
+    branch: main
+    rootDir: client
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build
+    staticPublishPath: ./dist
+    autoDeployTrigger: commit
+    envVars:
+      - key: VITE_API_URL
+        value: https://templogym-api.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://templogym-api.onrender.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"

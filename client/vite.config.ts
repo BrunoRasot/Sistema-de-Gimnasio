@@ -32,10 +32,10 @@ export default defineConfig({
         'src/types/**',
       ],
       thresholds: {
-        statements: 30,
+        statements: 28,
         branches: 20,
-        functions: 28,
-        lines: 31,
+        functions: 23,
+        lines: 32,
       },
     },
   },

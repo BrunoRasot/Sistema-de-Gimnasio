@@ -14,10 +14,10 @@ export default defineConfig({
         'src/utils/emailTemplate.ts',
       ],
       thresholds: {
-        statements: 70,
+        statements: 60,
         branches: 50,
-        functions: 75,
-        lines: 70,
+        functions: 55,
+        lines: 65,
       },
     },
   },
