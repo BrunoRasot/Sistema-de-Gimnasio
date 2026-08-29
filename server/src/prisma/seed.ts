@@ -65,10 +65,9 @@ async function main() {
       });
     }
 
-    const usuario = existente
-      ? await tx.usuario.update({ where: { id: existente.id }, data: datosAdmin })
-      : await tx.usuario.create({ data: datosAdmin });
-    await tx.refreshToken.deleteMany({ where: { usuarioId: usuario.id } });
+    // El seed puede ejecutarse manualmente más de una vez. Si el administrador ya
+    // existe, no debe restablecer su contraseña ni revocar sus sesiones activas.
+    const usuario = existente ?? await tx.usuario.create({ data: datosAdmin });
     return usuario;
   });
 

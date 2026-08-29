@@ -8,7 +8,7 @@ services:
     branch: main
     dockerContext: ./server
     dockerfilePath: ./server/Dockerfile
-    dockerCommand: sh -c "./node_modules/.bin/prisma migrate deploy && node dist/prisma/seed.js && exec node dist/index.js"
+    dockerCommand: sh -c "./node_modules/.bin/prisma migrate deploy && exec node dist/index.js"
     healthCheckPath: /api/health/ready
     autoDeployTrigger: commit
     envVars:

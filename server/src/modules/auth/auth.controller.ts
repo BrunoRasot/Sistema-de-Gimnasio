@@ -428,11 +428,6 @@ export const renovarToken = async (req: Request, res: Response): Promise<any> =>
     });
 
     if (!tokenRecord) {
-      const usuarioId = Number(payload.sub);
-      if (Number.isInteger(usuarioId) && usuarioId > 0) {
-        await prisma.refreshToken.deleteMany({ where: { usuarioId } });
-      }
-      res.clearCookie('refreshToken', clearRefreshCookieOptions);
       return res.status(403).json({ mensaje: 'Sesión revocada. Inicie sesión nuevamente.' });
     }
 
@@ -467,9 +462,7 @@ export const renovarToken = async (req: Request, res: Response): Promise<any> =>
       });
     } catch (rotationError) {
       if (rotationError instanceof Error && rotationError.message === 'REFRESH_TOKEN_REUSED') {
-        await prisma.refreshToken.deleteMany({ where: { usuarioId: usuario.id } });
-        res.clearCookie('refreshToken', clearRefreshCookieOptions);
-        return res.status(403).json({ mensaje: 'Sesión revocada por seguridad.' });
+        return res.status(409).json({ mensaje: 'La sesión ya fue renovada en otra pestaña. Intente nuevamente.' });
       }
       throw rotationError;
     }

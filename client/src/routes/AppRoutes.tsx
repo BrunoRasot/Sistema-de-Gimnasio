@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { tokenService } from '../services/token.service';
-import { api } from '../services/api';
+import { renovarSesion } from '../services/api';
 
 import { ProtectedRoute } from './ProtectedRoute';
 import AuthLayout from '../layouts/AuthLayout';
@@ -68,7 +68,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
 
     const restaurarSesion = async () => {
       try {
-        const { data } = await api.post('/auth/refresh-token');
+        const { data } = await renovarSesion();
         if (data?.token && isMounted) {
           tokenService.setAccessToken(data.token);
           if (data.usuario) {

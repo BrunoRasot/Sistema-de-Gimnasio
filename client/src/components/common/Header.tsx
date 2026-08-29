@@ -14,6 +14,7 @@ import {
   Server,
 } from 'lucide-react';
 import { notificacionesService } from '../../services/notificaciones.service';
+import { logoutService } from '../../services/auth.service';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -99,8 +100,8 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
     navigate('/configuracion/seguridad');
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
+  const handleLogout = async () => {
+    await logoutService();
     navigate('/', { replace: true });
   };
 

@@ -60,9 +60,22 @@ describe('Integración: autenticación y ciclo de sesión', () => {
   });
 
   it('rechaza reutilizar una sesión revocada', async () => {
+    const sesionVigente = jwt.sign(
+      { sub: adminId, type: 'refresh', jti: crypto.randomUUID() },
+      env.JWT_REFRESH_SECRET,
+      { expiresIn: '7d' },
+    );
+    await prisma.refreshToken.create({
+      data: {
+        token: crypto.createHash('sha256').update(sesionVigente).digest('hex'),
+        usuarioId: adminId,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
     const response = await request(app)
       .post('/api/auth/refresh-token')
       .set('Cookie', `refreshToken=${refreshTokenRevocado}`);
     expect(response.status).toBe(403);
+    expect(await prisma.refreshToken.count({ where: { usuarioId: adminId } })).toBe(1);
   });
 });

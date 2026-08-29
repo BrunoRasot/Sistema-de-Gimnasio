@@ -7,6 +7,19 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+const solicitarRenovacion = async () => axios.post(
+  `${api.defaults.baseURL}/auth/refresh-token`,
+  {},
+  { withCredentials: true },
+);
+
+export const renovarSesion = async () => {
+  if (typeof navigator !== 'undefined' && navigator.locks) {
+    return navigator.locks.request('templogym-refresh-session', solicitarRenovacion);
+  }
+  return solicitarRenovacion();
+};
+
 api.interceptors.request.use((config) => {
   const token = tokenService.getAccessToken();
   if (token && config.headers) {
@@ -63,11 +76,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post(
-          `${api.defaults.baseURL}/auth/refresh-token`,
-          {},
-          { withCredentials: true },
-        );
+        const { data } = await renovarSesion();
 
         const cleanToken = data.token.replace(/^["']|["']$/g, '');
         tokenService.setAccessToken(cleanToken);
