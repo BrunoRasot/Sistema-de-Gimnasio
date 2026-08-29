@@ -36,16 +36,28 @@ export const crearAdminDePrueba = async (prefix: string) => {
 };
 
 export const obtenerTokenAdminActivo = async () => {
-  const adminExistente = await prisma.usuario.findFirst({
-    where: { rol: 'ADMIN', activo: true, estadoCuenta: 'Activa', estadoLaboral: 'Activo' },
-    orderBy: { id: 'asc' },
+  const adminFixture = await prisma.usuario.upsert({
+    where: { email: 'suite-admin-fixture@test.local' },
+    update: {
+      activo: true,
+      estadoCuenta: 'Activa',
+      estadoLaboral: 'Activo',
+      rol: 'ADMIN',
+      cargo: 'Administrador',
+    },
+    create: {
+      nombres: 'Admin',
+      apellidos: 'Suite',
+      dni: '900000001',
+      email: 'suite-admin-fixture@test.local',
+      nombreUsuario: 'suite_admin_fixture',
+      password: await bcrypt.hash('TestPassword-123!', 4),
+      rol: 'ADMIN',
+      cargo: 'Administrador',
+    },
   });
-  if (!adminExistente) {
-    const { token } = await crearAdminDePrueba('suite-admin');
-    return token;
-  }
   return jwt.sign(
-    { sub: adminExistente.id, rol: adminExistente.rol, nombreUsuario: adminExistente.nombreUsuario, type: 'access' },
+    { sub: adminFixture.id, rol: adminFixture.rol, nombreUsuario: adminFixture.nombreUsuario, type: 'access' },
     env.JWT_ACCESS_SECRET,
     { expiresIn: '15m' },
   );
