@@ -10,6 +10,7 @@ export default defineConfig({
       exclude: [
         'src/tests/**',
         'src/index.ts',
+        'src/server.ts',
         'src/prisma/**',
         'src/utils/emailTemplate.ts',
       ],
