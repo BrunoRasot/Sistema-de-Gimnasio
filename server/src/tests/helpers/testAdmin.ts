@@ -21,7 +21,7 @@ export const crearAdminDePrueba = async (prefix: string) => {
 
   const token = jwt.sign(
     { sub: admin.id, rol: admin.rol, nombreUsuario: admin.nombreUsuario, type: 'access' },
-    env.JWT_SECRET,
+    env.JWT_ACCESS_SECRET,
     { expiresIn: '15m' },
   );
 
