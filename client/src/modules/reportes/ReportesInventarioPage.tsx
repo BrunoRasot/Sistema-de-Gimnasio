@@ -18,7 +18,7 @@ export default function ReportesInventarioPage() {
     try {
       const data = await reportesService.obtenerReporteInventario();
       setMetricas(data);
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar datos de inventario');
     } finally {
       setCargando(false);

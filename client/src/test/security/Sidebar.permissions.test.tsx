@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Sidebar from '../../components/common/Sidebar';
+import { obtenerMisPermisos } from '../../services/permisos.service';
+
+vi.mock('../../services/permisos.service', () => ({
+  obtenerMisPermisos: vi.fn(),
+}));
 
 const renderSidebar = () => render(
   <MemoryRouter>
@@ -10,7 +15,10 @@ const renderSidebar = () => render(
 );
 
 describe('Visibilidad del menú por permisos', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    vi.clearAllMocks();
+  });
 
   it('muestra todos los módulos al administrador', () => {
     localStorage.setItem('usuario', JSON.stringify({ rol: 'ADMIN' }));
@@ -38,5 +46,22 @@ describe('Visibilidad del menú por permisos', () => {
     renderSidebar();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.queryByText('Ventas')).not.toBeInTheDocument();
+  });
+
+  it('sincroniza los permisos visuales al recuperar el foco', async () => {
+    localStorage.setItem('usuario', JSON.stringify({ id: 8, rol: 'USER', permisos: {} }));
+    vi.mocked(obtenerMisPermisos).mockResolvedValue({
+      cargo: 'CAJERO',
+      permisos: { ventas: { ver: true } },
+    });
+    renderSidebar();
+
+    fireEvent.focus(window);
+
+    await waitFor(() => expect(screen.getByText('Ventas')).toBeInTheDocument());
+    expect(JSON.parse(localStorage.getItem('usuario')!)).toMatchObject({
+      cargo: 'CAJERO',
+      permisos: { ventas: { ver: true } },
+    });
   });
 });

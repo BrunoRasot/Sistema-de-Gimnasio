@@ -12,7 +12,7 @@ export default function StockAlertasPage() {
     try {
       const prods = await obtenerProductos();
       setProductos(prods);
-    } catch (err) {
+    } catch {
       toast.error('Error al cargar alertas de stock');
     } finally {
       setCargando(false);

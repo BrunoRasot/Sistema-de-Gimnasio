@@ -21,7 +21,7 @@ export default function ProveedoresPage() {
     try {
       const data = await obtenerProveedores();
       setProveedores(data);
-    } catch (err) {
+    } catch {
       toast.error('Error al cargar proveedores');
     } finally {
       setCargando(false);

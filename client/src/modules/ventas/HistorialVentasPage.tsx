@@ -3,7 +3,8 @@ import { Search, FileText, Loader2, RefreshCw, Receipt, Download } from 'lucide-
 import { ventasService } from '../../services/ventas.service';
 import toast from 'react-hot-toast';
 import type { Venta } from '../../types/venta';
-import { TablePagination, useTablePagination } from '../../components/common/TablePagination';
+import { TablePagination } from '../../components/common/TablePagination';
+import { useTablePagination } from '../../hooks/useTablePagination';
 
 export default function HistorialVentasPage() {
   const [ventas, setVentas] = useState<Venta[]>([]);

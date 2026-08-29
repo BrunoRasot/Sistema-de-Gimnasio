@@ -3,7 +3,8 @@ import { Search, Loader2, AlertTriangle, Tag, Save, X, CalendarCheck } from 'luc
 import toast from 'react-hot-toast';
 import { obtenerMiembros, renovarMembresia } from '../../services/miembros.service';
 import { obtenerPlanes } from '../../services/planes.service';
-import { TablePagination, useTablePagination } from '../../components/common/TablePagination';
+import { TablePagination } from '../../components/common/TablePagination';
+import { useTablePagination } from '../../hooks/useTablePagination';
 
 export default function MembresiasVencidasPage() {
   const [miembros, setMiembros] = useState<any[]>([]);
@@ -24,11 +25,11 @@ export default function MembresiasVencidasPage() {
     try {
       const dataPlanes = await obtenerPlanes();
       setPlanes(dataPlanes.filter((p: any) => p.estado?.toLowerCase() === 'activo'));
-    } catch (err) {}
+    } catch {}
     try {
       const dataMiembros = await obtenerMiembros();
       setMiembros(dataMiembros);
-    } catch (err) {}
+    } catch {}
     setCargando(false);
   };
 

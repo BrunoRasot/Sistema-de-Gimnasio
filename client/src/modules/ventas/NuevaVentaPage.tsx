@@ -47,7 +47,7 @@ export default function NuevaVentaPage() {
           setMetodoId(null);
         }
 
-      } catch (error) {
+      } catch {
         toast.error('Error al cargar los datos para la venta');
       } finally {
         setCargando(false);

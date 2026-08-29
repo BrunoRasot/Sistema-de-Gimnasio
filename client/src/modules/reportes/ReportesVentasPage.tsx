@@ -18,7 +18,7 @@ export default function ReportesVentasPage() {
     try {
       const data = await reportesService.obtenerReporteVentas();
       setMetricas(data);
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar datos de ventas');
     } finally {
       setCargando(false);

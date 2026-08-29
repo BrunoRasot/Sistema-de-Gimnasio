@@ -19,20 +19,24 @@ const Sidebar = ({ isOpen, closeSidebar }: SidebarProps) => {
   const [usuario, setUsuario] = useState<any>(() => {
     try { const value = localStorage.getItem('usuario'); return value ? JSON.parse(value) : null; } catch { return null; }
   });
+  const usuarioId = usuario?.id;
+  const usuarioRol = usuario?.rol;
   useEffect(() => {
-    if (!usuario || usuario.rol === 'ADMIN' || usuario.rol === 'SUPER_ADMIN') return;
+    if (!usuarioId || usuarioRol === 'ADMIN' || usuarioRol === 'SUPER_ADMIN') return;
     const actualizar = async () => {
       try {
         const sesion = await obtenerMisPermisos();
-        const actualizado = { ...usuario, cargo: sesion.cargo, permisos: sesion.permisos };
-        localStorage.setItem('usuario', JSON.stringify(actualizado));
-        setUsuario(actualizado);
+        setUsuario((actual: any) => {
+          const actualizado = { ...actual, cargo: sesion.cargo, permisos: sesion.permisos };
+          localStorage.setItem('usuario', JSON.stringify(actualizado));
+          return actualizado;
+        });
       } catch { /* El backend seguirá siendo la autoridad si falla la sincronización visual. */ }
     };
     const intervalo = window.setInterval(actualizar, 30000);
     window.addEventListener('focus', actualizar);
     return () => { window.clearInterval(intervalo); window.removeEventListener('focus', actualizar); };
-  }, [usuario?.id, usuario?.rol]);
+  }, [usuarioId, usuarioRol]);
   const esAdmin = usuario?.rol === 'ADMIN' || usuario?.rol === 'SUPER_ADMIN';
   const puedeVer = (path: string) => {
     const modulo = path.split('/')[1];

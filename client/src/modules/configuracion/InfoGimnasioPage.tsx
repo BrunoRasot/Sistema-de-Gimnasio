@@ -44,7 +44,7 @@ export default function InfoGimnasioPage() {
           condicionRuc: data.condicionRuc || 'HABIDO'
         });
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar la configuración');
     } finally {
       setCargando(false);

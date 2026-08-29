@@ -44,7 +44,7 @@ export default function DevolucionesPage() {
       );
       setVentaEncontrada(encontrada || null);
       setCantidades(encontrada ? Object.fromEntries(encontrada.detalles.map((d: any) => [d.productoId, d.cantidad])) : {});
-    } catch (error) {
+    } catch {
       setVentaEncontrada(null);
     } finally {
       setBuscandoVenta(false);

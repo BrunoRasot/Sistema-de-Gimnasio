@@ -15,6 +15,11 @@ export default defineConfig({
       '/api': 'http://localhost:3000',
     },
   },
+  build: {
+    // ExcelJS se carga como chunk independiente y minificado; su tamaño conocido
+    // supera el umbral genérico de Vite sin afectar el bundle inicial.
+    chunkSizeWarningLimit: 1000,
+  },
   test: {
     environment: 'jsdom',
     globals: true,

@@ -29,7 +29,7 @@ export default function NotificacionesPage() {
             reportesSemanales: data.reportesSemanales ?? true
           });
         }
-      } catch (error) {
+      } catch {
         toast.error('Error al cargar preferencias de notificación');
       } finally {
         setCargando(false);

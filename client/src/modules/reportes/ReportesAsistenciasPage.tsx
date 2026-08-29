@@ -17,7 +17,7 @@ export default function ReportesAsistenciasPage() {
     try {
       const data = await reportesService.obtenerReporteAsistencias();
       setMetricas(data);
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar datos de asistencias');
     } finally {
       setCargando(false);

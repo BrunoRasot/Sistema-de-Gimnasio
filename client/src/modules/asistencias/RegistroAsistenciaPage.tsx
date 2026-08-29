@@ -18,7 +18,7 @@ export default function RegistroAsistenciaPage() {
     try {
       const data = await buscarPorDni(dni);
       setMiembro(data);
-    } catch (error) {
+    } catch {
       toast.error('No se encontró ningún miembro con este DNI');
     } finally {
       setBuscando(false);
@@ -29,7 +29,6 @@ export default function RegistroAsistenciaPage() {
     if (!miembro) return;
     setRegistrando(true);
     try {
-      // Enviamos un objeto con la propiedad miembroId que el backend espera
       await registrarAsistencia({ miembroId: miembro.id });
       toast.success('Asistencia registrada correctamente');
       setDni('');

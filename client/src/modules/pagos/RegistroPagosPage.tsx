@@ -14,7 +14,7 @@ export default function RegistroPagosPage() {
     try {
       const data = await pagosService.obtenerPagos();
       setPagos(data);
-    } catch (err) {
+    } catch {
       toast.error('Error al cargar el registro de pagos');
     } finally {
       setCargando(false);

@@ -18,7 +18,8 @@ import {
   asignarMembresia,
 } from '../../services/miembros.service';
 import { obtenerPlanes } from '../../services/planes.service';
-import { TablePagination, useTablePagination } from '../../components/common/TablePagination';
+import { TablePagination } from '../../components/common/TablePagination';
+import { useTablePagination } from '../../hooks/useTablePagination';
 
 export default function MiembrosActivosPage() {
   const [miembros, setMiembros] = useState<any[]>([]);

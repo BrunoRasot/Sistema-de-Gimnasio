@@ -20,7 +20,7 @@ export default function ReportesMembresiasPage() {
     try {
       const data = await reportesService.obtenerReporteMembresias();
       setMetricas(data);
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar datos de membresías');
     } finally {
       setCargando(false);

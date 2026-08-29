@@ -7,7 +7,9 @@ const empty = { tipo: 'BOLETA', estado: 'PENDIENTE', proveedor: 'SEE_SOL', clien
 export default function ControlFiscalPage() {
   const [ventas, setVentas] = useState<any[]>([]); const [search, setSearch] = useState(''); const [edit, setEdit] = useState<any>(null); const [form, setForm] = useState<any>(empty); const [loading, setLoading] = useState(true);
   const load = async () => { setLoading(true); try { setVentas(await produccionService.listarFiscal(search)); } finally { setLoading(false); } };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    void produccionService.listarFiscal('').then(setVentas).finally(() => setLoading(false));
+  }, []);
   const open = (v: any) => { const f = v.comprobanteFiscal || {}; setEdit(v); setForm({ ...empty, ...f, fechaEmision: f.fechaEmision ? new Date(f.fechaEmision).toISOString().slice(0, 16) : '' }); };
   const save = async () => { try { await produccionService.actualizarFiscal(edit.id, { ...form, fechaEmision: form.fechaEmision ? new Date(form.fechaEmision).toISOString() : null, enlaceConsulta: form.enlaceConsulta || null }); toast.success('Control fiscal actualizado'); setEdit(null); load(); } catch (e: any) { toast.error(e.response?.data?.mensaje || 'No se pudo guardar'); } };
   const pendientes = ventas.filter(v => ['PENDIENTE'].includes(v.comprobanteFiscal?.estado)).length; const emitidos = ventas.filter(v => ['EMITIDO','ACEPTADO'].includes(v.comprobanteFiscal?.estado)).length;

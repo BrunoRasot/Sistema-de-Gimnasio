@@ -21,7 +21,7 @@ export default function CategoriasPage() {
     try {
       const data = await obtenerCategorias();
       setCategorias(data);
-    } catch (err) {
+    } catch {
       toast.error('Error al cargar categorías');
     } finally {
       setCargando(false);

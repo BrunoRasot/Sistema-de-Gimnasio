@@ -139,7 +139,7 @@ export default function ListaUsuariosPage() {
             }
           });
 
-        } catch (error) {
+        } catch {
           Swal.fire({
             title: 'Error',
             text: 'No se pudo eliminar el trabajador.',

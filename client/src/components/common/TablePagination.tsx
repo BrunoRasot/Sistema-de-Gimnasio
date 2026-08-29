@@ -1,24 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { TablePaginationState } from '../../hooks/useTablePagination';
 
-export function useTablePagination<T>(items: T[]) {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
-
-  useEffect(() => {
-    setPage((current) => Math.min(current, pageCount));
-  }, [pageCount]);
-
-  const start = (page - 1) * pageSize;
-  const rows = useMemo(() => items.slice(start, start + pageSize), [items, start, pageSize]);
-
-  return { rows, page, setPage, pageSize, setPageSize, pageCount, start, total: items.length };
-}
-
-type Props = ReturnType<typeof useTablePagination<unknown>>;
-
-export function TablePagination({ page, setPage, pageSize, setPageSize, pageCount, start, total }: Props) {
+export function TablePagination({ page, setPage, pageSize, setPageSize, pageCount, start, total }: TablePaginationState<unknown>) {
   if (total === 0) return null;
 
   return (

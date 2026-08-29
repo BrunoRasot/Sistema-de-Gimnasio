@@ -7,7 +7,8 @@ import {
   eliminarPlan,
 } from '../../services/planes.service';
 import toast from 'react-hot-toast';
-import { TablePagination, useTablePagination } from '../../components/common/TablePagination';
+import { TablePagination } from '../../components/common/TablePagination';
+import { useTablePagination } from '../../hooks/useTablePagination';
 import { usePermisos } from '../../hooks/usePermisos';
 
 interface Plan {

@@ -77,7 +77,7 @@ const AppInitializer = ({ children }: { children: React.ReactNode }) => {
             localStorage.setItem('usuarioCargo', data.usuario.cargo || '');
           }
         }
-      } catch (error) {
+      } catch {
         tokenService.clearAccessToken();
       } finally {
         if (isMounted) {

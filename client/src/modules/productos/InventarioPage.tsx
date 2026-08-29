@@ -32,7 +32,7 @@ export default function InventarioPage() {
       setProductos(prods);
       setCategorias(cats.filter((c: any) => c.estado)); 
       setProveedores(provs.filter((p: any) => p.estado));
-    } catch (err) {
+    } catch {
       toast.error('Error al cargar inventario');
     } finally {
       setCargando(false);

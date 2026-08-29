@@ -15,7 +15,7 @@ export default function MetodosPagoPage() {
       setCargando(true);
       const data = await pagosService.obtenerMetodos();
       setMetodos(data);
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar métodos de pago');
     } finally {
       setCargando(false);
@@ -49,7 +49,7 @@ export default function MetodosPagoPage() {
       await pagosService.actualizarMetodo(metodo.id, { ...metodo, activo: !metodo.activo });
       toast.success(`Método ${metodo.activo ? 'desactivado' : 'activado'}`);
       cargarMetodos();
-    } catch (error: any) {
+    } catch {
       toast.error('Error al cambiar el estado');
     }
   };
