@@ -63,6 +63,18 @@ describe('Seguridad HTTP del backend', () => {
     expect(response.status).toBe(403);
   });
 
+  it('permite mutaciones cross-site desde el frontend configurado', async () => {
+    const origin = env.FRONTEND_URL ?? 'http://localhost:5173';
+    const response = await request(app)
+      .post('/api/auth/login')
+      .set('Origin', origin)
+      .set('Sec-Fetch-Site', 'cross-site')
+      .send({ usuario: 'inexistente', password: 'incorrecta' });
+
+    expect(response.status).not.toBe(403);
+    expect(response.headers['access-control-allow-origin']).toBe(origin.replace(/\/$/, ''));
+  });
+
   it('rechaza cuerpos con un tipo de contenido no permitido', async () => {
     const response = await request(app).post('/api/auth/login').set('Content-Type', 'text/plain').send('usuario=x');
     expect(response.status).toBe(415);

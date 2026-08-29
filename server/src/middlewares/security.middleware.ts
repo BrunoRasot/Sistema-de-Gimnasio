@@ -11,6 +11,8 @@ const isMutation = (method: string) => !['GET', 'HEAD', 'OPTIONS'].includes(meth
 
 export const blockCrossSiteMutations: RequestHandler = (req, res, next) => {
   if (isMutation(req.method) && req.header('sec-fetch-site') === 'cross-site') {
+    const origin = req.header('origin')?.replace(/\/$/, '');
+    if (origin && allowedOrigins.has(origin)) return next();
     return res.status(403).json({ mensaje: 'Solicitud de origen cruzado rechazada.' });
   }
   next();
