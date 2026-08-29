@@ -47,7 +47,7 @@ export const obtenerVentas = async (req: Request, res: Response): Promise<any> =
     const total = await prisma.venta.count({ where });
     return res.json({ data: ventas, pagination: { page, pageSize, total, pageCount: Math.ceil(total / pageSize) } });
   } catch (error: any) {
-    logger.error(`Error al obtener historial de ventas: ${error}`);
+    logger.error('Error al obtener historial de ventas', { error });
     return res.status(500).json({ mensaje: 'Error interno al obtener el historial de ventas.' });
   }
 };
