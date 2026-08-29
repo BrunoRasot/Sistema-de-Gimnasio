@@ -3,6 +3,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import app from '../../../app.js';
+import { env } from '../../../config/env.js';
 import { prisma } from '../../../database/prisma.js';
 
 describe('Pruebas del módulo de Ventas y Devoluciones', () => {
@@ -35,7 +36,7 @@ describe('Pruebas del módulo de Ventas y Devoluciones', () => {
 
     tokenAdmin = jwt.sign(
       { sub: usuarioTestId, rol: 'ADMIN', nombreUsuario: 'admin_ventas_test', type: 'access' },
-      process.env.JWT_SECRET as string,
+      env.JWT_ACCESS_SECRET,
       { expiresIn: '15m' },
     );
 

@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import app from '../../../app.js';
+import { env } from '../../../config/env.js';
 
 describe('Pruebas de Autenticación y Seguridad', () => {
   it('Debería rechazar un login con datos vacíos y devolver estado 400', async () => {
@@ -19,7 +20,7 @@ describe('Pruebas de Autenticación y Seguridad', () => {
   it('Debería rechazar la sesión de un usuario inexistente (401)', async () => {
     const tokenIntruso = jwt.sign(
       { sub: 999, rol: 'USER', nombreUsuario: 'intruso', type: 'access' },
-      process.env.JWT_SECRET as string,
+      env.JWT_ACCESS_SECRET,
       { expiresIn: '15m' },
     );
 
