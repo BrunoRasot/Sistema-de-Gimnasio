@@ -27,6 +27,7 @@ jobs:
     timeout-minutes: 15
     env:
       DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      JWT_SECRET: workflow-only-not-used
       KEEP_USERNAME: ${{ inputs.keep_username }}
       CONFIRM_RESET_PRODUCTION: ${{ inputs.confirmation }}
 
