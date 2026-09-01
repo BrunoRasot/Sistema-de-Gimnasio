@@ -88,6 +88,8 @@ export const obtenerUsuarios = async (req: Request, res: Response): Promise<any>
           estadoLaboral: true,
           fechaIngreso: true,
           fechaNacimiento: true,
+          sexo: true,
+          direccion: true,
           activo: true,
           createdAt: true,
         },
@@ -125,8 +127,20 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
       return res.status(400).json({ mensaje: parsed.error.issues[0]?.message });
     }
 
-    const { nombres, apellidos, dni, email, password, telefono, rol, cargo, nombreUsuario } =
-      parsed.data;
+    const {
+      nombres,
+      apellidos,
+      dni,
+      fechaNacimiento,
+      sexo,
+      direccion,
+      email,
+      password,
+      telefono,
+      rol,
+      cargo,
+      nombreUsuario,
+    } = parsed.data;
     if (!(await puedeAdministrarCuenta(Number((req as any).usuario?.id), undefined, rol))) {
       return res.status(403).json({ mensaje: 'Solo un administrador puede crear cuentas ADMIN.' });
     }
@@ -160,6 +174,9 @@ export const crearUsuario = async (req: Request, res: Response): Promise<any> =>
         nombres,
         apellidos,
         dni,
+        fechaNacimiento: fechaNacimiento ? new Date(fechaNacimiento) : undefined,
+        sexo: sexo || null,
+        direccion: direccion || null,
         email,
         password: hashedPassword,
         telefono,

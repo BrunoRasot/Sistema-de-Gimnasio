@@ -26,6 +26,9 @@ describe('Pruebas del módulo de Usuarios', () => {
         nombres: 'Test',
         apellidos: 'User',
         dni: '99887766',
+        fechaNacimiento: '1995-04-23',
+        sexo: 'Masculino',
+        direccion: 'Av. Principal 123',
         email: 'test@gym.com',
         password: 'Password-123!',
         nombreUsuario: 'testuser',
@@ -34,6 +37,18 @@ describe('Pruebas del módulo de Usuarios', () => {
 
     expect(response.status).toBe(201);
     usuarioId = response.body.id;
+    expect(response.body).toMatchObject({
+      fechaNacimiento: '1995-04-23T00:00:00.000Z',
+      sexo: 'Masculino',
+      direccion: 'Av. Principal 123',
+    });
+
+    const guardado = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+    expect(guardado).toMatchObject({
+      sexo: 'Masculino',
+      direccion: 'Av. Principal 123',
+    });
+    expect(guardado?.fechaNacimiento?.toISOString()).toBe('1995-04-23T00:00:00.000Z');
   });
 
   it('Debería obtener usuarios paginados', async () => {
