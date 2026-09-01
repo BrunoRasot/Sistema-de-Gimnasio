@@ -70,12 +70,11 @@ pnpm run dev
 | `JWT_ACCESS_SECRET` | Firma de access tokens; obligatorio en producción |
 | `JWT_REFRESH_SECRET` | Firma de refresh tokens; distinto al anterior |
 | `FRONTEND_URL` | Origen permitido por CORS |
-| `EMAIL_USER` / `EMAIL_PASS` | Credenciales SMTP para OTP y recuperación |
+| `BREVO_API_KEY` | Clave de la API HTTPS de Brevo para OTP y recuperación |
 | `EMAIL_FROM` | Remitente validado en el proveedor de correo |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Conexión SMTP |
 | `ADMIN_INITIAL_PASSWORD` | Contraseña temporal usada solo por el seed |
 
-Nunca se deben versionar `.env`, claves SMTP, contraseñas, tokens o cadenas de producción.
+Nunca se deben versionar `.env`, claves de API, contraseñas, tokens o cadenas de producción.
 
 ## Comandos principales
 

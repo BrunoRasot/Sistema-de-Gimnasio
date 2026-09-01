@@ -1,10 +1,7 @@
 import { Request, Response } from 'express';
 import crypto from 'node:crypto';
-import dns from 'node:dns/promises';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
-import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
 import { z } from 'zod';
 import { prisma } from '../../database/prisma.js';
 import { generarTemplateOTP, generarTemplateRecuperacion } from '../../utils/emailTemplate.js';
@@ -74,24 +71,46 @@ const resetPasswordSchema = z.object({
 const hashRecoveryCode = (usuarioId: number, codigo: string) =>
   crypto.createHmac('sha256', env.JWT_ACCESS_SECRET).update(`${usuarioId}:${codigo}`).digest('hex');
 
-const crearTransportadorCorreo = async () => {
-  const opciones: SMTPTransport.Options = env.SMTP_HOST ? {
-    host: (await dns.resolve4(env.SMTP_HOST))[0],
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    tls: { servername: env.SMTP_HOST },
-    connectionTimeout: 15_000,
-    greetingTimeout: 15_000,
-    socketTimeout: 30_000,
-    auth: { user: env.EMAIL_USER, pass: env.EMAIL_PASS },
-  } : {
-    service: 'gmail',
-    connectionTimeout: 15_000,
-    greetingTimeout: 15_000,
-    socketTimeout: 30_000,
-    auth: { user: env.EMAIL_USER, pass: env.EMAIL_PASS },
-  };
-  return nodemailer.createTransport(opciones);
+const enviarCorreoTransaccional = async ({
+  destinatario,
+  asunto,
+  texto,
+  html,
+}: {
+  destinatario: string;
+  asunto: string;
+  texto: string;
+  html: string;
+}) => {
+  if (!env.BREVO_API_KEY || !env.EMAIL_FROM) {
+    throw new Error('Servicio de correo no configurado.');
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'api-key': env.BREVO_API_KEY,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: 'TemploGym', email: env.EMAIL_FROM },
+        to: [{ email: destinatario }],
+        subject: asunto,
+        textContent: texto,
+        htmlContent: html,
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`Brevo API respondió con estado ${response.status}.`);
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
 };
 
 const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
@@ -100,10 +119,7 @@ const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
     return;
   }
 
-  const emailUser = env.EMAIL_USER;
-  const emailPass = env.EMAIL_PASS;
-
-  if (!emailUser || !emailPass) {
+  if (!env.BREVO_API_KEY || !env.EMAIL_FROM) {
     if (env.NODE_ENV !== 'production') {
       logger.warn(`Fallback (Desarrollo): El código OTP para ${destinatario} es ${codigo}`);
       return;
@@ -111,32 +127,27 @@ const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
     throw new Error('Servicio de correo no configurado.');
   }
 
-	const transporter = await crearTransportadorCorreo();
-
-  await transporter.sendMail({
-    from: `"TemploGym" <${env.EMAIL_FROM || emailUser}>`,
-    to: destinatario,
-    subject: `${codigo} es tu código de acceso a TemploGym`,
-    text: `Tu código de acceso es ${codigo}. Vence en ${otpMinutes} minutos.`,
+  await enviarCorreoTransaccional({
+    destinatario,
+    asunto: `${codigo} es tu código de acceso a TemploGym`,
+    texto: `Tu código de acceso es ${codigo}. Vence en ${otpMinutes} minutos.`,
     html: generarTemplateOTP(codigo),
   });
 };
 
 const enviarCodigoRecuperacion = async (destinatario: string, codigo: string) => {
   if (env.NODE_ENV === 'test') return;
-  if (!env.EMAIL_USER || !env.EMAIL_PASS) {
+  if (!env.BREVO_API_KEY || !env.EMAIL_FROM) {
     if (env.NODE_ENV !== 'production') {
       logger.warn(`Fallback (Desarrollo): código de recuperación para ${destinatario}: ${codigo}`);
       return;
     }
     throw new Error('Servicio de correo no configurado.');
   }
-  const transporter = await crearTransportadorCorreo();
-  await transporter.sendMail({
-    from: `"TemploGym" <${env.EMAIL_FROM || env.EMAIL_USER}>`,
-    to: destinatario,
-    subject: 'Código para recuperar tu contraseña de TemploGym',
-    text: `Tu código de recuperación es ${codigo}. Vence en ${recoveryMinutes} minutos.`,
+  await enviarCorreoTransaccional({
+    destinatario,
+    asunto: 'Código para recuperar tu contraseña de TemploGym',
+    texto: `Tu código de recuperación es ${codigo}. Vence en ${recoveryMinutes} minutos.`,
     html: generarTemplateRecuperacion(codigo),
   });
 };

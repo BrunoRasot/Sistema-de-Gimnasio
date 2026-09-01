@@ -25,9 +25,9 @@ describe('Configuración operativa', () => {
   });
 
   it('convierte variables opcionales vacías en undefined', () => {
-    const result = parseEnv({ ...base, EMAIL_USER: '', EMAIL_PASS: '' });
-    expect(result.EMAIL_USER).toBeUndefined();
-    expect(result.EMAIL_PASS).toBeUndefined();
+    const result = parseEnv({ ...base, BREVO_API_KEY: '', EMAIL_FROM: '' });
+    expect(result.BREVO_API_KEY).toBeUndefined();
+    expect(result.EMAIL_FROM).toBeUndefined();
   });
 
   it('exige secretos separados y robustos en producción', () => {
@@ -40,14 +40,14 @@ describe('Configuración operativa', () => {
       NODE_ENV: 'production',
       JWT_ACCESS_SECRET: 'access-secret-production-32-bytes-minimum',
       JWT_REFRESH_SECRET: 'refresh-secret-production-32-bytes-minimum',
-      EMAIL_USER: 'otp@test.local',
-      EMAIL_PASS: 'app-password-test',
+      BREVO_API_KEY: 'xkeysib-clave-api-brevo-de-prueba',
+      EMAIL_FROM: 'otp@test.local',
       FRONTEND_URL: 'https://gym.test.local',
     });
     expect(production.JWT_ACCESS_SECRET).not.toBe(production.JWT_REFRESH_SECRET);
   });
 
   it('rechaza HTTP y secretos de ejemplo en producción', () => {
-    expect(() => parseEnv({ ...base, NODE_ENV: 'production', FRONTEND_URL: 'http://gym.example.com', JWT_ACCESS_SECRET: 'reemplazar-access-secret-32-caracteres', JWT_REFRESH_SECRET: 'reemplazar-refresh-secret-32-caracteres', EMAIL_USER: 'otp@test.local', EMAIL_PASS: 'password' })).toThrow('Configuración de entorno inválida');
+    expect(() => parseEnv({ ...base, NODE_ENV: 'production', FRONTEND_URL: 'http://gym.example.com', JWT_ACCESS_SECRET: 'reemplazar-access-secret-32-caracteres', JWT_REFRESH_SECRET: 'reemplazar-refresh-secret-32-caracteres', BREVO_API_KEY: 'xkeysib-clave-api-brevo-de-prueba', EMAIL_FROM: 'otp@test.local' })).toThrow('Configuración de entorno inválida');
   });
 });

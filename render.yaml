@@ -26,18 +26,10 @@ services:
         value: https://templogym-bruno-web.onrender.com
       - key: LOG_LEVEL
         value: info
-      - key: EMAIL_USER
-        sync: false
-      - key: EMAIL_PASS
+      - key: BREVO_API_KEY
         sync: false
       - key: EMAIL_FROM
         sync: false
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_SECURE
-        value: "false"
 
   - type: web
     name: templogym-bruno-web
