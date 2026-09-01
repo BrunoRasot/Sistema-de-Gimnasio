@@ -70,6 +70,22 @@ jobs:
         working-directory: server
         run: pnpm exec prisma generate
 
+      - name: Normalize Neon connection URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          connection_url="$DATABASE_URL"
+          connection_url="${connection_url#psql }"
+          connection_url="${connection_url#\'}"
+          connection_url="${connection_url%\'}"
+          connection_url="${connection_url#\"}"
+          connection_url="${connection_url%\"}"
+          if [[ "$connection_url" != postgresql://* && "$connection_url" != postgres://* ]]; then
+            echo "NEON_DATABASE_URL is not a PostgreSQL connection URL." >&2
+            exit 1
+          fi
+          echo "DATABASE_URL=$connection_url" >> "$GITHUB_ENV"
+
       - name: Reset production business data
         working-directory: server
         run: pnpm exec tsx src/scripts/reset-business-data.ts
