@@ -2,6 +2,20 @@ import 'dotenv/config';
 import { prisma } from '../database/prisma.js';
 
 async function main() {
+  if (process.env.CONFIRM_RESET_PRODUCTION !== 'BORRAR_TODO_MENOS_USUARIO') {
+    throw new Error('Falta CONFIRM_RESET_PRODUCTION=BORRAR_TODO_MENOS_USUARIO');
+  }
+  const nombreUsuario = process.env.KEEP_USERNAME?.trim();
+  if (!nombreUsuario) throw new Error('KEEP_USERNAME es obligatorio.');
+  const conservados = await prisma.usuario.findMany({
+    where: { nombreUsuario: { equals: nombreUsuario, mode: 'insensitive' } },
+    select: { id: true, nombreUsuario: true },
+  });
+  if (conservados.length !== 1) {
+    throw new Error(`Se esperaba exactamente un usuario ${nombreUsuario}; encontrados: ${conservados.length}.`);
+  }
+  const usuarioConservado = conservados[0];
+
   const antes = {
     usuarios: await prisma.usuario.count(),
     metodosPago: await prisma.metodoPago.count(),
@@ -12,6 +26,8 @@ async function main() {
   };
 
   await prisma.$transaction(async (tx) => {
+    await tx.abonoCuentaCobrar.deleteMany();
+    await tx.cuentaCobrar.deleteMany();
     await tx.detalleDevolucion.deleteMany();
     await tx.devolucion.deleteMany();
     await tx.movimientoCaja.deleteMany();
@@ -37,6 +53,19 @@ async function main() {
     await tx.passwordResetToken.deleteMany();
     await tx.permiso.deleteMany();
     await tx.configuracion.deleteMany();
+    await tx.usuario.deleteMany({ where: { id: { not: usuarioConservado.id } } });
+    await tx.usuario.update({
+      where: { id: usuarioConservado.id },
+      data: {
+        activo: true,
+        estadoCuenta: 'Activa',
+        estadoLaboral: 'Activo',
+        intentosFallidos: 0,
+        bloqueoHasta: null,
+        codigoOtp: null,
+        expiracionOtp: null,
+      },
+    });
   }, { timeout: 30_000 });
 
   const despues = {
@@ -54,6 +83,7 @@ async function main() {
     cajas: await prisma.sesionCaja.count(),
     kardex: await prisma.movimientoInventario.count(),
     auditorias: await prisma.auditoria.count(),
+    usuarioConservado: usuarioConservado.nombreUsuario,
   };
   console.log(JSON.stringify({ antes, despues }, null, 2));
 }
