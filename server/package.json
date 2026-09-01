@@ -22,7 +22,8 @@
     "test:all": "vitest run",
     "backup:create": "tsx src/scripts/backup.ts",
     "backup:verify": "tsx src/scripts/verify-backup.ts",
-    "backup:restore": "tsx src/scripts/restore.ts"
+    "backup:restore": "tsx src/scripts/restore.ts",
+    "production:reset": "tsx src/scripts/reset-business-data.ts"
   },
   "keywords": [],
   "author": "",
