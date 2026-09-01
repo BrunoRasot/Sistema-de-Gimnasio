@@ -6,10 +6,10 @@
 
 | Función | Responsable | Contacto | Reemplazo |
 | --- | --- | --- | --- |
-| Propietario del servicio | **[COMPLETAR]** | **[COMPLETAR]** | **[COMPLETAR]** |
-| Responsable de privacidad | **[COMPLETAR]** | **[COMPLETAR]** | **[COMPLETAR]** |
-| Responsable técnico | **[COMPLETAR]** | **[COMPLETAR]** | **[COMPLETAR]** |
-| Responsable de caja/operación | **[COMPLETAR]** | **[COMPLETAR]** | **[COMPLETAR]** |
+| Propietario del servicio | **Pascacio Valladares Antonio Felipe** | **998 620 054 / bdbr230311@gmail.com** | **[DESIGNAR REEMPLAZO]** |
+| Responsable de privacidad | **Puscacio León Alexander Bladimir** | **998 620 054 / bdbr230311@gmail.com** | **[DESIGNAR REEMPLAZO]** |
+| Responsable técnico | **[DESIGNAR RESPONSABLE TÉCNICO]** | **[COMPLETAR CONTACTO]** | **[DESIGNAR REEMPLAZO]** |
+| Responsable de caja/operación | **Puscacio León Alexander Bladimir** | **998 620 054** | **[DESIGNAR REEMPLAZO]** |
 
 Los accesos de emergencia a Render, Neon, Cloudflare, Brevo, GitHub y monitoreo deben pertenecer al propietario o a una cuenta institucional, con recuperación documentada y segundo factor.
 

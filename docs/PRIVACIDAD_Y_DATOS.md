@@ -4,12 +4,14 @@
 
 ## 1. Identificación del responsable
 
-- Nombre o razón social: **[COMPLETAR]**
-- RUC o documento: **[COMPLETAR]**
-- Domicilio: **[COMPLETAR]**
-- Correo para privacidad y derechos de titulares: **[COMPLETAR]**
-- Teléfono: **[COMPLETAR]**
-- Responsable interno de privacidad: **[NOMBRE Y CARGO]**
+- Titular: **Pascacio Valladares Antonio Felipe**
+- Nombre comercial: **Templo Gym Tu Gimnasio**
+- RUC: **10218015412**
+- Tipo: **Persona natural con negocio**
+- Domicilio: **Cal. Chincha Baja Nro. 132, Chincha Alta, Chincha, Ica**
+- Correo para privacidad y derechos de titulares: **bdbr230311@gmail.com**
+- Teléfono: **998 620 054**
+- Responsable interno de privacidad: **Puscacio León Alexander Bladimir, gerente general**
 
 El responsable determina las finalidades y medios del tratamiento efectuado mediante TemploGym.
 
@@ -94,7 +96,7 @@ El titular puede solicitar información, acceso, rectificación, cancelación, o
 
 Procedimiento interno:
 
-1. Recibir la solicitud en **[CORREO DE PRIVACIDAD]**.
+1. Recibir la solicitud en **bdbr230311@gmail.com**.
 2. Registrar fecha, identidad, derecho solicitado y alcance.
 3. Verificar la identidad sin recopilar datos excesivos.
 4. Acusar recepción y derivar al responsable de privacidad.
@@ -127,7 +129,7 @@ El propietario debe confirmar con asesoría legal la inscripción y actualizaci�
 
 ## 13. Aprobación y revisión
 
-- Aprobado por: **[NOMBRE Y CARGO]**
+- Aprobación propuesta: **Pascacio Valladares Antonio Felipe, titular del negocio**
 - Fecha de aprobación: **[FECHA]**
 - Versión: **[VERSIÓN]**
 - Próxima revisión: **[FECHA, MÁXIMO 12 MESES]**
