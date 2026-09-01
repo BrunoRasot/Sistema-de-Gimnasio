@@ -102,7 +102,7 @@ pnpm run test:coverage
 ## Documentación
 
 - [Índice de documentación](docs/README.md)
-- [Guía funcional y manual de usuario](docs/GUIA_USUARIO.md)
+- [Manual de usuario paso a paso](docs/GUIA_USUARIO.md)
 - [Referencia de la API](docs/API.md)
 - [Modelo de datos](docs/BASE_DE_DATOS.md)
 - [Desarrollo y pruebas](docs/DESARROLLO_Y_PRUEBAS.md)
