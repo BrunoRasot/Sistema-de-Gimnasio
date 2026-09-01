@@ -1,0 +1,147 @@
+name: Backup Neon to Cloudflare R2
+
+on:
+  schedule:
+    # 03:00 America/Lima (Peru does not observe daylight saving time).
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Dump, verify, encrypt and upload
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: templogym-backups
+
+    steps:
+      - name: Validate configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable in DATABASE_URL BACKUP_ENCRYPTION_KEY AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY R2_ENDPOINT; do
+            if [[ -z "${!variable:-}" ]]; then
+              echo "Required secret is missing: $variable" >&2
+              exit 1
+            fi
+          done
+
+      - name: Create PostgreSQL 18 dump
+        shell: bash
+        run: |
+          set -euo pipefail
+          backup_dir="$RUNNER_TEMP/templogym-backup"
+          timestamp="$(date -u +'%Y-%m-%dT%H-%M-%SZ')"
+          mkdir -p "$backup_dir"
+
+          docker run --rm \
+            --env DATABASE_URL \
+            --volume "$backup_dir:/backup" \
+            postgres:18-alpine \
+            pg_dump "$DATABASE_URL" \
+              --format=custom \
+              --compress=9 \
+              --no-owner \
+              --no-acl \
+              --file=/backup/database.dump
+
+          test -s "$backup_dir/database.dump"
+          echo "BACKUP_DIR=$backup_dir" >> "$GITHUB_ENV"
+          echo "BACKUP_NAME=templogym-$timestamp.dump.enc" >> "$GITHUB_ENV"
+
+      - name: Verify dump by restoring it
+        shell: bash
+        run: |
+          set -euo pipefail
+          container="templogym-restore-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+
+          docker run --detach \
+            --name "$container" \
+            --env POSTGRES_PASSWORD=temporary-restore-password \
+            --env POSTGRES_DB=restore_test \
+            --volume "$BACKUP_DIR:/backup:ro" \
+            postgres:18-alpine >/dev/null
+
+          ready=false
+          for _ in {1..30}; do
+            if docker exec "$container" pg_isready --username postgres --dbname restore_test >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$ready" != true ]]; then
+            echo "Temporary PostgreSQL instance did not become ready." >&2
+            exit 1
+          fi
+
+          docker exec "$container" \
+            pg_restore --username postgres --dbname restore_test \
+              --no-owner --no-acl --exit-on-error /backup/database.dump
+
+          table_count="$(docker exec "$container" psql --username postgres --dbname restore_test --tuples-only --no-align --command \
+            "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public';")"
+          if [[ ! "$table_count" =~ ^[1-9][0-9]*$ ]]; then
+            echo "Restore verification found no public tables." >&2
+            exit 1
+          fi
+          echo "Restore verified successfully ($table_count public tables)."
+
+      - name: Encrypt backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          encrypted="$BACKUP_DIR/$BACKUP_NAME"
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
+            -in "$BACKUP_DIR/database.dump" \
+            -out "$encrypted" \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          test -s "$encrypted"
+          sha256sum "$encrypted" > "$encrypted.sha256"
+          rm -f "$BACKUP_DIR/database.dump"
+
+      - name: Upload encrypted backup to R2
+        shell: bash
+        run: |
+          set -euo pipefail
+          object_key="daily/$BACKUP_NAME"
+          aws s3 cp "$BACKUP_DIR/$BACKUP_NAME" "s3://$R2_BUCKET/$object_key" \
+            --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          aws s3 cp "$BACKUP_DIR/$BACKUP_NAME.sha256" "s3://$R2_BUCKET/$object_key.sha256" \
+            --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          aws s3api head-object --bucket "$R2_BUCKET" --key "$object_key" \
+            --endpoint-url "$R2_ENDPOINT" >/dev/null
+          echo "Encrypted backup uploaded and confirmed: $object_key"
+
+      - name: Delete backups older than 30 days
+        shell: bash
+        run: |
+          set -euo pipefail
+          cutoff="$(date -u -d '30 days ago' +%s)"
+          aws s3api list-objects-v2 --bucket "$R2_BUCKET" --prefix "daily/" \
+            --endpoint-url "$R2_ENDPOINT" --output json |
+            jq -r '.Contents[]? | [.Key, .LastModified] | @tsv' |
+            while IFS=$'\t' read -r key modified; do
+              modified_epoch="$(date -u -d "$modified" +%s)"
+              if (( modified_epoch < cutoff )); then
+                aws s3api delete-object --bucket "$R2_BUCKET" --key "$key" \
+                  --endpoint-url "$R2_ENDPOINT"
+                echo "Expired backup object deleted: $key"
+              fi
+            done
+
