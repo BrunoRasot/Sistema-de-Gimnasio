@@ -1,3 +1,4 @@
-.env.production
 .secrets/
 backups/
+config.bat
+node_modules
