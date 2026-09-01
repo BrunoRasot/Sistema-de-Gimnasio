@@ -92,7 +92,9 @@ jobs:
 
           ready=false
           for _ in {1..30}; do
-            if docker exec "$container" pg_isready --username postgres --dbname restore_test >/dev/null 2>&1; then
+            if docker exec "$container" \
+              psql --username postgres --dbname restore_test \
+                --command "SELECT 1" >/dev/null 2>&1; then
               ready=true
               break
             fi
