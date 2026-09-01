@@ -47,16 +47,29 @@ jobs:
           timestamp="$(date -u +'%Y-%m-%dT%H-%M-%SZ')"
           mkdir -p "$backup_dir"
 
+          # Neon can copy the connection value either as a URL or as:
+          # psql 'postgresql://...'. Accept both without exposing the secret.
+          connection_url="$DATABASE_URL"
+          connection_url="${connection_url#psql }"
+          connection_url="${connection_url#\'}"
+          connection_url="${connection_url%\'}"
+          connection_url="${connection_url#\"}"
+          connection_url="${connection_url%\"}"
+          if [[ "$connection_url" != postgresql://* && "$connection_url" != postgres://* ]]; then
+            echo "NEON_DATABASE_URL is not a PostgreSQL connection URL." >&2
+            exit 1
+          fi
+
           docker run --rm \
-            --env DATABASE_URL \
+            --env "DATABASE_URL=$connection_url" \
             --volume "$backup_dir:/backup" \
             postgres:18-alpine \
-            pg_dump "$DATABASE_URL" \
+            sh -c 'pg_dump "$DATABASE_URL" \
               --format=custom \
               --compress=9 \
               --no-owner \
               --no-acl \
-              --file=/backup/database.dump
+              --file=/backup/database.dump'
 
           test -s "$backup_dir/database.dump"
           echo "BACKUP_DIR=$backup_dir" >> "$GITHUB_ENV"
@@ -144,4 +157,3 @@ jobs:
                 echo "Expired backup object deleted: $key"
               fi
             done
-
