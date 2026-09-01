@@ -6,6 +6,8 @@ Esta carpeta centraliza la documentación operativa y académica de TemploGym.
 | --- | --- | --- |
 | [README principal](../README.md) | Todos | Descripción, requisitos e inicio rápido |
 | [Manual de usuario](GUIA_USUARIO.md) | Administrador y personal | Uso paso a paso, operación segura y solución de problemas |
+| [Privacidad y datos](PRIVACIDAD_Y_DATOS.md) | Propietario y administración | Plantilla de política, derechos y tratamiento de datos |
+| [Continuidad e incidentes](CONTINUIDAD_E_INCIDENTES.md) | Propietario, operación y soporte | Respuesta ante fallos, incidentes y recuperación |
 | [API REST](API.md) | Desarrollo e integración | Rutas, autenticación y permisos |
 | [Base de datos](BASE_DE_DATOS.md) | Desarrollo y tesis | Entidades, relaciones e integridad |
 | [Desarrollo y pruebas](DESARROLLO_Y_PRUEBAS.md) | Equipo técnico | Convenciones, comandos y estrategia de pruebas |

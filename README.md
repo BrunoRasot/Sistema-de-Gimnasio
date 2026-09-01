@@ -103,6 +103,8 @@ pnpm run test:coverage
 
 - [Índice de documentación](docs/README.md)
 - [Manual de usuario paso a paso](docs/GUIA_USUARIO.md)
+- [Política operativa de privacidad](docs/PRIVACIDAD_Y_DATOS.md)
+- [Continuidad, fallos e incidentes](docs/CONTINUIDAD_E_INCIDENTES.md)
 - [Referencia de la API](docs/API.md)
 - [Modelo de datos](docs/BASE_DE_DATOS.md)
 - [Desarrollo y pruebas](docs/DESARROLLO_Y_PRUEBAS.md)
