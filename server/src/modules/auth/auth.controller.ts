@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import crypto from 'node:crypto';
+import dns from 'node:dns/promises';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
 import { z } from 'zod';
 import { prisma } from '../../database/prisma.js';
 import { generarTemplateOTP, generarTemplateRecuperacion } from '../../utils/emailTemplate.js';
@@ -72,6 +74,26 @@ const resetPasswordSchema = z.object({
 const hashRecoveryCode = (usuarioId: number, codigo: string) =>
   crypto.createHmac('sha256', env.JWT_ACCESS_SECRET).update(`${usuarioId}:${codigo}`).digest('hex');
 
+const crearTransportadorCorreo = async () => {
+  const opciones: SMTPTransport.Options = env.SMTP_HOST ? {
+    host: (await dns.resolve4(env.SMTP_HOST))[0],
+    port: env.SMTP_PORT,
+    secure: env.SMTP_SECURE,
+    tls: { servername: env.SMTP_HOST },
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 30_000,
+    auth: { user: env.EMAIL_USER, pass: env.EMAIL_PASS },
+  } : {
+    service: 'gmail',
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 30_000,
+    auth: { user: env.EMAIL_USER, pass: env.EMAIL_PASS },
+  };
+  return nodemailer.createTransport(opciones);
+};
+
 const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
   if (env.NODE_ENV === 'test') {
     logger.warn(`Fallback (Test): OTP generado para ${destinatario}`);
@@ -89,12 +111,7 @@ const enviarCodigoOtp = async (destinatario: string, codigo: string) => {
     throw new Error('Servicio de correo no configurado.');
   }
 
-  const transporter = nodemailer.createTransport(env.SMTP_HOST ? {
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    auth: { user: emailUser, pass: emailPass },
-  } : { service: 'gmail', auth: { user: emailUser, pass: emailPass } });
+	const transporter = await crearTransportadorCorreo();
 
   await transporter.sendMail({
     from: `"TemploGym" <${env.EMAIL_FROM || emailUser}>`,
@@ -114,12 +131,7 @@ const enviarCodigoRecuperacion = async (destinatario: string, codigo: string) =>
     }
     throw new Error('Servicio de correo no configurado.');
   }
-  const transporter = nodemailer.createTransport(env.SMTP_HOST ? {
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    auth: { user: env.EMAIL_USER, pass: env.EMAIL_PASS },
-  } : { service: 'gmail', auth: { user: env.EMAIL_USER, pass: env.EMAIL_PASS } });
+  const transporter = await crearTransportadorCorreo();
   await transporter.sendMail({
     from: `"TemploGym" <${env.EMAIL_FROM || env.EMAIL_USER}>`,
     to: destinatario,
