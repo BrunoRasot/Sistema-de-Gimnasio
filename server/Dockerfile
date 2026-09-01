@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim AS base
+FROM node:26-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 WORKDIR /app
@@ -25,7 +25,7 @@ ENV NODE_ENV=production
 USER node
 CMD ["./node_modules/.bin/prisma", "migrate", "deploy"]
 
-FROM node:24-bookworm-slim AS runner
+FROM node:26-bookworm-slim AS runner
 ENV NODE_ENV=production
 WORKDIR /app
 RUN apt-get update \
