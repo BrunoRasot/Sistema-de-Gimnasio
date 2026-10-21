@@ -1,0 +1,42 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "dependabot/docker/client/nginxinc/nginx-unprivileged-1.31-alpine",
+    "dependabot/docker/client/node-26-bookworm-slim",
+    "dependabot/docker/server/node-26-bookworm-slim",
+    "dependabot/github_actions/docker/build-push-action-7",
+    "dependabot/github_actions/docker/login-action-4",
+    "dependabot/github_actions/docker/metadata-action-6",
+    "dependabot/github_actions/docker/setup-buildx-action-4",
+    "dependabot/npm_and_yarn/client/frontend-dependencies-ff5bb5d9da",
+    "dependabot/npm_and_yarn/server/backend-dependencies-aa628ac6fe",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "dependabot/docker/client/nginxinc/nginx-unprivileged-1.31-alpine": "main",
+    "dependabot/docker/client/node-26-bookworm-slim": "main",
+    "dependabot/docker/server/node-26-bookworm-slim": "main",
+    "dependabot/github_actions/docker/build-push-action-7": "main",
+    "dependabot/github_actions/docker/login-action-4": "main",
+    "dependabot/github_actions/docker/metadata-action-6": "main",
+    "dependabot/github_actions/docker/setup-buildx-action-4": "main",
+    "dependabot/npm_and_yarn/client/frontend-dependencies-ff5bb5d9da": "main",
+    "dependabot/npm_and_yarn/server/backend-dependencies-aa628ac6fe": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "dependabot/docker/client/nginxinc/nginx-unprivileged-1.31-alpine",
+    "dependabot/docker/client/node-26-bookworm-slim",
+    "dependabot/docker/server/node-26-bookworm-slim",
+    "dependabot/github_actions/docker/build-push-action-7",
+    "dependabot/github_actions/docker/login-action-4",
+    "dependabot/github_actions/docker/metadata-action-6",
+    "dependabot/github_actions/docker/setup-buildx-action-4",
+    "dependabot/npm_and_yarn/client/frontend-dependencies-ff5bb5d9da",
+    "dependabot/npm_and_yarn/server/backend-dependencies-aa628ac6fe",
+    "origin"
+  ]
+}
